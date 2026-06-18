@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".EditPaymentActivity">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            style="@style/background_activity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- المبلغ المدفوع -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:hint="@string/amount_paid_cash"
+                tools:ignore="HardcodedText">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtPaidCash_edit"
+                    android:layout_width="@dimen/_240sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:inputType="numberDecimal"
+                    tools:ignore="TextContrastCheck,VisualLintTextFieldSize" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- المبلغ المدفوع -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:hint="@string/amount_paid_bank"
+                tools:ignore="HardcodedText">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtPaidBank_edit"
+                    android:layout_width="@dimen/_240sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:inputType="numberDecimal"
+                    tools:ignore="TextContrastCheck,VisualLintTextFieldSize" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- الرسوم الكاملة -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:hint="@string/full_fees"
+                tools:ignore="HardcodedText">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtTotal_edit"
+                    android:layout_width="@dimen/_240sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:inputType="numberDecimal"
+                    android:textColorHint="#757575"
+                    tools:ignore="TextContrastCheck,VisualLintTextFieldSize" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- طريقة الدفع -->
+            <TextView
+                android:layout_width="@dimen/_240sdp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:text="@string/payment_method"
+                android:textColor="#555"
+                android:textSize="14sp"
+                tools:ignore="HardcodedText" />
+
+            <Spinner
+                android:id="@+id/spinnerPaymentMethod_edit"
+                android:layout_width="@dimen/_240sdp"
+                android:layout_height="@dimen/_50sdp"
+                android:layout_marginTop="4dp"
+                android:entries="@array/payment_methods"
+                android:spinnerMode="dropdown" />
+
+            <!-- تاريخ الدفع -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:hint="@string/payment_date"
+                tools:ignore="HardcodedText">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtPaymentDate_edit"
+                    android:layout_width="@dimen/_240sdp"
+                    android:layout_height="@dimen/_50sdp"
+                    android:clickable="true"
+                    android:cursorVisible="false"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:longClickable="false"
+                    android:textColorHint="#757575"
+                    tools:ignore="KeyboardInaccessibleWidget,VisualLintLocaleText,TextContrastCheck" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- عنوان أو شرح أعلى حقل الملاحظات -->
+            <TextView
+                android:layout_width="@dimen/_240sdp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_20sdp"
+                android:fontFamily="sans-serif-medium"
+                android:paddingStart="@dimen/_4sdp"
+                android:text="@string/additional_notes_optional"
+                android:textColor="#757575"
+                android:textSize="@dimen/_13ssp"
+                tools:ignore="RtlSymmetry" />
+
+            <!-- حقل الملاحظات -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="@string/notes">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtNotes_Payment_edit"
+                    android:layout_width="@dimen/_240sdp"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:lines="4"
+                    android:maxLines="6"
+                    android:scrollbars="vertical"
+                    android:textColorHint="#757575" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- زر الحفظ -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditPayment"
+                android:layout_width="@dimen/_240sdp"
+                android:layout_height="@dimen/_40sdp"
+                android:layout_marginTop="24dp"
+                android:text="@string/edit"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                app:backgroundTint="?attr/colorPrimary"
+                app:cornerRadius="12dp"
+                app:iconGravity="textStart"
+                app:iconTint="@android:color/white"
+                tools:ignore="VisualLintButtonSize,TextContrastCheck" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

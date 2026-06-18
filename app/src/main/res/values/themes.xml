@@ -1,0 +1,31 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Base.Theme.TalibPay" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">#1E88E5</item>          <!-- لون الـ Action Bar -->
+        <item name="colorPrimaryVariant">#1565C0</item>   <!-- لون عند الضغط -->
+        <item name="colorOnPrimary">#FFFFFF</item>        <!-- لون النص -->
+    </style>
+
+    <style name="Theme.TalibPay" parent="Base.Theme.TalibPay" />
+
+    <style name="background_login">
+        <item name="android:background">@drawable/round_custom</item>
+    </style>
+
+    <style name="background_item">
+        <item name="android:background">@drawable/payment_item_background</item>
+    </style>
+
+    <style name="CircleImage" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="background_activity">
+        <item name="android:background">#F4F7FA</item>
+    </style>
+
+
+
+
+</resources>

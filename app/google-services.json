@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "913851560456",
+    "project_id": "talibpay-491dc",
+    "storage_bucket": "talibpay-491dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913851560456:android:30ea148403575eaf2fd7bd",
+        "android_client_info": {
+          "package_name": "com.irdev.talibpay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1iiE3hjavCvhYDvtqUg6hQxkOj595qJs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

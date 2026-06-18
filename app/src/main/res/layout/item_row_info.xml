@@ -1,0 +1,28 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingVertical="4dp"
+    tools:ignore="UseCompoundDrawables">
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_info"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/tvValue"
+        style="@style/textColor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:autoLink="phone"
+        android:linksClickable="true"
+        android:text="@string/information"
+        android:textColorLink="@color/primary"
+        android:textSize="@dimen/_10ssp"
+        tools:ignore="HardcodedText" />
+</LinearLayout>
