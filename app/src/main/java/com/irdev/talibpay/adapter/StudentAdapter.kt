@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.adapter
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -9,6 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.irdev.talibpay.model.Payment
+import com.irdev.talibpay.R
+import com.irdev.talibpay.model.Student
+import com.irdev.talibpay.activity.DetailActivity
 
 class StudentAdapter(private var studentList: ArrayList<Student>) :
     RecyclerView.Adapter<StudentAdapter.StudentViewHolder>() {

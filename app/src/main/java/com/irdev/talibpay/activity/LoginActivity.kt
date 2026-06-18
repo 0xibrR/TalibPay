@@ -1,7 +1,6 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
@@ -26,6 +25,7 @@ import com.google.android.gms.common.SignInButton
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.irdev.talibpay.R
 
 @Suppress("DEPRECATION")
 class LoginActivity : AppCompatActivity() {
@@ -150,7 +150,7 @@ class LoginActivity : AppCompatActivity() {
 
             progressDialog.dismiss()  // إخفاء مربع الحوار بعد اكتمال العملية
 
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 handleResults(task)
             } else {

@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.model
 
 data class Student(
     val id: String = "",

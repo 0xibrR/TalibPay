@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
@@ -36,6 +37,10 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.irdev.talibpay.model.Payment
+import com.irdev.talibpay.R
+import com.irdev.talibpay.model.Student
+import com.irdev.talibpay.adapter.StudentAdapter
 import com.ncorti.slidetoact.SlideToActView
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 
@@ -293,7 +298,7 @@ class MainActivity : AppCompatActivity() {
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             private var searchRunnable: Runnable? = null
-            private val handler = android.os.Handler(Looper.getMainLooper())
+            private val handler = Handler(Looper.getMainLooper())
 
             override fun onQueryTextChange(newText: String): Boolean {
                 searchRunnable?.let { handler.removeCallbacks(it) }

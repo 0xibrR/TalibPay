@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.irdev.talibpay.R
 
 class RegisterActivity : AppCompatActivity() {
 

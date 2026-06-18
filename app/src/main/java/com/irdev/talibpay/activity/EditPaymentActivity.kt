@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
@@ -15,6 +15,8 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.irdev.talibpay.model.Payment
+import com.irdev.talibpay.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date

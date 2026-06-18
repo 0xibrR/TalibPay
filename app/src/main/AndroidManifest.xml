@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:name=".MyApp"
+        android:name=".application.MyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -25,60 +25,60 @@
         </provider>
 
         <activity
-            android:name=".EditPaymentActivity"
+            android:name=".activity.EditPaymentActivity"
             android:exported="false"
-            android:parentActivityName=".EditPaymentActivity"
+            android:parentActivityName=".activity.EditPaymentActivity"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
         <activity
-            android:name=".AddPayment"
+            android:name=".activity.AddPayment"
             android:exported="false"
-            android:parentActivityName=".AddPayment"
+            android:parentActivityName=".activity.AddPayment"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
-            android:name=".DetailActivity"
-            android:parentActivityName=".DetailActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".EditActivity"
-            android:exported="false"
-            android:parentActivityName=".EditActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".AddActivity"
-            android:exported="false"
-            android:parentActivityName=".AddActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".SettingsActivity"
-            android:exported="false"
-            android:parentActivityName=".SettingsActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".ForgotPasswordActivity"
-            android:exported="false"
-            android:parentActivityName=".ForgotPasswordActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".RegisterActivity"
+            android:name=".activity.DetailActivity"
+            android:parentActivityName=".activity.DetailActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".activity.EditActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.EditActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.AddActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.AddActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.SettingsActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.ForgotPasswordActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.ForgotPasswordActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.RegisterActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
-            android:name=".SplashActivity"
+            android:name=".activity.LoginActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.SplashActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
@@ -89,7 +89,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />

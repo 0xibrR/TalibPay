@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/primary"
     android:fitsSystemWindows="true"
-    tools:context=".RegisterActivity">
+    tools:context=".activity.RegisterActivity">
 
     <!-- زر الرجوع ثابت على اليسار -->
     <ImageView

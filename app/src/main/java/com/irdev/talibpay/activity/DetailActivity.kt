@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -29,6 +29,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.irdev.talibpay.model.Payment
+import com.irdev.talibpay.adapter.PaymentAdapter
+import com.irdev.talibpay.R
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import java.io.File
 import java.io.FileOutputStream

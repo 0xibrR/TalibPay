@@ -1,8 +1,7 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -22,6 +21,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.irdev.talibpay.R
 
 class ForgotPasswordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +105,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
     @SuppressLint("UseKtx")
     private fun massage() {
         // Check if the message has already been shown
-        val prefs = getPreferences(Context.MODE_PRIVATE)
+        val prefs = getPreferences(MODE_PRIVATE)
         val isFirstLaunch = prefs.getBoolean("isFirstLaunch", true)
 
         if (isFirstLaunch) {

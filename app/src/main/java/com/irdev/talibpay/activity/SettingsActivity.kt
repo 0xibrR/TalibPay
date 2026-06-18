@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -35,6 +35,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
+import com.irdev.talibpay.R
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlin.properties.Delegates
 

@@ -1,4 +1,4 @@
-package com.irdev.talibpay
+package com.irdev.talibpay.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,6 +14,8 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.irdev.talibpay.R
+import com.irdev.talibpay.model.Student
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
