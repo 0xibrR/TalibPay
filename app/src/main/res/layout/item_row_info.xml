@@ -1,28 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- صف معلومة: أيقونة + عنوان صغير + قيمة -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
+    android:minHeight="56dp"
     android:orientation="horizontal"
-    android:paddingVertical="4dp"
-    tools:ignore="UseCompoundDrawables">
+    android:paddingHorizontal="@dimen/card_padding"
+    android:paddingVertical="8dp">
 
     <ImageView
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginEnd="8dp"
-        android:src="@drawable/ic_info"
-        tools:ignore="ContentDescription" />
+        android:id="@+id/ivIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:importantForAccessibility="no"
+        app:tint="?attr/colorOnSurfaceVariant"
+        tools:src="@drawable/ic_phone" />
 
-    <TextView
-        android:id="@+id/tvValue"
-        style="@style/textColor"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:autoLink="phone"
-        android:linksClickable="true"
-        android:text="@string/information"
-        android:textColorLink="@color/primary"
-        android:textSize="@dimen/_10ssp"
-        tools:ignore="HardcodedText" />
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.TalibPay.Caption"
+            tools:text="رقم الهاتف" />
+
+        <TextView
+            android:id="@+id/tvValue"
+            android:textAlignment="viewStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textIsSelectable="true"
+            tools:text="0599 123 456" />
+    </LinearLayout>
 </LinearLayout>

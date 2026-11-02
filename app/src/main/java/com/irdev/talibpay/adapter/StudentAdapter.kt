@@ -1,5 +1,6 @@
 package com.irdev.talibpay.adapter
 
+import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,8 +11,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ItemStudentBinding
-import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.PaymentMethod
+import com.irdev.talibpay.util.money
+import com.irdev.talibpay.util.paidPercent
 
 class StudentAdapter(
     private val onClick: (StudentWithPayments) -> Unit
@@ -31,11 +33,28 @@ class StudentAdapter(
 
         with(holder.binding) {
             nameTextView.text = student.name
-            paidCashTextView.text = Money.format(student.paidCash)
-            paidBankTextView.text = Money.format(student.paidBank)
-            totalAmountTextView.text = Money.format(student.total)
-            remainingTextView.text = Money.format(student.remaining)
             initialTextView.text = student.name.firstOrNull()?.toString() ?: "?"
+
+            paidCashTextView.text =
+                context.getString(R.string.labeled_amount, context.getString(R.string.label_cash), context.money(student.paidCash))
+            paidBankTextView.text =
+                context.getString(R.string.labeled_amount, context.getString(R.string.label_bank), context.money(student.paidBank))
+            totalAmountTextView.text =
+                context.getString(R.string.labeled_amount, context.getString(R.string.label_fees), context.money(student.total))
+
+            // المتبقي: أحمر إن وُجد، أخضر عند السداد الكامل، ومحايد إن لم تُسجَّل رسوم
+            remainingTextView.text = context.money(student.remaining)
+            remainingTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    when {
+                        student.total <= 0 -> R.color.method_none
+                        student.remaining > 0 -> R.color.status_due
+                        else -> R.color.status_paid
+                    }
+                )
+            )
+            paidProgress.setProgressCompat(paidPercent(student.paid, student.total), false)
 
             // اللون والنص حسب طريقة الدفع في آخر دفعة
             val lastPayment = item.lastPayment
@@ -49,8 +68,10 @@ class StudentAdapter(
 
             val color = ContextCompat.getColor(context, method?.color ?: R.color.method_none)
             paymentMethodTextView.setTextColor(color)
+            paidProgress.setIndicatorColor(color)
             // mutate() حتى لا يتشارك كل الصفوف نفس الخلفية فيتغير لونها معًا
-            (initialTextView.background?.mutate() as? GradientDrawable)?.setColor(color)
+            (initialTextView.background?.mutate() as? GradientDrawable)?.color =
+                ColorStateList.valueOf(color)
 
             root.setOnClickListener { onClick(item) }
         }

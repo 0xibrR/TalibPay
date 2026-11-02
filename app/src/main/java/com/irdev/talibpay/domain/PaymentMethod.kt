@@ -7,7 +7,7 @@ import com.irdev.talibpay.R
 /**
  * طريقة الدفع تُخزَّن في Firebase كرمز ثابت ([code]) بدل النص المترجم،
  * حتى لا تتأثر البيانات بتغيير لغة الجهاز.
- * الترتيب هنا هو نفس ترتيب العناصر في القائمة المنسدلة (بعد "اختر طريقة الدفع").
+ * الترتيب هنا هو ترتيب العناصر في القائمة المنسدلة.
  */
 enum class PaymentMethod(
     val code: String,
@@ -35,11 +35,5 @@ enum class PaymentMethod(
             if (trimmed.isEmpty()) return null
             return entries.firstOrNull { it.code == trimmed } ?: legacyLabels[trimmed]
         }
-
-        /** موضع القائمة المنسدلة: 0 = "اختر طريقة الدفع". */
-        fun fromSpinnerPosition(position: Int): PaymentMethod? = entries.getOrNull(position - 1)
-
-        fun spinnerPositionOf(method: PaymentMethod?): Int =
-            if (method == null) 0 else method.ordinal + 1
     }
 }

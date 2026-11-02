@@ -5,11 +5,13 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityAddPaymentBinding
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.selectedPaymentMethod
+import com.irdev.talibpay.util.setupPaymentMethods
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.PaymentFormViewModel
@@ -25,9 +27,10 @@ class AddPayment : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityAddPaymentBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.main)
-        title = getString(R.string.add_payment)
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar)
 
+        binding.spinnerPaymentMethod.setupPaymentMethods()
         binding.edtPaymentDate.setOnClickListener {
             showDatePicker { binding.edtPaymentDate.setText(it) }
         }
@@ -40,7 +43,7 @@ class AddPayment : AppCompatActivity() {
                 cashText = binding.edtPaidCash.text?.toString().orEmpty().ifBlank { "0" },
                 bankText = binding.edtPaidBank.text?.toString().orEmpty().ifBlank { "0" },
                 totalText = total,
-                methodPosition = binding.spinnerPaymentMethod.selectedItemPosition,
+                method = binding.spinnerPaymentMethod.selectedPaymentMethod(),
                 paymentDate = date,
                 note = binding.edtNotesPayment.text?.toString()?.trim().orEmpty()
             )

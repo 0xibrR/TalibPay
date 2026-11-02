@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">TalibPay</string>
-    <string name="create_an_account">Create an Account 🔑</string>
+    <string name="create_an_account">Create an account</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
@@ -10,10 +10,10 @@
     <string name="verification_email">A verification link has been sent to your email.</string>
     <string name="Password_does_not_match">Password does not match</string>
     <string name="check_email">Please make sure the email format is correct</string>
-    <string name="forgot_password">forgot password?</string>
-    <string name="sign_in">SignIn</string>
-    <string name="sign_up">SignUp</string>
-    <string name="do_you_have_an_account">do you have an account?</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="sign_in">Sign in</string>
+    <string name="sign_up">Sign up</string>
+    <string name="do_you_have_an_account">Don\'t have an account?</string>
     <string name="or">or</string>
     <string name="login_successfully_email">You have successfully logged in using your email.</string>
     <string name="login_successfully_google_account">You have successfully logged in with your Google account.</string>
@@ -58,10 +58,10 @@
     <string name="amount_paid_cash">Amount paid cash</string>
     <string name="amount_paid_bank">Amount paid ban</string>
     <string name="full_fees">Full fees</string>
-    <string name="payment_method">payment method</string>
+    <string name="payment_method">Payment method</string>
     <string name="payment_date">Payment date</string>
-    <string name="phone_number">Phone Number</string>
-    <string name="notes">notes</string>
+    <string name="phone_number">Phone number</string>
+    <string name="notes">Notes</string>
     <string name="additional_notes_optional">Additional notes (optional)</string>
     <string name="add_student">Add student</string>
     <string name="modification_student">Student modification</string>
@@ -108,14 +108,14 @@
     <string name="payment_summary_total">Total: Sum of cash and bank payments.</string>
     <string name="payment_summary_remaining">Remaining: Total unpaid amount.</string>
     <string name="student_avatar">Student avatar</string>
-    <string name="last_modified">Last Modified</string>
+    <string name="last_modified">Last modified</string>
     <string name="information">Information</string>
     <string name="search">Search</string>
     <string name="edit">edit</string>
     <string name="delete">delete</string>
     <string name="share">share</string>
     <string name="download_notification">Download the notification</string>
-    <string name="added">Added in</string>
+    <string name="added">Added on</string>
     <string name="share_name">👤 Name: %1$s</string>
     <string name="share_birth_year">🎂 Year of Birth: %1$s</string>
     <string name="share_phone">📞 Phone Number: %1$s</string>
@@ -188,6 +188,48 @@
     <string name="invalid_amount">Enter a valid amount</string>
     <string name="cash_amount">Cash %1$s</string>
     <string name="bank_amount">Bank %1$s</string>
+
+    <!-- التصميم الجديد -->
+    <string name="currency_symbol" translatable="false">₪</string>
+    <string name="amount_currency" translatable="false">%1$s ₪</string>
+    <string name="app_tagline">Student tuition payments, organized</string>
+    <string name="register_subtitle">Create an account to start managing your students.</string>
+    <string name="password_requirements">At least 8 characters</string>
+    <string name="reset_password_title">Reset password</string>
+    <string name="send_reset_link">Send reset link</string>
+    <string name="students_title">Students</string>
+    <string name="empty_students_hint">Tap \"Add student\" to add your first student.</string>
+    <string name="label_collected">Collected</string>
+    <string name="label_cash">Cash</string>
+    <string name="label_bank">Bank</string>
+    <string name="label_remaining">Remaining</string>
+    <string name="label_fees">Fees</string>
+    <string name="label_paid">Paid</string>
+    <string name="collection_rate">%1$d%% of fees collected</string>
+    <string name="student_info">Student information</string>
+    <string name="payments_title">Payments</string>
+    <string name="no_payments_hint">No payments yet. Tap \"Add payment\" to record one.</string>
+    <string name="section_amounts">Amounts</string>
+    <string name="section_details">Payment details</string>
+    <string name="full_fees_helper">The full fees required from the student</string>
+    <string name="status_fully_paid">Fully paid</string>
+    <string name="status_remaining">%1$s remaining</string>
+    <string name="status_no_fees">No fees recorded yet</string>
+    <string name="paid_of_total">Paid %1$s of %2$s</string>
+    <string name="labeled_amount">%1$s %2$s</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_danger_zone">Danger zone</string>
+    <string name="none_value" translatable="false">—</string>
+
+    <plurals name="students_count">
+        <item quantity="one">%d student</item>
+        <item quantity="other">%d students</item>
+    </plurals>
+    <plurals name="payments_count">
+        <item quantity="one">%d payment</item>
+        <item quantity="other">%d payments</item>
+    </plurals>
 
     <!-- الترتيب يطابق PaymentMethod.entries -->
     <string-array name="payment_methods">

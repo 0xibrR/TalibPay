@@ -16,15 +16,18 @@ data class DashboardSummary(
     val cash: Double = 0.0,
     val bank: Double = 0.0,
     val paid: Double = 0.0,
-    val remaining: Double = 0.0
+    val remaining: Double = 0.0,
+    val total: Double = 0.0
 )
 
 data class MainUiState(
     val loading: Boolean = true,
     val students: List<StudentWithPayments> = emptyList(),
-    val hasAnyStudent: Boolean = false,
+    val studentCount: Int = 0,
     val summary: DashboardSummary = DashboardSummary()
-)
+) {
+    val hasAnyStudent: Boolean get() = studentCount > 0
+}
 
 class MainViewModel : BaseViewModel() {
 
@@ -42,12 +45,13 @@ class MainViewModel : BaseViewModel() {
         MainUiState(
             loading = false,
             students = filter(list, q),
-            hasAnyStudent = list.isNotEmpty(),
+            studentCount = list.size,
             summary = DashboardSummary(
                 cash = Money.sum(list.map { it.student.paidCash }),
                 bank = Money.sum(list.map { it.student.paidBank }),
                 paid = Money.sum(list.map { it.student.paid }),
-                remaining = Money.sum(list.map { it.student.remaining })
+                remaining = Money.sum(list.map { it.student.remaining }),
+                total = Money.sum(list.map { it.student.total })
             )
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())

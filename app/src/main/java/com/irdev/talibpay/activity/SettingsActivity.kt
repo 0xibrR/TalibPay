@@ -2,22 +2,17 @@ package com.irdev.talibpay.activity
 
 import android.app.Dialog
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
-import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textfield.TextInputLayout
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.AccountProvider
 import com.irdev.talibpay.data.Reauthentication
@@ -31,6 +26,8 @@ import com.irdev.talibpay.util.LoadingDialog
 import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
 import com.irdev.talibpay.util.ThemePrefs
 import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.setupToolbar
+import com.irdev.talibpay.util.cardDialog
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.errorMessageRes
 import com.irdev.talibpay.util.isUserCancellation
@@ -54,7 +51,8 @@ class SettingsActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.settingsLayout)
+        applySystemBarInsets(binding.settingsLayout, applyTop = false)
+        setupToolbar(binding.toolbar)
         title = getString(R.string.settings)
 
         binding.btnDeleteAccount.setOnClickListener { confirmDeleteAccount() }
@@ -90,7 +88,9 @@ class SettingsActivity : AppCompatActivity() {
             goToLogin()
             return
         }
-        binding.tvUserName.text = user.displayName ?: getString(R.string.user_name)
+        // حسابات البريد بلا اسم: نُخفي سطر الاسم بدل عرضه فارغًا
+        binding.tvUserName.text = user.displayName.orEmpty()
+        binding.tvUserName.isVisible = !user.displayName.isNullOrBlank()
         binding.tvUserEmail.text = user.email ?: getString(R.string.user_email_com)
         Glide.with(this)
             .load(user.photoUrl)
@@ -118,8 +118,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun showThemeDialog() {
         val dialogBinding = AlertDialogThemeSelectBinding.inflate(layoutInflater)
-        val dialog = AlertDialog.Builder(this).setView(dialogBinding.root).create()
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val dialog = cardDialog(dialogBinding.root)
 
         dialogBinding.deafultRadioButton.setText(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) R.string.system_default
@@ -146,7 +145,7 @@ class SettingsActivity : AppCompatActivity() {
     // ---------------- حذف الحساب ----------------
 
     private fun confirmDeleteAccount() {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.delete_account)
             .setMessage(R.string.delete_account_message)
             .setPositiveButton(R.string.delete_account) { _, _ ->
@@ -181,11 +180,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun showPasswordReauthDialog() {
         val dialogBinding = DilaogEmailPasswordBinding.inflate(layoutInflater)
-        val dialog = Dialog(this).apply {
-            setContentView(dialogBinding.root)
-            setCancelable(false)
-            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        }
+        val dialog = cardDialog(dialogBinding.root, cancelable = false)
         // البريد هو بريد الحساب الحالي دائمًا
         dialogBinding.edtEmailDialog.setText(viewModel.user?.email)
         dialogBinding.edtEmailDialog.isEnabled = false
@@ -203,16 +198,11 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun showChangePasswordDialog() {
         val dialogBinding = DialogChangePasswordBinding.inflate(layoutInflater)
-        val dialog = Dialog(this).apply {
-            setContentView(dialogBinding.root)
-            setCancelable(false)
-            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        }
+        val dialog = cardDialog(dialogBinding.root, cancelable = false)
 
         // حساب Google بلا كلمة مرور: نربط كلمة مرور جديدة بدون طلب القديمة
         val hasPassword = viewModel.hasPassword()
-        dialogBinding.edtOldPassword.textInputLayout()?.isVisible = hasPassword
-        dialogBinding.edtOldPassword.isVisible = hasPassword
+        dialogBinding.oldPasswordLayout.isVisible = hasPassword
 
         dialogBinding.btnSaveChangePassword.setOnClickListener {
             val oldPass = dialogBinding.edtOldPassword.text?.toString().orEmpty()
@@ -236,9 +226,6 @@ class SettingsActivity : AppCompatActivity() {
         openDialog = dialog
         dialog.show()
     }
-
-    private fun View.textInputLayout(): TextInputLayout? =
-        generateSequence(parent) { it.parent }.filterIsInstance<TextInputLayout>().firstOrNull()
 
     override fun onDestroy() {
         openDialog?.dismiss()

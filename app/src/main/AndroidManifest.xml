@@ -25,74 +25,53 @@
         </provider>
 
         <activity
-            android:name=".activity.EditPaymentActivity"
-            android:exported="false"
-            android:parentActivityName=".activity.EditPaymentActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-
-        <activity
-            android:name=".activity.AddPayment"
-            android:exported="false"
-            android:parentActivityName=".activity.AddPayment"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".activity.DetailActivity"
-            android:parentActivityName=".activity.DetailActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".activity.EditActivity"
-            android:exported="false"
-            android:parentActivityName=".activity.EditActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".activity.AddActivity"
-            android:exported="false"
-            android:parentActivityName=".activity.AddActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".activity.SettingsActivity"
-            android:exported="false"
-            android:parentActivityName=".activity.SettingsActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".activity.ForgotPasswordActivity"
-            android:exported="false"
-            android:parentActivityName=".activity.ForgotPasswordActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".activity.RegisterActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
-            android:name=".activity.LoginActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-        <activity
             android:name=".activity.SplashActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            android:theme="@style/Theme.TalibPay.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".activity.LoginActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.RegisterActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.ForgotPasswordActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.AddActivity"
             android:exported="false"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.EditActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.AddPayment"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.EditPaymentActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.SettingsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

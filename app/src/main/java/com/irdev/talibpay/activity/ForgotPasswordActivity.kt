@@ -4,14 +4,13 @@ import android.os.Bundle
 import android.util.Patterns
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import com.google.android.material.snackbar.Snackbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityForgotPasswordBinding
 import com.irdev.talibpay.util.LoadingDialog
 import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.toast
@@ -25,12 +24,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
         enableEdgeToEdge()
         binding = ActivityForgotPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.main)
-        showIntroOnce()
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar)
+        title = ""
 
         val loading = LoadingDialog(this)
         collectWhileStarted(viewModel.loading) { loading.setVisible(it) }
@@ -42,7 +41,6 @@ class ForgotPasswordActivity : AppCompatActivity() {
             }
         }
 
-        binding.iBtnBackForgotPassword.setOnClickListener { finish() }
         binding.btnForgot.setOnClickListener { view ->
             val email = binding.edtEmailForgot.requireText() ?: return@setOnClickListener
             if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -51,17 +49,5 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 Snackbar.make(view, getString(R.string.check_email), Snackbar.LENGTH_LONG).show()
             }
         }
-    }
-
-    /** شرح الشاشة يظهر أول مرة فقط. */
-    private fun showIntroOnce() {
-        val prefs = getPreferences(MODE_PRIVATE)
-        if (!prefs.getBoolean("isFirstLaunch", true)) return
-        AlertDialog.Builder(this)
-            .setTitle(R.string.forgot_password_)
-            .setMessage(R.string.dialog_forgot)
-            .setPositiveButton(R.string.ok, null)
-            .show()
-        prefs.edit { putBoolean("isFirstLaunch", false) }
     }
 }

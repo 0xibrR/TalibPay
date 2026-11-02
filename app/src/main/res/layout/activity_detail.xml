@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -7,186 +7,291 @@
     android:layout_height="match_parent"
     tools:context=".activity.DetailActivity">
 
-
-    <LinearLayout
-        style="@style/background_activity"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:fitsSystemWindows="true">
 
-        <!-- بطاقة الطالب -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/student_card_layout"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/details_student" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="96dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"
-            android:background="@android:color/white"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="6dp">
+            android:orientation="vertical"
+            android:padding="@dimen/screen_padding">
 
-            <LinearLayout
+            <!-- بطاقة الطالب (تُشارك كصورة) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/student_card_layout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="?attr/colorPrimaryContainer">
 
-                <!-- صورة واسم -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    tools:ignore="UseCompoundDrawables">
+                    android:orientation="vertical"
+                    android:padding="@dimen/card_padding">
 
-                    <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/circle_background"
-                        android:contentDescription="@string/student_avatar"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_student" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvInitial"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:background="@drawable/circle_avatar"
+                            android:backgroundTint="?attr/colorPrimary"
+                            android:gravity="center"
+                            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                            android:textColor="?attr/colorOnPrimary"
+                            tools:text="م" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvName"
+            android:textAlignment="viewStart"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                android:textColor="?attr/colorOnPrimaryContainer"
+                                android:textStyle="bold"
+                                tools:text="محمد أحمد" />
+
+                            <TextView
+                                android:id="@+id/tvStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textAppearance="?attr/textAppearanceLabelLarge"
+                                tools:text="مدفوع بالكامل" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/studentProgress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:max="100"
+                        app:trackColor="?attr/colorSurfaceContainerLowest"
+                        app:trackCornerRadius="4dp"
+                        app:trackThickness="8dp"
+                        tools:progress="60" />
 
                     <TextView
-                        android:id="@+id/tvName"
-                        style="@style/textColor"
+                        android:id="@+id/tvProgressLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:text="@string/full_name"
-                        android:textSize="@dimen/_12ssp"
-                        android:textStyle="bold" />
+                        android:layout_marginTop="4dp"
+                        android:textAppearance="?attr/textAppearanceLabelMedium"
+                        android:textColor="?attr/colorOnPrimaryContainer"
+                        tools:text="دفع 450 ₪ من 750 ₪" />
+
+                    <!-- إحصائيات 2×2 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.TalibPay.StatLabel"
+                                android:text="@string/label_cash" />
+
+                            <TextView
+                                android:id="@+id/tvStatCash"
+                                style="@style/Widget.TalibPay.StatValue"
+                                tools:text="300 ₪" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.TalibPay.StatLabel"
+                                android:text="@string/label_bank" />
+
+                            <TextView
+                                android:id="@+id/tvStatBank"
+                                style="@style/Widget.TalibPay.StatValue"
+                                tools:text="150 ₪" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.TalibPay.StatLabel"
+                                android:text="@string/label_fees" />
+
+                            <TextView
+                                android:id="@+id/tvStatTotal"
+                                style="@style/Widget.TalibPay.StatValue"
+                                tools:text="750 ₪" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.TalibPay.StatLabel"
+                                android:text="@string/label_remaining" />
+
+                            <TextView
+                                android:id="@+id/tvStatRemaining"
+                                style="@style/Widget.TalibPay.StatValue"
+                                tools:text="300 ₪" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                <!-- خط فاصل -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="16dp"
-                    android:background="#B0BEC5" />
+            <!-- معلومات الطالب -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/student_info"
+                android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
 
-                <!-- معلومات الطالب -->
-                <include
-                    android:id="@+id/rowBirthYear"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/year_of_birth" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-                <include
-                    android:id="@+id/rowPhone"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/phone_number" />
-
-                <include
-                    android:id="@+id/rowPaymentDate"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/payment_date" />
-
-                <include
-                    android:id="@+id/rowPaidCash"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/paid_cash_label"
-                    android:tooltipText="@string/payment_summary_cash"
-                    tools:ignore="UnusedAttribute" />
-
-                <include
-                    android:id="@+id/rowPaidBank"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/paid_bank_label"
-                    android:tooltipText="@string/payment_summary_bank"
-                    tools:ignore="UnusedAttribute" />
-
-                <include
-                    android:id="@+id/rowPaid"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/paid_total"
-                    android:tooltipText="@string/payment_summary_total"
-                    tools:ignore="UnusedAttribute" />
-
-                <include
-                    android:id="@+id/rowTotalAmount"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/total_amount_label" />
-
-                <include
-                    android:id="@+id/rowRemaining"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/remaining_total"
-                    android:tooltipText="@string/payment_summary_remaining"
-                    tools:ignore="UnusedAttribute" />
-
-                <include
-                    android:id="@+id/rowPaymentMethod"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/payment_method" />
-
-                <include
-                    android:id="@+id/rowAdded"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/added" />
-
-                <include
-                    android:id="@+id/rowLastModified"
-                    layout="@layout/item_row_info"
-                    android:tag="@string/last_modified" />
-
-                <TextView
-                    android:id="@+id/tvNotes"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="4dp"
-                    android:textColor="#FF9800"
-                    android:textSize="@dimen/_11ssp" />
+                    android:orientation="vertical"
+                    android:paddingVertical="8dp">
 
+                    <include
+                        android:id="@+id/rowPhone"
+                        layout="@layout/item_row_info" />
+
+                    <include
+                        android:id="@+id/rowBirthYear"
+                        layout="@layout/item_row_info" />
+
+                    <include
+                        android:id="@+id/rowPaymentMethod"
+                        layout="@layout/item_row_info" />
+
+                    <include
+                        android:id="@+id/rowPaymentDate"
+                        layout="@layout/item_row_info" />
+
+                    <include
+                        android:id="@+id/rowAdded"
+                        layout="@layout/item_row_info" />
+
+                    <include
+                        android:id="@+id/rowLastModified"
+                        layout="@layout/item_row_info" />
+
+                    <include
+                        android:id="@+id/rowNotes"
+                        layout="@layout/item_row_info" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- الدفعات -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
 
                 <TextView
-                    style="@style/textColor"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="@string/pyment_months"
-                    android:textSize="@dimen/_11ssp" />
+                    android:layout_weight="1"
+                    android:text="@string/payments_title"
+                    android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerViewPayment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="1dp"
-                    android:layout_marginTop="1dp"
-                    android:layout_marginEnd="1dp"
-                    android:layout_marginBottom="1dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/payment_summary_layout"
-                    tools:listitem="@layout/item_payment" />
-
-
+                <TextView
+                    android:id="@+id/tvPaymentsCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.TalibPay.Caption"
+                    tools:text="3 دفعات" />
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+            <TextView
+                android:id="@+id/tvNoPayments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="@string/no_payments_hint"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
 
-        <!-- قائمة الدفعات -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewPayment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="2"
+                tools:listitem="@layout/item_payment" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-    </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabAddPayment"
         android:layout_width="wrap_content"
-        android:layout_height="56dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:src="@drawable/ic_add_black_24dp"
-        app:backgroundTint="@color/primary"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/screen_padding"
+        android:text="@string/add_payment"
+        app:icon="@drawable/ic_add" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

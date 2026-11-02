@@ -5,13 +5,16 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityEditPaymentBinding
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.PaymentMethod
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.selectPaymentMethod
+import com.irdev.talibpay.util.selectedPaymentMethod
+import com.irdev.talibpay.util.setupPaymentMethods
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.PaymentFormViewModel
@@ -29,10 +32,12 @@ class EditPaymentActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityEditPaymentBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.main)
-        title = getString(R.string.edit_pyment)
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar)
+        // بعد تدوير الشاشة يحتفظ النظام بما كتبه المستخدم، فلا نعيد التعبئة
         prefilled = savedInstanceState != null
 
+        binding.spinnerPaymentMethodEdit.setupPaymentMethods()
         binding.edtPaymentDateEdit.setOnClickListener {
             showDatePicker { binding.edtPaymentDateEdit.setText(it) }
         }
@@ -44,7 +49,7 @@ class EditPaymentActivity : AppCompatActivity() {
                 cashText = binding.edtPaidCashEdit.text?.toString().orEmpty().ifBlank { "0" },
                 bankText = binding.edtPaidBankEdit.text?.toString().orEmpty().ifBlank { "0" },
                 totalText = total,
-                methodPosition = binding.spinnerPaymentMethodEdit.selectedItemPosition,
+                method = binding.spinnerPaymentMethodEdit.selectedPaymentMethod(),
                 paymentDate = date,
                 note = binding.edtNotesPaymentEdit.text?.toString()?.trim().orEmpty()
             )
@@ -53,14 +58,13 @@ class EditPaymentActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.existing) { payment ->
             if (payment == null || prefilled) return@collectWhileStarted
             prefilled = true
-            // أرقام لاتينية بدون فواصل آلاف حتى يقبلها حقل الإدخال الرقمي
-            binding.edtPaidCashEdit.setText(Money.format(payment.cash, Locale.US).replace(",", ""))
-            binding.edtPaidBankEdit.setText(Money.format(payment.bank, Locale.US).replace(",", ""))
-            binding.edtTotalEdit.setText(Money.format(payment.total, Locale.US).replace(",", ""))
+            binding.edtPaidCashEdit.setText(plainAmount(payment.cash))
+            binding.edtPaidBankEdit.setText(plainAmount(payment.bank))
+            binding.edtTotalEdit.setText(plainAmount(payment.total))
             binding.edtPaymentDateEdit.setText(payment.paymentDate)
             binding.edtNotesPaymentEdit.setText(payment.note)
-            binding.spinnerPaymentMethodEdit.setSelection(
-                PaymentMethod.spinnerPositionOf(PaymentMethod.fromStored(payment.paymentMethod))
+            binding.spinnerPaymentMethodEdit.selectPaymentMethod(
+                PaymentMethod.fromStored(payment.paymentMethod)
             )
         }
         collectWhileStarted(viewModel.loading) { binding.btnEditPayment.isEnabled = !it }
@@ -77,4 +81,7 @@ class EditPaymentActivity : AppCompatActivity() {
             }
         }
     }
+
+    // أرقام لاتينية بدون فواصل آلاف حتى يقبلها حقل الإدخال الرقمي
+    private fun plainAmount(value: Double) = Money.format(value, Locale.US).replace(",", "")
 }

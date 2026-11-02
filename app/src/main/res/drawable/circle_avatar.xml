@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- خلفية دائرية للحرف الأول؛ اللون يُضبط من الكود حسب طريقة الدفع -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/method_none" />
+</shape>

@@ -16,6 +16,7 @@ import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -25,7 +26,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.MaterialToolbar
 import com.irdev.talibpay.R
+import com.irdev.talibpay.domain.Money
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -33,14 +36,37 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-/** يضيف هوامش أشرطة النظام للجذر (مع enableEdgeToEdge). */
-fun applySystemBarInsets(root: View) {
+/**
+ * يضيف هوامش أشرطة النظام للجذر (مع enableEdgeToEdge).
+ * في الشاشات التي فيها AppBarLayout (fitsSystemWindows) يتولى شريط التطبيق الهامش العلوي،
+ * فنمرر applyTop = false ونترك الـ insets تصل إليه.
+ */
+fun applySystemBarInsets(root: View, applyTop: Boolean = true) {
     ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-        val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-        v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+        val bars = insets.getInsets(
+            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        )
+        v.setPadding(bars.left, if (applyTop) bars.top else 0, bars.right, bars.bottom)
         insets
     }
 }
+
+/** يربط MaterialToolbar كشريط التطبيق، مع زر رجوع اختياري. */
+fun AppCompatActivity.setupToolbar(toolbar: MaterialToolbar, showUp: Boolean = true) {
+    setSupportActionBar(toolbar)
+    if (showUp) {
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+    }
+}
+
+/** المبلغ مع رمز العملة بتنسيق لغة الجهاز. */
+fun Context.money(value: Double): String =
+    getString(R.string.amount_currency, Money.format(value))
+
+/** نسبة المدفوع من الرسوم (0..100). */
+fun paidPercent(paid: Double, total: Double): Int =
+    if (total <= 0) 0 else ((paid / total) * 100).toInt().coerceIn(0, 100)
 
 /** يجمع الـ Flow فقط أثناء ظهور الشاشة. */
 fun <T> LifecycleOwner.collectWhileStarted(flow: Flow<T>, action: suspend (T) -> Unit) {
@@ -74,6 +100,22 @@ fun EditText.requireRawText(): String? {
     }
     return value
 }
+
+/**
+ * نافذة حوار لتصميم مخصص (بطاقة بحواف دائرية): نافذة شفافة بعرض الشاشة
+ * حتى لا تظهر خلفية مربعة خلف البطاقة.
+ */
+fun Context.cardDialog(content: View, cancelable: Boolean = true): Dialog =
+    Dialog(this).apply {
+        setContentView(content)
+        setCancelable(cancelable)
+        setCanceledOnTouchOutside(cancelable)
+        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        window?.setLayout(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
 
 /** نافذة تحميل غير قابلة للإلغاء. */
 class LoadingDialog(activity: Activity) {
@@ -168,6 +210,7 @@ fun RecyclerView.attachSwipeActions(
                 )
                     .addBackgroundColor(if (editing) editColor else deleteColor)
                     .addActionIcon(if (editing) R.drawable.ic_edit else R.drawable.ic_delete)
+                    .setActionIconTint(Color.WHITE)
                     .create()
                     .decorate()
             }

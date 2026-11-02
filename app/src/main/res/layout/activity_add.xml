@@ -1,133 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".activity.AddActivity">
+    android:layout_height="match_parent">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/add_student" />
+    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            tools:ignore="UselessLeaf">
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center|top"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
-                tools:ignore="UselessParent">
+                android:padding="@dimen/screen_padding"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="@dimen/form_max_width">
 
-                <!-- الاسم الكامل -->
                 <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
+                    style="@style/Widget.TalibPay.TextField"
                     android:hint="@string/full_name"
-                    tools:ignore="HardcodedText">
+                    app:startIconDrawable="@drawable/ic_person">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/edtStudentName"
-                        android:layout_width="@dimen/_240sdp"
-                        android:layout_height="@dimen/_50sdp"
-                        android:inputType="textPersonName"
-                        android:textColorHint="#757575"
-                        tools:ignore="TextContrastCheck,VisualLintTextFieldSize" />
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="textPersonName|textCapWords"
+                        android:maxLength="200" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- سنة الميلاد -->
                 <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
+                    style="@style/Widget.TalibPay.TextField"
                     android:hint="@string/year_of_birth"
-                    tools:ignore="HardcodedText">
+                    app:startIconDrawable="@drawable/ic_cake">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/edtBirthYear"
-                        android:layout_width="@dimen/_240sdp"
-                        android:layout_height="@dimen/_50sdp"
-                        android:clickable="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:cursorVisible="false"
                         android:focusable="false"
-                        android:inputType="number"
-                        android:longClickable="false"
-                        tools:ignore="KeyboardInaccessibleWidget,TextContrastCheck,VisualLintTextFieldSize" />
+                        android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-
                 <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
+                    style="@style/Widget.TalibPay.TextField"
                     android:hint="@string/phone_number"
-                    tools:ignore="HardcodedText">
+                    app:startIconDrawable="@drawable/ic_phone">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/edtPhoneNumber"
-                        android:layout_width="@dimen/_240sdp"
-                        android:layout_height="@dimen/_50sdp"
-                        android:inputType="number"
-                        tools:ignore="KeyboardInaccessibleWidget,TextContrastCheck,VisualLintTextFieldSize" />
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="phone"
+                        android:maxLength="30"
+                        android:textDirection="ltr" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- عنوان أو شرح أعلى حقل الملاحظات -->
-                <TextView
-                    android:layout_width="@dimen/_240sdp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_20sdp"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingStart="@dimen/_4sdp"
-                    android:text="@string/additional_notes_optional"
-                    android:textColor="#757575"
-                    android:textSize="@dimen/_13ssp"
-                    tools:ignore="RtlSymmetry" />
-
-                <!-- حقل الملاحظات -->
                 <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/notes">
+                    style="@style/Widget.TalibPay.TextField"
+                    android:hint="@string/additional_notes_optional"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="2000"
+                    app:startIconDrawable="@drawable/ic_notes">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/edtNotes"
-                        android:layout_width="@dimen/_240sdp"
-                        android:layout_height="120dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:gravity="top|start"
-                        android:inputType="textMultiLine"
-                        android:lines="4"
-                        android:maxLines="6"
-                        android:scrollbars="vertical" />
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:maxLength="2000"
+                        android:minLines="3" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-
-                <!-- زر الإضافة -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddStudent"
-                    android:layout_width="@dimen/_240sdp"
-                    android:layout_height="@dimen/_50sdp"
-                    android:layout_marginTop="@dimen/_40sdp"
-                    android:layout_marginBottom="@dimen/_30sdp"
-                    android:backgroundTint="#1E88E5"
-                    android:text="@string/add_student"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    tools:ignore="HardcodedText,TextContrastCheck,VisualLintButtonSize" />
-
+                    style="@style/Widget.TalibPay.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/add_student" />
             </LinearLayout>
-
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

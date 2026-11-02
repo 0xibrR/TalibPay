@@ -31,11 +31,8 @@ class PaymentMethodTest {
     }
 
     @Test
-    fun `spinner positions round-trip, position zero is the placeholder`() {
-        assertNull(PaymentMethod.fromSpinnerPosition(0))
-        PaymentMethod.entries.forEach {
-            assertEquals(it, PaymentMethod.fromSpinnerPosition(PaymentMethod.spinnerPositionOf(it)))
-        }
-        assertEquals(0, PaymentMethod.spinnerPositionOf(null))
+    fun `codes are unique so stored values stay unambiguous`() {
+        val codes = PaymentMethod.entries.map { it.code }
+        assertEquals(codes.size, codes.toSet().size)
     }
 }

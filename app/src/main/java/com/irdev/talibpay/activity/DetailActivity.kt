@@ -8,24 +8,33 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.app.AppCompatActivity
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.adapter.PaymentAdapter
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityDetailBinding
-import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.databinding.ItemRowInfoBinding
 import com.irdev.talibpay.domain.PaymentMethod
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.attachSwipeActions
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.formatTimestamp
+import com.irdev.talibpay.util.money
+import com.irdev.talibpay.util.paidPercent
 import com.irdev.talibpay.viewmodel.DetailViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 import java.io.File
@@ -42,7 +51,8 @@ class DetailActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.main)
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar)
         title = getString(R.string.details_student)
 
         if (viewModel.studentId.isEmpty()) {
@@ -84,30 +94,65 @@ class DetailActivity : AppCompatActivity() {
         val last = data.lastPayment
 
         with(binding) {
+            // البطاقة العلوية: الاسم والحالة والتقدم
             tvName.text = student.name
-            rowBirthYear.tvValue.text = label(R.string.year_of_birth, student.birthYear)
-            rowPhone.tvValue.text = label(R.string.phone_number, student.phoneNumber)
-            rowPaymentDate.tvValue.text = label(R.string.payment_date, last?.paymentDate.orEmpty())
-            rowPaidCash.tvValue.text = amount(R.string.paid_cash_label, student.paidCash)
-            rowPaidBank.tvValue.text = amount(R.string.paid_bank_label, student.paidBank)
-            rowPaid.tvValue.text = amount(R.string.paid_total, student.paid)
-            rowTotalAmount.tvValue.text = amount(R.string.total_amount_label, student.total)
-            rowRemaining.tvValue.text = amount(R.string.remaining_total, student.remaining)
-            rowPaymentMethod.tvValue.text = label(R.string.payment_method, methodLabel(last))
-            rowAdded.tvValue.text =
-                label(R.string.added, formatTimestamp(student.addedAt, student.addedIn))
-            rowLastModified.tvValue.text =
-                label(R.string.last_modified, formatTimestamp(student.updatedAt, student.lastModified))
-            tvNotes.text = label(R.string.notes, student.notes)
+            tvInitial.text = student.name.firstOrNull()?.toString() ?: "?"
+            val percent = paidPercent(student.paid, student.total)
+            studentProgress.setProgressCompat(percent, true)
+            tvProgressLabel.text =
+                getString(R.string.paid_of_total, money(student.paid), money(student.total))
+            when {
+                student.total <= 0 -> setStatus(getString(R.string.status_no_fees), null)
+                student.remaining <= 0 -> setStatus(getString(R.string.status_fully_paid), R.color.status_paid)
+                else -> setStatus(
+                    getString(R.string.status_remaining, money(student.remaining)),
+                    R.color.status_due
+                )
+            }
+            tvStatCash.text = money(student.paidCash)
+            tvStatBank.text = money(student.paidBank)
+            tvStatTotal.text = money(student.total)
+            tvStatRemaining.text = money(student.remaining)
+
+            // معلومات الطالب
+            rowPhone.bind(R.drawable.ic_phone, R.string.phone_number, student.phoneNumber)
+            rowBirthYear.bind(R.drawable.ic_cake, R.string.year_of_birth, student.birthYear)
+            rowPaymentMethod.bind(R.drawable.ic_cash, R.string.payment_method, methodLabel(last))
+            rowPaymentDate.bind(R.drawable.ic_calendar, R.string.payment_date, last?.paymentDate.orEmpty())
+            rowAdded.bind(
+                R.drawable.ic_schedule, R.string.added,
+                formatTimestamp(student.addedAt, student.addedIn)
+            )
+            rowLastModified.bind(
+                R.drawable.ic_schedule, R.string.last_modified,
+                formatTimestamp(student.updatedAt, student.lastModified)
+            )
+            rowNotes.bind(R.drawable.ic_notes, R.string.notes, student.notes)
+
+            // الدفعات
+            tvPaymentsCount.text =
+                resources.getQuantityString(R.plurals.payments_count, data.payments.size, data.payments.size)
+            tvNoPayments.isVisible = data.payments.isEmpty()
         }
 
         // الأحدث أولًا
         adapter.submitList(data.payments.reversed())
     }
 
-    private fun label(res: Int, value: String) = "${getString(res)}: $value"
+    /** @param color null = لون نص البطاقة (حالة محايدة). */
+    private fun setStatus(text: String, @ColorRes color: Int?) {
+        binding.tvStatus.text = text
+        binding.tvStatus.setTextColor(
+            if (color != null) ContextCompat.getColor(this, color)
+            else MaterialColors.getColor(binding.tvStatus, com.google.android.material.R.attr.colorOnPrimaryContainer)
+        )
+    }
 
-    private fun amount(res: Int, value: Double) = "${getString(res)} ${Money.format(value)}"
+    private fun ItemRowInfoBinding.bind(@DrawableRes icon: Int, @StringRes label: Int, value: String) {
+        ivIcon.setImageResource(icon)
+        tvLabel.setText(label)
+        tvValue.text = value.ifBlank { getString(R.string.none_value) }
+    }
 
     private fun methodLabel(payment: Payment?): String {
         if (payment == null) return getString(R.string.no_payments)
@@ -124,7 +169,7 @@ class DetailActivity : AppCompatActivity() {
     }
 
     private fun confirmDeletePayment(payment: Payment) {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.delete_title_payment, ""))
             .setMessage(getString(R.string.delete_message_payment, ""))
             .setPositiveButton(R.string.ok) { _, _ -> viewModel.deletePayment(payment.id) }
@@ -151,7 +196,7 @@ class DetailActivity : AppCompatActivity() {
 
             R.id.menu_delete -> {
                 val name = data?.student?.name.orEmpty()
-                AlertDialog.Builder(this)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(getString(R.string.delete_title_with_name, name))
                     .setMessage(getString(R.string.delete_message_with_name, name))
                     .setPositiveButton(R.string.ok) { _, _ -> viewModel.deleteStudent() }

@@ -1,33 +1,31 @@
 package com.irdev.talibpay.activity
 
-import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.view.ViewGroup
-import android.widget.PopupWindow
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.adapter.StudentAdapter
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityMainBinding
 import com.irdev.talibpay.databinding.AlertDialogDeleteAllBinding
-import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.attachSwipeActions
+import com.irdev.talibpay.util.cardDialog
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.money
+import com.irdev.talibpay.util.paidPercent
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.viewmodel.MainUiState
 import com.irdev.talibpay.viewmodel.MainViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
@@ -44,7 +42,8 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.main)
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar, showUp = false)
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
@@ -52,11 +51,17 @@ class MainActivity : AppCompatActivity() {
             onEdit = { position -> openEdit(adapter.currentList[position]) },
             onDelete = { position -> confirmDelete(adapter.currentList[position]) }
         )
+        // تصغير زر الإضافة أثناء التمرير للأسفل حتى لا يغطي البطاقات
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0) binding.newStudentFAB.shrink() else if (dy < 0) binding.newStudentFAB.extend()
+            }
+        })
 
         binding.newStudentFAB.setOnClickListener {
             startActivity(Intent(this, AddActivity::class.java))
         }
-        binding.paymentSummaryLayout.setOnClickListener { showSummaryTooltip() }
+        binding.summary.btnSummaryInfo.setOnClickListener { showSummaryExplanation() }
 
         collectWhileStarted(viewModel.uiState, ::render)
         collectWhileStarted(viewModel.events, ::onEvent)
@@ -66,11 +71,19 @@ class MainActivity : AppCompatActivity() {
         binding.progressBarNotes.isVisible = state.loading
         binding.linearLayoutEmpty.isVisible = !state.loading && !state.hasAnyStudent
         binding.recyclerView.isVisible = !state.loading && state.hasAnyStudent
+        binding.tvStudentsCount.text = resources.getQuantityString(
+            R.plurals.students_count, state.studentCount, state.studentCount
+        )
 
-        binding.txtCashValue.text = Money.format(state.summary.cash)
-        binding.txtBankValue.text = Money.format(state.summary.bank)
-        binding.txtPaidValue.text = Money.format(state.summary.paid)
-        binding.txtRemainingValue.text = Money.format(state.summary.remaining)
+        with(binding.summary) {
+            txtPaidValue.text = money(state.summary.paid)
+            txtCashValue.text = money(state.summary.cash)
+            txtBankValue.text = money(state.summary.bank)
+            txtRemainingValue.text = money(state.summary.remaining)
+            val percent = paidPercent(state.summary.paid, state.summary.total)
+            collectionProgress.setProgressCompat(percent, true)
+            tvCollectionRate.text = getString(R.string.collection_rate, percent)
+        }
 
         adapter.submitList(state.students)
     }
@@ -107,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun confirmDelete(item: StudentWithPayments) {
         val name = item.student.name
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.delete_title_with_name, name))
             .setMessage(getString(R.string.delete_message_with_name, name))
             .setPositiveButton(R.string.ok) { _, _ -> viewModel.deleteStudent(item) }
@@ -133,19 +146,19 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    @SuppressLint("InflateParams")
-    private fun showSummaryTooltip() {
-        val view = LayoutInflater.from(this).inflate(R.layout.tooltip_payment_summary, null)
-        PopupWindow(
-            view,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
-        ).apply {
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            elevation = 10f
-            showAsDropDown(binding.paymentSummaryLayout, -20, 0)
-        }
+    private fun showSummaryExplanation() {
+        val message = listOf(
+            R.string.payment_summary_popup_title2,
+            R.string.payment_summary_cash,
+            R.string.payment_summary_bank,
+            R.string.payment_summary_total,
+            R.string.payment_summary_remaining
+        ).joinToString("\n\n") { getString(it) }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.payment_summary_explained_title)
+            .setMessage(message)
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -194,12 +207,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showDeleteAllDialog() {
         val dialogBinding = AlertDialogDeleteAllBinding.inflate(layoutInflater)
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogBinding.root)
-            .setCancelable(false)
-            .create()
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.setCanceledOnTouchOutside(false)
+        val dialog = cardDialog(dialogBinding.root, cancelable = false)
         dialog.show()
 
         dialogBinding.slideConfirm.onSlideCompleteListener =

@@ -45,7 +45,7 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
         cashText: String,
         bankText: String,
         totalText: String,
-        methodPosition: Int,
+        method: PaymentMethod?,
         paymentDate: String,
         note: String
     ) {
@@ -53,7 +53,6 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
             send(UiEvent.Message(R.string.error_generic))
             return
         }
-        val method = PaymentMethod.fromSpinnerPosition(methodPosition)
         if (method == null) {
             send(UiEvent.Message(R.string.please_choose_payment_method))
             return

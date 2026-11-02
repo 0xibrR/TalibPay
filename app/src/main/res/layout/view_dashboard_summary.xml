@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- لوحة إحصائيات المدفوعات: المحصّل الكلي، المتبقي، ونسبة التحصيل، وتوزيع نقدي/بنكي -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/payment_summary_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/card_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/payment_summary"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textColor="?attr/colorOnPrimaryContainer" />
+
+            <ImageView
+                android:id="@+id/btnSummaryInfo"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/payment_summary_explained_title"
+                android:padding="4dp"
+                android:src="@drawable/ic_info_outline"
+                app:tint="?attr/colorOnPrimaryContainer" />
+        </LinearLayout>
+
+        <!-- المحصّل -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/label_collected"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnPrimaryContainer" />
+
+        <TextView
+            android:id="@+id/txtPaidValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            android:textStyle="bold"
+            tools:text="12,450 ₪" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/collectionProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:max="100"
+            app:indicatorColor="?attr/colorPrimary"
+            app:trackColor="?attr/colorSurfaceContainerLowest"
+            app:trackCornerRadius="4dp"
+            app:trackThickness="8dp"
+            tools:progress="70" />
+
+        <TextView
+            android:id="@+id/tvCollectionRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            tools:text="تم تحصيل 70٪ من الرسوم" />
+
+        <!-- نقدي / بنكي / المتبقي -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Widget.TalibPay.StatLabel"
+                    android:text="@string/label_cash" />
+
+                <TextView
+                    android:id="@+id/txtCashValue"
+                    style="@style/Widget.TalibPay.StatValue"
+                    tools:text="8,000 ₪" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Widget.TalibPay.StatLabel"
+                    android:text="@string/label_bank" />
+
+                <TextView
+                    android:id="@+id/txtBankValue"
+                    style="@style/Widget.TalibPay.StatValue"
+                    tools:text="4,450 ₪" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Widget.TalibPay.StatLabel"
+                    android:text="@string/label_remaining" />
+
+                <TextView
+                    android:id="@+id/txtRemainingValue"
+                    style="@style/Widget.TalibPay.StatValue"
+                    tools:text="5,300 ₪" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

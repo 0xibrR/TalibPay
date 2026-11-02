@@ -10,6 +10,7 @@ import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentInput
 import com.irdev.talibpay.databinding.ActivityAddBinding
 import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showYearPicker
@@ -26,7 +27,8 @@ class AddActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityAddBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.main)
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar)
         title = getString(R.string.add_student)
 
         binding.edtBirthYear.setOnClickListener {

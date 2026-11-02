@@ -10,6 +10,7 @@ import com.irdev.talibpay.databinding.ActivityRegisterBinding
 import com.irdev.talibpay.util.LoadingDialog
 import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
 import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireRawText
 import com.irdev.talibpay.util.requireText
@@ -27,8 +28,9 @@ class RegisterActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
-        applySystemBarInsets(binding.main)
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar)
+        title = ""
 
         val loading = LoadingDialog(this)
         collectWhileStarted(viewModel.loading) { loading.setVisible(it) }
@@ -40,7 +42,6 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        binding.iBtnBackRegister.setOnClickListener { finish() }
         binding.btnRegister.setOnClickListener { signUp() }
     }
 

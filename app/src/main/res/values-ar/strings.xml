@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TalibPay</string>
-    <string name="create_an_account"> 🔑إنشاء حساب</string>
+    <string name="create_an_account">إنشاء حساب</string>
     <string name="email">البريد الإلكتروني</string>
     <string name="password">كلمة المرور</string>
     <string name="confirm_password">تأكيد كلمة المرور</string>
@@ -15,7 +15,7 @@
     <string name="forgot_password">نسيت كلمة المرور؟</string>
     <string name="sign_in">تسجيل الدخول</string>
     <string name="sign_up">إنشاء حساب</string>
-    <string name="do_you_have_an_account">هل لديك حساب؟</string>
+    <string name="do_you_have_an_account">ليس لديك حساب؟</string>
     <string name="or">أو</string>
     <string name="login_successfully_email">لقد قمت بتسجيل الدخول بنجاح باستخدام بريدك الإلكتروني.</string>
     <string name="login_successfully_google_account">لقد قمت بتسجيل الدخول بنجاح باستخدام حساب Google الخاص بك.</string>
@@ -189,6 +189,53 @@
     <string name="invalid_amount">أدخل مبلغًا صحيحًا</string>
     <string name="cash_amount">كاش %1$s</string>
     <string name="bank_amount">بنكي %1$s</string>
+
+    <!-- التصميم الجديد -->
+    <string name="app_tagline">إدارة رسوم الطلاب ودفعاتهم بسهولة</string>
+    <string name="register_subtitle">أنشئ حسابًا لتبدأ بإدارة طلابك.</string>
+    <string name="password_requirements">8 أحرف على الأقل</string>
+    <string name="reset_password_title">استعادة كلمة المرور</string>
+    <string name="send_reset_link">إرسال رابط الاستعادة</string>
+    <string name="students_title">الطلاب</string>
+    <string name="empty_students_hint">اضغط \"إضافة طالب\" لإضافة أول طالب.</string>
+    <string name="label_collected">المحصّل</string>
+    <string name="label_cash">نقدي</string>
+    <string name="label_bank">بنكي</string>
+    <string name="label_remaining">المتبقي</string>
+    <string name="label_fees">الرسوم</string>
+    <string name="label_paid">المدفوع</string>
+    <string name="collection_rate">تم تحصيل %1$d٪ من الرسوم</string>
+    <string name="student_info">معلومات الطالب</string>
+    <string name="payments_title">الدفعات</string>
+    <string name="no_payments_hint">لا توجد دفعات بعد. اضغط \"إضافة دفعة\" لتسجيل دفعة.</string>
+    <string name="section_amounts">المبالغ</string>
+    <string name="section_details">تفاصيل الدفعة</string>
+    <string name="full_fees_helper">الرسوم الكاملة المطلوبة من الطالب</string>
+    <string name="status_fully_paid">مدفوع بالكامل</string>
+    <string name="status_remaining">متبقٍ %1$s</string>
+    <string name="status_no_fees">لم تُسجَّل رسوم بعد</string>
+    <string name="paid_of_total">دُفع %1$s من %2$s</string>
+    <string name="labeled_amount">%1$s %2$s</string>
+    <string name="settings_appearance">المظهر</string>
+    <string name="settings_account">الحساب</string>
+    <string name="settings_danger_zone">منطقة الخطر</string>
+
+    <plurals name="students_count">
+        <item quantity="zero">لا يوجد طلاب</item>
+        <item quantity="one">طالب واحد</item>
+        <item quantity="two">طالبان</item>
+        <item quantity="few">%d طلاب</item>
+        <item quantity="many">%d طالبًا</item>
+        <item quantity="other">%d طالب</item>
+    </plurals>
+    <plurals name="payments_count">
+        <item quantity="zero">لا توجد دفعات</item>
+        <item quantity="one">دفعة واحدة</item>
+        <item quantity="two">دفعتان</item>
+        <item quantity="few">%d دفعات</item>
+        <item quantity="many">%d دفعة</item>
+        <item quantity="other">%d دفعة</item>
+    </plurals>
 
     <!-- الترتيب يطابق PaymentMethod.entries -->
     <string-array name="payment_methods">

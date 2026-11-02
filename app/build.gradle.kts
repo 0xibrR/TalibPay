@@ -52,22 +52,19 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.glide)
 
-    implementation(libs.sdp.android)
-    implementation(libs.ssp.android)
 
     implementation(libs.lottie)
     implementation(libs.slidetoact)
 
     implementation(libs.recyclerview.swipedecorator)
-    implementation(libs.circleimageview)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.legacy.support.v4)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.kotlinx.coroutines.play.services)

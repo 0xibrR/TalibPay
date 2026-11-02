@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- نظام ألوان Material 3 للوضع الداكن -->
+    <color name="md_primary">#A9C7FF</color>
+    <color name="md_on_primary">#003063</color>
+    <color name="md_primary_container">#00468C</color>
+    <color name="md_on_primary_container">#D6E3FF</color>
+    <color name="md_secondary">#BCC7DC</color>
+    <color name="md_on_secondary">#263141</color>
+    <color name="md_secondary_container">#3D4758</color>
+    <color name="md_on_secondary_container">#D8E3F8</color>
+    <color name="md_tertiary">#82D5C6</color>
+    <color name="md_on_tertiary">#003731</color>
+    <color name="md_tertiary_container">#005048</color>
+    <color name="md_on_tertiary_container">#9EF2E2</color>
+    <color name="md_error">#FFB4AB</color>
+    <color name="md_on_error">#690005</color>
+    <color name="md_error_container">#93000A</color>
+    <color name="md_on_error_container">#FFDAD6</color>
+    <color name="md_background">#111318</color>
+    <color name="md_on_background">#E2E2E9</color>
+    <color name="md_surface">#111318</color>
+    <color name="md_on_surface">#E2E2E9</color>
+    <color name="md_surface_variant">#44474E</color>
+    <color name="md_on_surface_variant">#C4C6D0</color>
+    <color name="md_outline">#8E9099</color>
+    <color name="md_outline_variant">#44474E</color>
+    <color name="md_surface_container_lowest">#0C0E13</color>
+    <color name="md_surface_container_low">#191C20</color>
+    <color name="md_surface_container">#1D2024</color>
+    <color name="md_surface_container_high">#282A2F</color>
+    <color name="md_surface_container_highest">#33353A</color>
+    <color name="md_inverse_surface">#E2E2E9</color>
+    <color name="md_inverse_on_surface">#2E3036</color>
+    <color name="md_inverse_primary">#0B67C2</color>
+
+    <color name="status_paid">#7DDB95</color>
+    <color name="status_due">#FFB4AB</color>
+
+    <color name="method_cash">#7DDB95</color>
+    <color name="method_bank">#A9C7FF</color>
+    <color name="method_mixed">#FFB870</color>
+    <color name="method_unpaid">#FFB4AB</color>
+    <color name="method_none">#8E9099</color>
+    <color name="swipe_edit">#00468C</color>
+    <color name="swipe_delete">#93000A</color>
+
+    <color name="splash_background">#111318</color>
+</resources>

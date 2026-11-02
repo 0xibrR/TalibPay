@@ -34,7 +34,6 @@ class LoginActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
         applySystemBarInsets(binding.main)
 
         if (viewModel.hasActiveSession()) {

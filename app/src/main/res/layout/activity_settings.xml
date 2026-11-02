@@ -5,138 +5,169 @@
     android:id="@+id/settingsLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:colorBackground"
     tools:context=".activity.SettingsActivity">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/settings" />
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.core.widget.NestedScrollView
-        style="@style/background_activity"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="20dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
-            <!-- بطاقة الملف الشخصي -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="2dp"
-                app:strokeColor="?attr/colorPrimary"
-                app:strokeWidth="1dp">
+                android:orientation="vertical"
+                android:padding="@dimen/screen_padding"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="@dimen/content_max_width">
 
-                <RelativeLayout
+                <!-- الملف الشخصي -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="20dp">
+                    android:layout_height="wrap_content">
 
-                    <!-- صورة الحساب -->
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/imgAvatar"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:contentDescription="@string/profile"
-                        android:elevation="4dp"
-                        android:src="@drawable/outline_account_circle_24" />
-
-                    <!-- معلومات المستخدم -->
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_centerVertical="true"
-                        android:layout_marginStart="16dp"
-                        android:layout_toEndOf="@id/imgAvatar"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="@dimen/card_padding">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/imgAvatar"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:contentDescription="@string/profile"
+                            android:scaleType="centerCrop"
+                            app:shapeAppearanceOverlay="@style/ShapeAppearance.TalibPay.Circle"
+                            tools:src="@drawable/outline_account_circle_24" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvUserName"
+            android:textAlignment="viewStart"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:textAppearance="?attr/textAppearanceTitleMedium"
+                                tools:text="@string/user_name" />
+
+                            <TextView
+                                android:id="@+id/tvUserEmail"
+            android:textAlignment="viewStart"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                tools:text="@string/user_email_com" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- المظهر -->
+                <TextView
+                    style="@style/Widget.TalibPay.SettingsHeader"
+                    android:text="@string/settings_appearance" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnToggleTheme"
+                        style="@style/Widget.TalibPay.SettingsItem"
+                        android:text="@string/change_theme"
+                        app:icon="@drawable/ic_palette" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- الحساب -->
+                <TextView
+                    style="@style/Widget.TalibPay.SettingsHeader"
+                    android:text="@string/settings_account" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/tvUserName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/user_name"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnChangePassword"
+                            style="@style/Widget.TalibPay.SettingsItem"
+                            android:text="@string/change_password"
+                            app:icon="@drawable/ic_lock" />
 
-                        <TextView
-                            android:id="@+id/tvUserEmail"
-                            android:layout_width="wrap_content"
+                        <com.google.android.material.divider.MaterialDivider
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/user_email_com"
-                            android:textColor="?android:textColorSecondary"
-                            android:textSize="14sp" />
+                            app:dividerInsetStart="56dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnLogout"
+                            style="@style/Widget.TalibPay.SettingsItem"
+                            android:text="@string/sign_out"
+                            app:icon="@drawable/ic_logout_24" />
                     </LinearLayout>
-                </RelativeLayout>
-            </com.google.android.material.card.MaterialCardView>
+                </com.google.android.material.card.MaterialCardView>
 
-            <!-- زر تغيير الثيم -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnToggleTheme"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/change_theme"
-                android:textAllCaps="false"
-                app:iconGravity="textStart" />
+                <!-- منطقة الخطر -->
+                <TextView
+                    style="@style/Widget.TalibPay.SettingsHeader"
+                    android:text="@string/settings_danger_zone"
+                    android:textColor="?attr/colorError" />
 
-            <!-- زر حذف الحساب -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDeleteAccount"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:icon="@drawable/ic_delete"
-                android:iconTint="@color/redAccent"
-                android:text="@string/delete_account"
-                android:textAllCaps="false"
-                android:textColor="@color/redAccent"
-                app:iconGravity="textStart"
-                app:strokeColor="@color/redAccent"
-                tools:ignore="UnusedAttribute" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="?attr/colorErrorContainer">
 
-            <!-- زر تسجيل الخروج -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:icon="@drawable/ic_logout_24"
-                android:text="@string/sign_out"
-                android:textAllCaps="false"
-                app:iconGravity="textStart" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnDeleteAccount"
+                        style="@style/Widget.TalibPay.SettingsItem"
+                        android:text="@string/delete_account"
+                        android:textColor="?attr/colorOnErrorContainer"
+                        app:icon="@drawable/ic_delete"
+                        app:iconTint="?attr/colorOnErrorContainer" />
+                </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnChangePassword"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:icon="@drawable/ic_password"
-                android:text="@string/change_password"
-                android:textAllCaps="false"
-                app:iconGravity="textStart"
-                tools:ignore="PrivateResource" />
-
-
-            <!-- معلومات الإصدار -->
-            <TextView
-                android:id="@+id/tvVersion"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:gravity="center"
-                android:text="@string/app_version_placeholder"
-                android:textColor="?android:textColorSecondary"
-                android:textSize="12sp" />
-
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/tvVersion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.TalibPay.Caption"
+                    tools:text="@string/app_version_placeholder" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

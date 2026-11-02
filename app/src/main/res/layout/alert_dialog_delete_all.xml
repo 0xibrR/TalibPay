@@ -1,76 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- تأكيد حذف كل الطلاب: يتطلب سحبًا متعمدًا لمنع الحذف بالخطأ -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.TalibPay.DialogCard"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    android:background="@color/cardBckGround"
-    android:elevation="2dp"
-    app:cardCornerRadius="20dp">
+    android:layout_height="wrap_content">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="24dp">
 
         <ImageView
-            android:id="@+id/img_btn_cancel_dialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:layout_constraintBottom_toTopOf="@+id/alertTitleText"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.037"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0"
-            app:srcCompat="@drawable/baseline_cancel_24"
-            tools:ignore="ContentDescription" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_delete_sweep"
+            app:tint="?attr/colorError" />
 
         <TextView
             android:id="@+id/alertTitleText"
-            style="@style/textColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
             android:text="@string/are_you_sure_you_want_to_delete_all_student"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <com.ncorti.slidetoact.SlideToActView
-            android:id="@+id/slideConfirm"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="64dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="32dp"
-            app:area_margin="8dp"
-            app:inner_color="@color/slidetoact_white"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView"
-            app:layout_constraintVertical_bias="1.0"
-            app:outer_color="@color/primary"
-            app:text="@string/slide_to_delete_all" />
+            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
             android:text="@string/this_process_is_irreversible"
-            android:textColor="@android:color/holo_red_light"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/alertTitleText"
-            tools:ignore="TextContrastCheck" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorError" />
 
+        <com.ncorti.slidetoact.SlideToActView
+            android:id="@+id/slideConfirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:area_margin="6dp"
+            app:border_radius="28dp"
+            app:inner_color="?attr/colorOnError"
+            app:outer_color="?attr/colorError"
+            app:slider_height="56dp"
+            app:text="@string/slide_to_delete_all"
+            app:text_appearance="@style/TextAppearance.Material3.LabelLarge"
+            app:text_color="?attr/colorOnError" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/img_btn_cancel_dialog"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/cancel" />
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

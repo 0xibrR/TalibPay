@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="screen_padding">16dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="field_spacing">12dp</dimen>
+    <!-- أقصى عرض للمحتوى على الأجهزة اللوحية والشاشات العريضة -->
+    <dimen name="content_max_width">640dp</dimen>
+    <dimen name="form_max_width">480dp</dimen>
+</resources>

@@ -4,12 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.app.AppCompatActivity
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentInput
 import com.irdev.talibpay.databinding.ActivityEditBinding
 import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showYearPicker
@@ -28,7 +29,8 @@ class EditActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityEditBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applySystemBarInsets(binding.main)
+        applySystemBarInsets(binding.main, applyTop = false)
+        setupToolbar(binding.toolbar)
         title = getString(R.string.edit_student)
         // بعد تدوير الشاشة يحتفظ النظام بما كتبه المستخدم، فلا نعيد التعبئة
         prefilled = savedInstanceState != null
@@ -67,7 +69,7 @@ class EditActivity : AppCompatActivity() {
         val phone = binding.edtPhoneNumberEdit.requireText() ?: return
         val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.confirm_edit_title)
             .setMessage(R.string.confirm_edit_message)
             .setPositiveButton(R.string.ok) { _, _ ->

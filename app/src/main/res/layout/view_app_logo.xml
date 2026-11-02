@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- شعار التطبيق: أيقونة التخرّج داخل دائرة بلون العلامة -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="88dp"
+    android:layout_height="88dp"
+    android:background="@drawable/circle_avatar"
+    android:backgroundTint="?attr/colorPrimary">
+
+    <ImageView
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_school"
+        app:tint="?attr/colorOnPrimary" />
+</FrameLayout>
