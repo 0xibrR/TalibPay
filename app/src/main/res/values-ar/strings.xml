@@ -220,6 +220,7 @@
     <string name="theme_system">النظام</string>
     <string name="theme_dark">داكن</string>
     <string name="theme_light">نهاري</string>
+    <string name="app_language">لغة التطبيق</string>
     <string name="settings_account">الحساب</string>
     <string name="settings_danger_zone">منطقة الخطر</string>
 

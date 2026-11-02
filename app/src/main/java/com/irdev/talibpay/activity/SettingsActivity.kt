@@ -21,6 +21,7 @@ import com.irdev.talibpay.databinding.ActivitySettingsBinding
 import com.irdev.talibpay.databinding.DialogChangePasswordBinding
 import com.irdev.talibpay.databinding.DilaogEmailPasswordBinding
 import com.irdev.talibpay.util.LoadingDialog
+import com.irdev.talibpay.util.LanguagePrefs
 import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
 import com.irdev.talibpay.util.ThemePrefs
 import com.irdev.talibpay.util.applySystemBarInsets
@@ -56,6 +57,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnDeleteAccount.setOnClickListener { confirmDeleteAccount() }
         binding.btnLogout.setOnClickListener { confirmSignOut() }
         setupThemeToggle()
+        setupLanguageToggle()
         binding.btnChangePassword.setOnClickListener { showChangePasswordDialog() }
 
         val versionName = packageManager.getPackageInfo(packageName, 0).versionName
@@ -132,6 +134,27 @@ class SettingsActivity : AppCompatActivity() {
                 else -> ThemePrefs.SYSTEM
             }
             if (mode != ThemePrefs.get(this)) ThemePrefs.set(this, mode)
+        }
+    }
+
+    /** اختيار لغة التطبيق: النظام / العربية / English. */
+    private fun setupLanguageToggle() {
+        binding.languageToggle.check(
+            when (LanguagePrefs.get()) {
+                LanguagePrefs.ARABIC -> R.id.btnLangArabic
+                LanguagePrefs.ENGLISH -> R.id.btnLangEnglish
+                else -> R.id.btnLangSystem
+            }
+        )
+        binding.languageToggle.addOnButtonCheckedListener { _, id, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val language = when (id) {
+                R.id.btnLangArabic -> LanguagePrefs.ARABIC
+                R.id.btnLangEnglish -> LanguagePrefs.ENGLISH
+                else -> LanguagePrefs.SYSTEM
+            }
+            // يعيد رسم الشاشات تلقائيًا باللغة الجديدة
+            if (language != LanguagePrefs.get()) LanguagePrefs.set(language)
         }
     }
 

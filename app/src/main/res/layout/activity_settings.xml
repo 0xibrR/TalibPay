@@ -139,6 +139,46 @@
                                 style="@style/Widget.TalibPay.SegmentedButton"
                                 android:text="@string/theme_light" />
                         </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                        <com.google.android.material.divider.MaterialDivider
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginVertical="16dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawablePadding="16dp"
+                            android:gravity="center_vertical"
+                            android:text="@string/app_language"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            app:drawableStartCompat="@drawable/ic_language"
+                            app:drawableTint="?attr/colorOnSurfaceVariant" />
+
+                        <!-- لغة التطبيق: النظام / العربية / English (تُحفظ وتبقى بعد إعادة فتح التطبيق) -->
+                        <com.google.android.material.button.MaterialButtonToggleGroup
+                            android:id="@+id/languageToggle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnLangSystem"
+                                style="@style/Widget.TalibPay.SegmentedButton"
+                                android:text="@string/theme_system" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnLangArabic"
+                                style="@style/Widget.TalibPay.SegmentedButton"
+                                android:text="@string/language_arabic" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnLangEnglish"
+                                style="@style/Widget.TalibPay.SegmentedButton"
+                                android:text="@string/language_english" />
+                        </com.google.android.material.button.MaterialButtonToggleGroup>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
