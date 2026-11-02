@@ -18,6 +18,8 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.irdev.talibpay.R
+import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
+import com.irdev.talibpay.util.authErrorMessage
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -68,13 +70,15 @@ class RegisterActivity : AppCompatActivity() {
         builder.setCanceledOnTouchOutside(false)
 
         firebaseAuth = FirebaseAuth.getInstance()
-        val email = edtEmail.text.toString()
+        val email = edtEmail.text.toString().trim()
         val password = edtPassword.text.toString()
 
         if (check(edtEmail) && check(edtPassword) && check(edtConfirmPassword)) {
 
             if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                if (edtPassword.text.toString() == edtConfirmPassword.text.toString()) {
+                if (password.length < MIN_PASSWORD_LENGTH) {
+                    edtPassword.error = getString(R.string.error_weak_password)
+                } else if (password == edtConfirmPassword.text.toString()) {
 
                     builder.show()
 
@@ -107,7 +111,7 @@ class RegisterActivity : AppCompatActivity() {
                                         } else {
                                             Toast.makeText(
                                                 this,
-                                                verificationTask.exception!!.message.toString(),
+                                                authErrorMessage(verificationTask.exception),
                                                 Toast.LENGTH_LONG
                                             ).show()
                                         }
@@ -115,7 +119,7 @@ class RegisterActivity : AppCompatActivity() {
                             } else {
                                 Toast.makeText(
                                     this,
-                                    it.exception!!.message.toString(),
+                                    authErrorMessage(it.exception),
                                     Toast.LENGTH_LONG
                                 ).show()
                             }

@@ -15,7 +15,6 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.R
-import com.irdev.talibpay.model.Student
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -46,18 +45,11 @@ class EditActivity : AppCompatActivity() {
         val birthYear = intent.getStringExtra("birthYear") ?: ""
         val phoneNumber = intent.getStringExtra("phoneNumber") ?: ""
         val notes = intent.getStringExtra("notes") ?: ""
-        val addedIn = intent.getStringExtra("addedIn") ?: ""
 
         edtStudentName.setText(name)
         edtBirthYear.setText(birthYear)
         edtPhoneNumber.setText(phoneNumber)
-        val userNoteOnly = notes
-            .lineSequence()
-            .drop(1) // يحذف السطر الأول
-            .joinToString("\n")
-            .trim()
-
-        edtNotes.setText(userNoteOnly)
+        edtNotes.setText(notes)
 
 
         edtBirthYear.setOnClickListener {
@@ -93,25 +85,28 @@ class EditActivity : AppCompatActivity() {
                         val updatedName = edtStudentName.text.toString().trim()
                         val updatedBirthYear = edtBirthYear.text.toString().trim()
                         val updatedPhoneNumber = edtPhoneNumber.text.toString().trim()
+                        val updatedNotes = edtNotes.text.toString().trim()
 
-
-                        val student = Student(
-                            id = studentId,
-                            name = updatedName,
-                            birthYear = updatedBirthYear,
-                            phoneNumber = updatedPhoneNumber,
-                            lastModified = getCurrentTime(),
-                            addedIn = addedIn
+                        // تحديث الحقول المعدّلة فقط حتى لا تُمسح المبالغ والدفعات
+                        val updates = mapOf<String, Any>(
+                            "name" to updatedName,
+                            "birthYear" to updatedBirthYear,
+                            "phoneNumber" to updatedPhoneNumber,
+                            "notes" to updatedNotes,
+                            "lastModified" to getCurrentTime()
                         )
 
-                        databaseRef.child("students").child(studentId).setValue(student)
+                        databaseRef.child("students").child(studentId).updateChildren(updates)
                             .addOnSuccessListener {
                                 Toast.makeText(
                                     this,
                                     getString(R.string.updated_successfully),
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                startActivity(Intent(this, MainActivity::class.java))
+                                startActivity(
+                                    Intent(this, MainActivity::class.java)
+                                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                )
                                 finish()
                             }
                             .addOnFailureListener {

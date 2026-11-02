@@ -26,6 +26,8 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.irdev.talibpay.R
+import com.irdev.talibpay.util.authErrorMessage
+import com.irdev.talibpay.util.canAccessApp
 
 @Suppress("DEPRECATION")
 class LoginActivity : AppCompatActivity() {
@@ -95,7 +97,7 @@ class LoginActivity : AppCompatActivity() {
     private fun signInWithEmail() {
         val edtEmail = findViewById<EditText>(R.id.edt_email)
         val edtPassword = findViewById<EditText>(R.id.edt_password)
-        val email = edtEmail.text.toString()
+        val email = edtEmail.text.toString().trim()
         val password = edtPassword.text.toString()
 
         if (check(edtEmail) && check(edtPassword)) {
@@ -120,6 +122,8 @@ class LoginActivity : AppCompatActivity() {
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
                         } else {
+                            // لا نترك جلسة لحساب غير مؤكَّد، وإلا سيدخل تلقائيًا عند فتح التطبيق
+                            firebaseAuth.signOut()
                             Toast.makeText(
                                 this,
                                 getString(R.string.check_verification_email),
@@ -127,7 +131,7 @@ class LoginActivity : AppCompatActivity() {
                             ).show()
                         }
                     } else {
-                        Toast.makeText(this, it.exception!!.message.toString(), Toast.LENGTH_LONG)
+                        Toast.makeText(this, authErrorMessage(it.exception), Toast.LENGTH_LONG)
                             .show()
                     }
                 }
@@ -190,7 +194,7 @@ class LoginActivity : AppCompatActivity() {
                     } else {
                         Toast.makeText(
                             this,
-                            "${getString(R.string.firebase_authentication_failed)} ${it.exception}",
+                            authErrorMessage(it.exception),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -218,9 +222,12 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (firebaseAuth.currentUser != null) {
+        val user = firebaseAuth.currentUser ?: return
+        if (user.canAccessApp()) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
+        } else {
+            firebaseAuth.signOut()
         }
     }
 }

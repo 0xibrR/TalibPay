@@ -36,6 +36,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.R
+import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlin.properties.Delegates
 
@@ -290,7 +291,7 @@ class SettingsActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(
                     this,
-                    getString(R.string.failed_to_delete_data) + ": ${task.exception?.message}",
+                    getString(R.string.failed_to_delete_data),
                     Toast.LENGTH_SHORT
                 ).show()
                 onComplete(false)
@@ -336,7 +337,7 @@ class SettingsActivity : AppCompatActivity() {
                                                     } else {
                                                         Toast.makeText(
                                                             this,
-                                                            "${getString(R.string.error_deleting_google_user)} ${deleteTask.exception?.message}",
+                                                            getString(R.string.error_deleting_google_user),
                                                             Toast.LENGTH_SHORT
                                                         ).show()
                                                     }
@@ -360,7 +361,7 @@ class SettingsActivity : AppCompatActivity() {
                             } else {
                                 Toast.makeText(
                                     this,
-                                    "${getString(R.string.error_authenticating_google_user)} ${reauthTask.exception?.message}",
+                                    getString(R.string.error_authenticating_google_user),
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -422,7 +423,7 @@ class SettingsActivity : AppCompatActivity() {
                                                             } else {
                                                                 Toast.makeText(
                                                                     this,
-                                                                    "${getString(R.string.error_deleting_email_password_user)} ${deleteTask.exception?.message}",
+                                                                    getString(R.string.error_deleting_email_password_user),
                                                                     Toast.LENGTH_LONG
                                                                 ).show()
                                                             }
@@ -445,7 +446,7 @@ class SettingsActivity : AppCompatActivity() {
                                 } else {
                                     Toast.makeText(
                                         this,
-                                        "${getString(R.string.error_authenticating_email_password_user)} ${reauthTask.exception?.message}",
+                                        getString(R.string.error_authenticating_email_password_user),
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }
@@ -531,9 +532,9 @@ class SettingsActivity : AppCompatActivity() {
         /* 4) منطق الحفظ */
         btnSave.setOnClickListener {
 
-            val oldPass = edtOld.text.toString().trim()
-            val newPass = edtNew.text.toString().trim()
-            val confirm = edtConfirm.text.toString().trim()
+            val oldPass = edtOld.text.toString()
+            val newPass = edtNew.text.toString()
+            val confirm = edtConfirm.text.toString()
 
             // تحققات سريعة
             if (newPass.isEmpty() || confirm.isEmpty() || (hasPassword && oldPass.isEmpty())) {
@@ -541,7 +542,7 @@ class SettingsActivity : AppCompatActivity() {
                     .show()
                 return@setOnClickListener
             }
-            if (newPass.length < 6) {
+            if (newPass.length < MIN_PASSWORD_LENGTH) {
                 edtNew.error = getString(R.string.password_too_short); return@setOnClickListener
             }
             if (newPass != confirm) {

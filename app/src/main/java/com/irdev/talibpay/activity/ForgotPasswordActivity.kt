@@ -21,7 +21,9 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.irdev.talibpay.R
+import com.irdev.talibpay.util.authErrorMessage
 
 class ForgotPasswordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,12 +80,13 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
                     builder.dismiss()
 
-                    if (task.isSuccessful) {
+                    // نفس الرسالة سواء كان البريد مسجّلًا أم لا، حتى لا تُكشف الحسابات الموجودة
+                    if (task.isSuccessful || task.exception is FirebaseAuthInvalidUserException) {
                         Toast.makeText(this, getString(R.string.email_sent), Toast.LENGTH_LONG)
                             .show()
                         finish()
                     } else {
-                        Toast.makeText(this, task.exception!!.message.toString(), Toast.LENGTH_LONG)
+                        Toast.makeText(this, authErrorMessage(task.exception), Toast.LENGTH_LONG)
                             .show()
                     }
                 }

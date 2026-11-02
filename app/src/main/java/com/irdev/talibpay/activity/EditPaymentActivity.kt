@@ -14,9 +14,10 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
+import com.irdev.talibpay.data.recalculateStudentTotals
+import com.irdev.talibpay.data.studentRef
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -99,6 +100,15 @@ class EditPaymentActivity : AppCompatActivity() {
             val paidVal = paidCash + paidBank
             val remainingVal = totalVal - paidVal
 
+            if (paidVal > totalVal) {
+                Toast.makeText(
+                    this,
+                    getString(R.string.The_amount_paid_may_not_be_greater_than_the_full_fee),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
             val studentId = intent.getStringExtra("studentId") ?: ""
             val paymentId = intent.getStringExtra("id") ?: ""
             val note = edtNotesPayment.text?.toString().orEmpty()
@@ -137,26 +147,29 @@ class EditPaymentActivity : AppCompatActivity() {
                 note = note
             )
 
-            // التحديث في Firebase
-            FirebaseDatabase.getInstance().getReference("TalibPay")
-                .child(user.uid)
-                .child("students")
-                .child(studentId)
-                .child("payments")
-                .child(paymentId)
+            // التحديث في Firebase ثم إعادة حساب مجاميع الطالب من دفعاته
+            val dbRef = studentRef(user.uid, studentId)
+            btnEditPayment.isEnabled = false
+            dbRef.child("payments").child(paymentId)
                 .setValue(updatedPayment)
                 .addOnSuccessListener {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.updated_successfully),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    finish() // رجوع لصفحة التفاصيل
+                    recalculateStudentTotals(dbRef, getCurrentTime()) { ok ->
+                        Toast.makeText(
+                            this,
+                            getString(
+                                if (ok) R.string.updated_successfully
+                                else R.string.failed_to_update_student
+                            ),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        if (ok) finish() else btnEditPayment.isEnabled = true // رجوع لصفحة التفاصيل
+                    }
                 }
-                .addOnFailureListener { e ->
+                .addOnFailureListener {
+                    btnEditPayment.isEnabled = true
                     Toast.makeText(
                         this,
-                        "${getString(R.string.updated_failed)} ${e.message}",
+                        getString(R.string.updated_failed),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -173,7 +186,7 @@ class EditPaymentActivity : AppCompatActivity() {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_YEAR)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
 
         val datePickerDialog =
             DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->

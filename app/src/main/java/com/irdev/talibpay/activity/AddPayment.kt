@@ -14,10 +14,10 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
-import com.irdev.talibpay.model.Student
+import com.irdev.talibpay.data.recalculateStudentTotals
+import com.irdev.talibpay.data.studentRef
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -96,13 +96,8 @@ class AddPayment : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
-                val userId = currentUser.uid
                 val studentId = intent.getStringExtra("id") ?: return@setOnClickListener
-                val dbRef = FirebaseDatabase.getInstance()
-                    .getReference("TalibPay")
-                    .child(userId)
-                    .child("students")
-                    .child(studentId)
+                val dbRef = studentRef(currentUser.uid, studentId)
 
                 val paymentId = dbRef.child("payments").push().key ?: return@setOnClickListener
 
@@ -118,65 +113,33 @@ class AddPayment : AppCompatActivity() {
                     note = "دفعة جديدة بتاريخ $paymentDate \n $notes"
                 )
 
+                // منع النقر المزدوج من إضافة الدفعة مرتين
+                btnAddPayment.isEnabled = false
                 dbRef.child("payments").child(paymentId).setValue(payment)
-
                     .addOnSuccessListener {
-                        dbRef.get().addOnSuccessListener { snapshot ->
-                            val student = snapshot.getValue(Student::class.java)
-                            if (student != null) {
-
-                                //1.       100                 0          100
-                                //2.        200                 100          100
-                                val newPaidCash = student.paidCash + paidCashValue
-
-                                //1.         100                 0          100
-                                //2.        100                 100         0
-                                val newPaidBank = student.paidBank + paidBankValue
-
-                                //1.     200          100             100
-                                //2.     300          200             100
-                                val newPaid = newPaidCash + newPaidBank
-
-                                // ✅ استخدم القيمة الأكبر بين المدخل والموجود
-                                val studentTotal = maxOf(student.total, totalValue)
-
-                                // ✅ نضمن دائماً أن المتبقي لا يكون بالسالب
-                                val newRemaining = (studentTotal - newPaid).coerceAtLeast(0.0)
-
-                                val updates = mapOf<String, Any>(
-                                    "paidCash" to newPaidCash,  // 100
-                                    "paidBank" to newPaidBank,  // 100
-                                    "paid" to newPaid,
-                                    "total" to studentTotal,    // 200
-                                    "remaining" to remaining, // ✅ دائماً صفر أو أكثر
-                                    "lastModified" to getCurrentTime()
+                        recalculateStudentTotals(dbRef, getCurrentTime()) { ok ->
+                            Toast.makeText(
+                                this,
+                                getString(
+                                    if (ok) R.string.payment_added_successfully
+                                    else R.string.failed_to_update_student
+                                ),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            if (ok) {
+                                startActivity(
+                                    Intent(this, MainActivity::class.java)
+                                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                                 )
-
-                                dbRef.updateChildren(updates)
-                                    .addOnSuccessListener {
-                                        Toast.makeText(
-                                            this,
-                                            "تمت إضافة الدفعة وتحديث بيانات الطالب",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        startActivity(Intent(this, MainActivity::class.java))
-                                        finish()
-                                    }
-                                    .addOnFailureListener {
-                                        Toast.makeText(
-                                            this,
-                                            "حدث خطأ أثناء تحديث بيانات الطالب",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
+                                finish()
+                            } else {
+                                btnAddPayment.isEnabled = true
                             }
-                        }.addOnFailureListener {
-                            Toast.makeText(this, "تعذر قراءة بيانات الطالب", Toast.LENGTH_SHORT)
-                                .show()
                         }
                     }
                     .addOnFailureListener {
-                        Toast.makeText(this, "فشل في إضافة الدفعة", Toast.LENGTH_SHORT).show()
+                        btnAddPayment.isEnabled = true
+                        Toast.makeText(this, getString(R.string.failed_to_add_payment), Toast.LENGTH_SHORT).show()
                     }
             }
         }
@@ -193,7 +156,7 @@ class AddPayment : AppCompatActivity() {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_YEAR)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
 
         val datePickerDialog =
             DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->

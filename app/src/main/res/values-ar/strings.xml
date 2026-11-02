@@ -157,7 +157,7 @@
     <string name="password_changed_success">تم تغيير كلمة المرور بنجاح.</string>
     <string name="password_changed_failed">فشل تغيير كلمة المرور، حاول مرة أخرى.</string>
     <string name="wrong_old_password">كلمة المرور القديمة غير صحيحة.</string>
-    <string name="password_too_short">يجب أن تتكون كلمة المرور الجديدة من 6 أحرف على الأقل.</string>
+    <string name="password_too_short">يجب أن تتكون كلمة المرور الجديدة من 8 أحرف على الأقل.</string>
     <string name="passwords_not_match">كلمة المرور الجديدة وتأكيدها غير متطابقين.</string>
     <string name="fill_all_fields">يرجى ملء جميع الحقول.</string>
     <string name="check_your_email_to_verify">تم ربط كلمة المرور بنجاح. يُرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.</string>
@@ -171,6 +171,13 @@
     <string name="failed_to_update_student">فشل في تحديث بيانات الطالب</string>
     <string name="failed_to_read_student">تعذر قراءة بيانات الطالب</string>
     <string name="failed_to_add_payment">فشل في إضافة الدفعة</string>
+    <string name="failed_to_load_payments">حدث خطأ أثناء تحميل الدفعات</string>
+    <string name="error_invalid_credentials">البريد الإلكتروني أو كلمة المرور غير صحيحة.</string>
+    <string name="error_network">لا يوجد اتصال بالإنترنت. حاول مرة أخرى.</string>
+    <string name="error_too_many_requests">محاولات كثيرة. حاول لاحقًا.</string>
+    <string name="error_email_in_use">هذا البريد الإلكتروني مسجّل مسبقًا.</string>
+    <string name="error_weak_password">يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.</string>
+    <string name="error_generic">حدث خطأ ما. حاول مرة أخرى.</string>
     <string name="delete_title_payment">حذف الدفعة %1$s</string>
     <string name="delete_message_payment">هل أنت متأكد أنك تريد حذف %1$s؟!</string>
 

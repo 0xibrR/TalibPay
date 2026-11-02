@@ -143,7 +143,7 @@
     <string name="password_changed_success">Password changed successfully.</string>
     <string name="password_changed_failed">Failed to change password. Please try again.</string>
     <string name="wrong_old_password">The old password you entered is incorrect.</string>
-    <string name="password_too_short">The new password must be at least 6 characters.</string>
+    <string name="password_too_short">The new password must be at least 8 characters.</string>
     <string name="passwords_not_match">The new password and its confirmation do not match.</string>
     <string name="fill_all_fields">Please fill in all fields.</string>
     <string name="check_your_email_to_verify">Password linked successfully. Please verify your email address.</string>
@@ -169,9 +169,16 @@
     <string name="incorrect_password">Current password is incorrect</string>
     <string name="error_updating_password">Error updating password</string>
     <string name="payment_added_successfully">Payment added successfully</string>
-    <string name="failed_to_read_student">**\"Payment added successfully\"**</string>
+    <string name="failed_to_read_student">Failed to read student data</string>
     <string name="failed_to_update_student">Failed to update student data</string>
     <string name="failed_to_add_payment">Failed to add payment</string>
+    <string name="failed_to_load_payments">Failed to load payments</string>
+    <string name="error_invalid_credentials">Incorrect email or password.</string>
+    <string name="error_network">No internet connection. Please try again.</string>
+    <string name="error_too_many_requests">Too many attempts. Please try again later.</string>
+    <string name="error_email_in_use">This email is already registered.</string>
+    <string name="error_weak_password">Password must be at least 8 characters.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
 
     <string-array name="payment_methods">
         <item>Select payment method</item>

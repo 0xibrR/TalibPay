@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "TalibPay": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid && (auth.token.email_verified === true || auth.token.firebase.sign_in_provider === 'google.com')",
+        ".write": "auth != null && auth.uid === $uid && (auth.token.email_verified === true || auth.token.firebase.sign_in_provider === 'google.com')",
+        "students": {
+          "$studentId": {
+            ".validate": "newData.hasChildren(['id', 'name']) && newData.child('id').val() === $studentId",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
+            "birthYear": { ".validate": "newData.isString() && newData.val().length <= 4" },
+            "phoneNumber": { ".validate": "newData.isString() && newData.val().length <= 30" },
+            "notes": { ".validate": "newData.isString() && newData.val().length <= 2000" },
+            "paidCash": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "paidBank": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "paid": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "total": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "payments": {
+              "$paymentId": {
+                ".validate": "newData.hasChildren(['id', 'cash', 'bank', 'total']) && newData.child('id').val() === $paymentId",
+                "cash": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+                "bank": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+                "total": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+                "note": { ".validate": "newData.isString() && newData.val().length <= 2000" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,8 @@
 package com.irdev.talibpay.model
 
+import com.google.firebase.database.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class Student(
     val id: String = "",
     val name: String = "",

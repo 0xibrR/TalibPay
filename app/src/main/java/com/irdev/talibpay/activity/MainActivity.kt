@@ -35,12 +35,15 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
 import com.irdev.talibpay.model.Student
 import com.irdev.talibpay.adapter.StudentAdapter
+import com.irdev.talibpay.data.studentRef
+import com.irdev.talibpay.util.canAccessApp
 import com.ncorti.slidetoact.SlideToActView
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 
@@ -51,6 +54,11 @@ class MainActivity : AppCompatActivity() {
     private val allStudents = ArrayList<Student>()
     private lateinit var customAdapter: StudentAdapter
     private lateinit var recyclerView: RecyclerView
+
+    // القيمة الخام لكل طالب (مع دفعاته) لاستعادتها كاملة عند التراجع عن الحذف
+    private val rawStudents = HashMap<String, Any?>()
+    private var studentsRef: DatabaseReference? = null
+    private var studentsListener: ValueEventListener? = null
 
 
     @SuppressLint("MissingInflatedId", "UseKtx", "InflateParams")
@@ -119,26 +127,22 @@ class MainActivity : AppCompatActivity() {
                         builder.setPositiveButton(getString(R.string.ok)) { dialog, _ ->
                             val currentUser = FirebaseAuth.getInstance().currentUser
                             currentUser?.let { user ->
-                                val userId = user.uid
+                                // نحتفظ بالعقدة كاملة (مع الدفعات) حتى يستعيدها التراجع بلا فقدان
+                                val rawStudent = rawStudents[student.id]
 
                                 // حذف من Firebase
-                                FirebaseDatabase.getInstance().getReference("TalibPay")
-                                    .child(userId).child("students").child(student.id).removeValue()
+                                studentRef(user.uid, student.id).removeValue()
                                     .addOnSuccessListener {
-                                        showUndoSnackbar(student, position)
+                                        showUndoSnackbar(student, rawStudent)
                                     }
-                                    .addOnFailureListener { e ->
+                                    .addOnFailureListener {
+                                        customAdapter.notifyItemChanged(position)
                                         Snackbar.make(
                                             findViewById(android.R.id.content),
-                                            "${getString(R.string.deleted_failed)} ${e.message}",
+                                            getString(R.string.deleted_failed),
                                             Snackbar.LENGTH_LONG
                                         ).show()
                                     }
-
-                                // حذف من كافة القوائم
-                                customAdapter.removeStudent(student)
-                                allStudents.remove(student)
-                                studentList.remove(student)
                             }
                             dialog.dismiss()
                         }
@@ -155,6 +159,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     ItemTouchHelper.RIGHT -> {
+                        customAdapter.notifyItemChanged(position)
                         val intent = Intent(this@MainActivity, EditActivity::class.java).apply {
                             putExtra("id", student.id)
                             putExtra("name", student.name)
@@ -228,8 +233,6 @@ class MainActivity : AppCompatActivity() {
 
         itemTouchHelper.attachToRecyclerView(recyclerView)
 
-        loadData()
-
     }
 
     override fun onStart() {
@@ -237,8 +240,14 @@ class MainActivity : AppCompatActivity() {
         loadData()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private fun showUndoSnackbar(student: Student, removedPos: Int) {
+    override fun onStop() {
+        super.onStop()
+        // إزالة المستمع حتى لا تتراكم المستمعات مع كل عودة للشاشة
+        studentsListener?.let { studentsRef?.removeEventListener(it) }
+        studentsListener = null
+    }
+
+    private fun showUndoSnackbar(student: Student, rawStudent: Any?) {
         val snackbar = Snackbar.make(
             findViewById(android.R.id.content),
             getString(R.string.deleted_successfully_with_name, student.name),
@@ -246,12 +255,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         snackbar.setAction(getString(R.string.undo)) {
-            // 1. أعد الطالب إلى القوائم
-            allStudents.add(removedPos, student)
-            studentList.add(removedPos, student)
-            customAdapter.restoreStudent(removedPos, student)
-
-            // 2. Firebase
+            // القائمة تتحدث تلقائيًا من المستمع بعد الاستعادة
             val currentUser = FirebaseAuth.getInstance().currentUser
             if (currentUser == null) {
                 Snackbar.make(
@@ -264,9 +268,7 @@ class MainActivity : AppCompatActivity() {
                 return@setAction
             }
 
-            val userId = currentUser.uid
-            FirebaseDatabase.getInstance().getReference("TalibPay")
-                .child(userId).child("students").child(student.id).setValue(student)
+            studentRef(currentUser.uid, student.id).setValue(rawStudent ?: student)
                 .addOnSuccessListener {
                     Snackbar.make(
                         findViewById(android.R.id.content),
@@ -365,13 +367,11 @@ class MainActivity : AppCompatActivity() {
                                         getString(R.string.delete_all_note),
                                         Snackbar.LENGTH_LONG
                                     ).show()
-                                    studentList.clear()
-                                    customAdapter.notifyDataSetChanged()
                                 }
                                 .addOnFailureListener { e ->
                                     Snackbar.make(
                                         findViewById(android.R.id.content),
-                                        "${getString(R.string.deleted_failed)} ${e.message}",
+                                        getString(R.string.deleted_failed),
                                         Snackbar.LENGTH_LONG
                                     ).show()
                                 }
@@ -421,7 +421,7 @@ class MainActivity : AppCompatActivity() {
         val txtRemainingValue = findViewById<TextView>(R.id.txtRemainingValue)
 
         val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser == null) {
+        if (currentUser == null || !currentUser.canAccessApp()) {
             Toast.makeText(this, getString(R.string.user_not_found), Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
@@ -436,11 +436,13 @@ class MainActivity : AppCompatActivity() {
         emptyLayout.isVisible = false
         recyclerView.isVisible = false
 
-        databaseRef.addValueEventListener(object : ValueEventListener {
+        val listener = object : ValueEventListener {
             @SuppressLint("NotifyDataSetChanged", "SetTextI18n")
             override fun onDataChange(snapshot: DataSnapshot) {
                 allStudents.clear()
                 studentList.clear()
+                rawStudents.clear()
+                customAdapter.lastPaymentsMap.clear()
 
                 var totalCash = 0.0
                 var totalBank = 0.0
@@ -456,6 +458,12 @@ class MainActivity : AppCompatActivity() {
                         student?.let {
                             allStudents.add(it)
                             studentList.add(it)
+                            rawStudents[it.id] = stuSnap.value
+
+                            // الدفعات موجودة أصلًا داخل عقدة الطالب، فلا حاجة لاستعلام لكل طالب
+                            stuSnap.child("payments").children.lastOrNull()
+                                ?.getValue(Payment::class.java)
+                                ?.let { last -> customAdapter.lastPaymentsMap[it.id] = last }
 
                             totalCash += it.paidCash
                             totalBank += it.paidBank
@@ -475,45 +483,20 @@ class MainActivity : AppCompatActivity() {
 
                 progressBar.isVisible = false
                 customAdapter.notifyDataSetChanged()
-
-                // ✅ تحميل آخر دفعة لكل طالب
-                for (student in studentList) {
-                    val paymentRef = FirebaseDatabase.getInstance().getReference("TalibPay")
-                        .child(userId)
-                        .child("students")
-                        .child(student.id)
-                        .child("payments")
-
-                    paymentRef.orderByKey().limitToLast(1)
-                        .addListenerForSingleValueEvent(object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                                for (paymentSnap in snapshot.children) {
-                                    val lastPayment = paymentSnap.getValue(Payment::class.java)
-                                    if (lastPayment != null) {
-                                        customAdapter.lastPaymentsMap[student.id] = lastPayment
-                                        val index = studentList.indexOfFirst { it.id == student.id }
-                                        if (index != -1) {
-                                            customAdapter.notifyItemChanged(index)
-                                        }
-                                    }
-                                }
-                            }
-
-                            override fun onCancelled(error: DatabaseError) {
-                                Log.e("Firebase", "فشل تحميل الدفعة الأخيرة: ${error.message}")
-                            }
-                        })
-                }
             }
 
             override fun onCancelled(error: DatabaseError) {
                 progressBar.isVisible = false
-                Toast.makeText(this@MainActivity, "Error: ${error.message}", Toast.LENGTH_SHORT)
+                Log.e("Firebase", "Loading students failed", error.toException())
+                Toast.makeText(this@MainActivity, getString(R.string.error_generic), Toast.LENGTH_SHORT)
                     .show()
             }
-        })
+        }
 
+        databaseRef.addValueEventListener(listener)
         databaseRef.keepSynced(true)
+        studentsRef = databaseRef
+        studentsListener = listener
     }
 
 }

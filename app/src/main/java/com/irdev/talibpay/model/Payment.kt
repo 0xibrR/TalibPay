@@ -1,5 +1,8 @@
 package com.irdev.talibpay.model
 
+import com.google.firebase.database.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class Payment(
     val id: String = "",
     val cash: Double = 0.0, // كم دفع الطالب نقدي

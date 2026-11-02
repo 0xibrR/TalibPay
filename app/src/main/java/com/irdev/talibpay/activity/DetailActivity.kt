@@ -27,14 +27,20 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.adapter.PaymentAdapter
 import com.irdev.talibpay.R
+import com.irdev.talibpay.data.recalculateStudentTotals
+import com.irdev.talibpay.data.studentRef
+import com.irdev.talibpay.model.Student
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Suppress("DEPRECATION")
 class DetailActivity : AppCompatActivity() {
@@ -43,7 +49,14 @@ class DetailActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var customAdapter: PaymentAdapter
 
-    @SuppressLint("DefaultLocale", "SetTextI18n", "InflateParams", "UseKtx", "MissingInflatedId")
+    private lateinit var studentId: String
+    private var student = Student()
+    private var lastPayment: Payment? = null
+
+    private var dbRef: DatabaseReference? = null
+    private var studentListener: ValueEventListener? = null
+
+    @SuppressLint("UseKtx", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -56,68 +69,18 @@ class DetailActivity : AppCompatActivity() {
 
         title = getString(R.string.details_student)
 
-        // استقبال البيانات من الـ Intent
-        val id = intent.getStringExtra("id") ?: ""
-        val name = intent.getStringExtra("name") ?: ""
-        val birthYear = intent.getStringExtra("birthYear") ?: ""
-        val paidCash = intent.getDoubleExtra("paidCash", 0.0)
-        val paidBank = intent.getDoubleExtra("paidBank", 0.0)
-        val paid = intent.getDoubleExtra("paid", 0.0)
-        val total = intent.getDoubleExtra("total", 0.0)
-        val remaining = intent.getDoubleExtra("remaining", 0.0)
-        val paymentMethod = intent.getStringExtra("paymentMethod") ?: ""
-        val paymentDate = intent.getStringExtra("paymentDate") ?: ""
-        val phoneNumber = intent.getStringExtra("phoneNumber") ?: ""
-        val notes = intent.getStringExtra("notes") ?: ""
-        val lastModified = intent.getStringExtra("lastModified") ?: ""
-        val addedIn = intent.getStringExtra("addedIn") ?: ""
+        studentId = intent.getStringExtra("id").orEmpty()
+        if (studentId.isEmpty()) {
+            finish()
+            return
+        }
 
-        // ربط عناصر الواجهة
-        val tvStudentName = findViewById<TextView>(R.id.tvName)
-        val rowBirthYear = findViewById<View>(R.id.rowBirthYear)
-        val rowPhone = findViewById<View>(R.id.rowPhone)
-        val rowPaymentDate = findViewById<View>(R.id.rowPaymentDate)
-        val rowPaidCash = findViewById<View>(R.id.rowPaidCash)
-        val rowPaidBank = findViewById<View>(R.id.rowPaidBank)
-        val rowPaid = findViewById<View>(R.id.rowPaid)
-        val rowTotalAmount = findViewById<View>(R.id.rowTotalAmount)
-        val rowRemaining = findViewById<View>(R.id.rowRemaining)
-        val rowPaymentMethod = findViewById<View>(R.id.rowPaymentMethod)
-        val rowAdded = findViewById<View>(R.id.rowAdded)
-        val rowLastModified = findViewById<View>(R.id.rowLastModified)
-        val tvNotes = findViewById<TextView>(R.id.tvNotes)
         val fabAddPayment = findViewById<FloatingActionButton>(R.id.fabAddPayment)
         recyclerView = findViewById(R.id.recyclerViewPayment)
 
-        // عرض البيانات
-        tvStudentName.text = name
-        rowBirthYear.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.year_of_birth) + ": " + birthYear
-        rowPhone.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.phone_number) + ": " + phoneNumber
-        rowPaymentDate.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.payment_date) + ": " + paymentDate
-        rowPaidCash.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.paid_cash_label) + " " + String.format("%.2f", paidCash)
-        rowPaidBank.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.paid_bank_label) + " " + String.format("%.2f", paidBank)
-        rowPaid.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.paid_total) + " " + String.format("%.2f", paid)
-        rowTotalAmount.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.total_amount_label) + " " + String.format("%.2f", total)
-        rowRemaining.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.remaining_total) + " " + String.format("%.2f", remaining)
-        rowPaymentMethod.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.payment_method) + ": " + paymentMethod
-        rowAdded.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.added) + ": " + addedIn
-        rowLastModified.findViewById<TextView>(R.id.tvValue).text =
-            getString(R.string.last_modified) + ": " + lastModified
-        tvNotes.text = getString(R.string.notes) + ": " + notes
-
         fabAddPayment.setOnClickListener {
             val intent = Intent(this, AddPayment::class.java)
-            intent.putExtra("id", id)
+            intent.putExtra("id", studentId)
             startActivity(intent)
             finish()
         }
@@ -136,70 +99,28 @@ class DetailActivity : AppCompatActivity() {
                 target: RecyclerView.ViewHolder
             ) = false
 
-            @SuppressLint("UseKtx", "NotifyDataSetChanged")
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
+                val payment = paymentList.getOrNull(position) ?: return
 
                 when (direction) {
-                    ItemTouchHelper.LEFT -> {
-                        val position = viewHolder.adapterPosition
-                        AlertDialog.Builder(this@DetailActivity)
-                            .setTitle(getString(R.string.delete_title_payment, ""))
-                            .setMessage(getString(R.string.delete_message_payment, ""))
-                            .setPositiveButton(getString(R.string.ok)) { dialog, _ ->
-                                val currentUser = FirebaseAuth.getInstance().currentUser
-                                currentUser?.let { user ->
-                                    val userId = user.uid
-                                    val studentId = intent.getStringExtra("id").orEmpty()
-                                    val paymentId = paymentList.getOrNull(position)?.id
-
-                                    if (studentId.isNotEmpty() && !paymentId.isNullOrEmpty()) {
-                                        FirebaseDatabase.getInstance().getReference("TalibPay")
-                                            .child(userId).child("students").child(studentId)
-                                            .child("payments").child(paymentId)
-                                            .removeValue()
-                                            .addOnSuccessListener {
-
-                                            }
-                                            .addOnFailureListener { e ->
-                                                Snackbar.make(
-                                                    findViewById(android.R.id.content),
-                                                    "${getString(R.string.deleted_failed)} ${e.message}",
-                                                    Snackbar.LENGTH_LONG
-                                                ).show()
-                                                customAdapter.notifyItemChanged(position)
-                                            }
-                                    } else {
-                                        customAdapter.notifyItemChanged(position)
-                                    }
-                                } ?: run {
-                                    paymentList.removeAt(position)
-                                    customAdapter.notifyItemRemoved(position)
-                                }
-                                dialog.dismiss()
-                            }
-                            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-                                customAdapter.notifyItemChanged(position)
-                                dialog.dismiss()
-                            }
-                            .setCancelable(false)
-                            .show()
-                    }
+                    ItemTouchHelper.LEFT -> confirmDeletePayment(payment, position)
 
                     ItemTouchHelper.RIGHT -> {
+                        // إعادة الصف لمكانه، ثم فتح شاشة التعديل
+                        customAdapter.notifyItemChanged(position)
                         val intent =
                             Intent(this@DetailActivity, EditPaymentActivity::class.java).apply {
-                                putExtra("studentId", id)
-                                putExtra("id", paymentList[position].id)
-                                putExtra("cash", paymentList[position].cash)
-                                putExtra("bank", paymentList[position].bank)
-                                putExtra("total", paymentList[position].total)
-                                putExtra("paymentMethod", paymentList[position].paymentMethod)
-                                putExtra("paymentDate", paymentList[position].paymentDate)
-                                putExtra("note", paymentList[position].note)
+                                putExtra("studentId", studentId)
+                                putExtra("id", payment.id)
+                                putExtra("cash", payment.cash)
+                                putExtra("bank", payment.bank)
+                                putExtra("total", payment.total)
+                                putExtra("paymentMethod", payment.paymentMethod)
+                                putExtra("paymentDate", payment.paymentDate)
+                                putExtra("note", payment.note)
                             }
                         startActivity(intent)
-
                     }
                 }
             }
@@ -261,6 +182,71 @@ class DetailActivity : AppCompatActivity() {
 
     }
 
+    private fun confirmDeletePayment(payment: Payment, position: Int) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.delete_title_payment, ""))
+            .setMessage(getString(R.string.delete_message_payment, ""))
+            .setPositiveButton(getString(R.string.ok)) { dialog, _ ->
+                val ref = dbRef
+                if (ref == null || payment.id.isEmpty()) {
+                    customAdapter.notifyItemChanged(position)
+                } else {
+                    ref.child("payments").child(payment.id).removeValue()
+                        .addOnSuccessListener {
+                            // تحديث مجاميع الطالب بعد حذف الدفعة
+                            recalculateStudentTotals(ref, getCurrentTime()) { ok ->
+                                if (!ok) showSnackbar(getString(R.string.failed_to_update_student))
+                            }
+                        }
+                        .addOnFailureListener {
+                            showSnackbar(getString(R.string.deleted_failed))
+                            customAdapter.notifyItemChanged(position)
+                        }
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                customAdapter.notifyItemChanged(position)
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    @SuppressLint("DefaultLocale", "SetTextI18n")
+    private fun bindStudent() {
+        val paymentMethod = lastPayment?.paymentMethod.orEmpty()
+        val paymentDate = lastPayment?.paymentDate.orEmpty()
+
+        fun row(id: Int) = findViewById<View>(id).findViewById<TextView>(R.id.tvValue)
+
+        findViewById<TextView>(R.id.tvName).text = student.name
+        row(R.id.rowBirthYear).text =
+            getString(R.string.year_of_birth) + ": " + student.birthYear
+        row(R.id.rowPhone).text =
+            getString(R.string.phone_number) + ": " + student.phoneNumber
+        row(R.id.rowPaymentDate).text =
+            getString(R.string.payment_date) + ": " + paymentDate
+        row(R.id.rowPaidCash).text =
+            getString(R.string.paid_cash_label) + " " + String.format("%.2f", student.paidCash)
+        row(R.id.rowPaidBank).text =
+            getString(R.string.paid_bank_label) + " " + String.format("%.2f", student.paidBank)
+        row(R.id.rowPaid).text =
+            getString(R.string.paid_total) + " " + String.format("%.2f", student.paid)
+        row(R.id.rowTotalAmount).text =
+            getString(R.string.total_amount_label) + " " + String.format("%.2f", student.total)
+        row(R.id.rowRemaining).text =
+            getString(R.string.remaining_total) + " " + String.format("%.2f", student.remaining)
+        row(R.id.rowPaymentMethod).text =
+            getString(R.string.payment_method) + ": " + paymentMethod
+        row(R.id.rowAdded).text =
+            getString(R.string.added) + ": " + student.addedIn
+        row(R.id.rowLastModified).text =
+            getString(R.string.last_modified) + ": " + student.lastModified
+        findViewById<TextView>(R.id.tvNotes).text =
+            getString(R.string.notes) + ": " + student.notes
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.detail_menu, menu)
         return super.onCreateOptionsMenu(menu)
@@ -271,20 +257,11 @@ class DetailActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.menu_edit -> {
                 val intent = Intent(this, EditActivity::class.java).apply {
-                    putExtra("id", intent.getStringExtra("id"))
-                    putExtra("name", intent.getStringExtra("name"))
-                    putExtra("birthYear", intent.getStringExtra("birthYear"))
-                    putExtra("paidCash", intent.getDoubleExtra("paidCash", 0.0))
-                    putExtra("paidBank", intent.getDoubleExtra("paidBank", 0.0))
-                    putExtra("paid", intent.getDoubleExtra("paid", 0.0))
-                    putExtra("total", intent.getDoubleExtra("total", 0.0))
-                    putExtra("remaining", intent.getDoubleExtra("remaining", 0.0))
-                    putExtra("paymentMethod", intent.getStringExtra("paymentMethod"))
-                    putExtra("paymentDate", intent.getStringExtra("paymentDate"))
-                    putExtra("phoneNumber", intent.getStringExtra("phoneNumber"))
-                    putExtra("notes", intent.getStringExtra("notes"))
-                    putExtra("addedIn", intent.getStringExtra("addedIn"))
-
+                    putExtra("id", studentId)
+                    putExtra("name", student.name)
+                    putExtra("birthYear", student.birthYear)
+                    putExtra("phoneNumber", student.phoneNumber)
+                    putExtra("notes", student.notes)
                 }
                 startActivity(intent)
                 return true
@@ -293,42 +270,23 @@ class DetailActivity : AppCompatActivity() {
             R.id.menu_delete -> {
 
                 val builderAlertDialog = AlertDialog.Builder(this)
-                    .setTitle(
-                        getString(
-                            R.string.delete_title_with_name,
-                            intent.getStringExtra("name")
-                        )
-                    )
-                    .setMessage(
-                        getString(
-                            R.string.delete_message_with_name,
-                            intent.getStringExtra("name")
-                        )
-                    )
+                    .setTitle(getString(R.string.delete_title_with_name, student.name))
+                    .setMessage(getString(R.string.delete_message_with_name, student.name))
 
                 builderAlertDialog.setPositiveButton(getString(R.string.ok)) { dialog: DialogInterface, _: Int ->
 
-                    val currentUser = FirebaseAuth.getInstance().currentUser
-                    currentUser?.let {
-                        val userId = it.uid
-
-                        // حذف الطالب من Firebase
-                        FirebaseDatabase.getInstance().getReference("TalibPay")
-                            .child(userId).child("students")
-                            .child(intent.getStringExtra("id").toString()).removeValue()
-
-                            .addOnSuccessListener {
-                                startActivity(Intent(this, MainActivity::class.java))
-                                finish()
-                            }
-                            .addOnFailureListener { e ->
-                                Snackbar.make(
-                                    findViewById(android.R.id.content),
-                                    "${getString(R.string.deleted_failed)} ${e.message}",
-                                    Snackbar.LENGTH_LONG
-                                ).show()
-                            }
-                    }
+                    // حذف الطالب من Firebase
+                    dbRef?.removeValue()
+                        ?.addOnSuccessListener {
+                            startActivity(
+                                Intent(this, MainActivity::class.java)
+                                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            )
+                            finish()
+                        }
+                        ?.addOnFailureListener {
+                            showSnackbar(getString(R.string.deleted_failed))
+                        }
 
                     dialog.dismiss()
                 }
@@ -341,45 +299,31 @@ class DetailActivity : AppCompatActivity() {
                 dialog.setCanceledOnTouchOutside(false)
                 dialog.setCancelable(false)
                 dialog.show()
-                true
+                return true
             }
 
             R.id.menu_share -> {
-                val name = intent.getStringExtra("name") ?: ""
-                val birthYear = intent.getStringExtra("birthYear") ?: ""
-                val paidCash = intent.getDoubleExtra("paidCash", 0.0)
-                val paidBank = intent.getDoubleExtra("paidBank", 0.0)
-                val paid = intent.getDoubleExtra("paid", 0.0)
-                val total = intent.getDoubleExtra("total", 0.0)
-                val remaining = intent.getDoubleExtra("remaining", 0.0)
-                val paymentMethod = intent.getStringExtra("paymentMethod") ?: ""
-                val paymentDate = intent.getStringExtra("paymentDate") ?: ""
-                val phoneNumber = intent.getStringExtra("phoneNumber") ?: ""
-                val notes = intent.getStringExtra("notes") ?: ""
-                val lastModified = intent.getStringExtra("lastModified") ?: ""
-                val addedIn = intent.getStringExtra("addedIn") ?: ""
-
                 val shareText = """
-    ${getString(R.string.share_name, name)}
-    ${getString(R.string.share_birth_year, birthYear)}
-    ${getString(R.string.share_phone, phoneNumber)}
-    ${getString(R.string.share_payment_date, paymentDate)}
+    ${getString(R.string.share_name, student.name)}
+    ${getString(R.string.share_birth_year, student.birthYear)}
+    ${getString(R.string.share_phone, student.phoneNumber)}
+    ${getString(R.string.share_payment_date, lastPayment?.paymentDate.orEmpty())}
 
-    ${getString(R.string.share_paid_cash, paidCash)}
-    ${getString(R.string.share_paid_bank, paidBank)}
-    ${getString(R.string.share_paid_total, paid)}
-    ${getString(R.string.share_total_amount, total)}
-    ${getString(R.string.share_remaining, remaining)}
-    ${getString(R.string.share_payment_method, paymentMethod)}
+    ${getString(R.string.share_paid_cash, student.paidCash)}
+    ${getString(R.string.share_paid_bank, student.paidBank)}
+    ${getString(R.string.share_paid_total, student.paid)}
+    ${getString(R.string.share_total_amount, student.total)}
+    ${getString(R.string.share_remaining, student.remaining)}
+    ${getString(R.string.share_payment_method, lastPayment?.paymentMethod.orEmpty())}
 
-    ${getString(R.string.share_notes, notes)}
-    ${getString(R.string.share_added_at, addedIn)}
-    ${getString(R.string.share_last_modified, lastModified)}
+    ${getString(R.string.share_notes, student.notes)}
+    ${getString(R.string.share_added_at, student.addedIn)}
+    ${getString(R.string.share_last_modified, student.lastModified)}
 """.trimIndent()
 
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_subject, name))
+                    putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_subject, student.name))
                     putExtra(Intent.EXTRA_TEXT, shareText)
                 }
 
@@ -404,10 +348,9 @@ class DetailActivity : AppCompatActivity() {
 
                 // حفظ الصورة مؤقتًا في cache
                 val file = File(cacheDir, "student_card.png")
-                val outputStream = FileOutputStream(file)
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                outputStream.flush()
-                outputStream.close()
+                FileOutputStream(file).use { outputStream ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                }
 
                 // مشاركة الصورة
                 val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
@@ -422,10 +365,8 @@ class DetailActivity : AppCompatActivity() {
                         getString(R.string.share_chooser_title)
                     )
                 )
-
+                return true
             }
-
-            else -> false
         }
         return super.onOptionsItemSelected(item)
     }
@@ -433,45 +374,63 @@ class DetailActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        val studentId = intent.getStringExtra("id") ?: return
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
-        val userId = currentUser.uid
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
 
-        val dbRef = FirebaseDatabase.getInstance()
-            .getReference("TalibPay")
-            .child(userId)
-            .child("students")
-            .child(studentId)
-            .child("payments")
-
-        dbRef.addValueEventListener(object : ValueEventListener {
+        // نستمع لعقدة الطالب كاملة: بياناته ودفعاته معًا، فيبقى العرض محدَّثًا بعد أي تعديل
+        val ref = studentRef(currentUser.uid, studentId)
+        val listener = object : ValueEventListener {
             @SuppressLint("NotifyDataSetChanged")
             override fun onDataChange(snapshot: DataSnapshot) {
-                paymentList.clear()
-                for (paymentSnap in snapshot.children) {
-                    val payment = paymentSnap.getValue(Payment::class.java)
-                    payment?.let { paymentList.add(it) }
+                if (!snapshot.exists()) {
+                    // الطالب حُذف (من هذا الجهاز أو غيره)
+                    finish()
+                    return
                 }
+                student = snapshot.getValue(Student::class.java) ?: Student()
 
-                // ترتيب الدفعات من الأحدث إلى الأقدم حسب التاريخ (اختياري)
-//                paymentList.sortByDescending { it.paymentDate }
+                paymentList.clear()
+                for (paymentSnap in snapshot.child("payments").children) {
+                    paymentSnap.getValue(Payment::class.java)?.let { paymentList.add(it) }
+                }
+                // المفاتيح مرتبة زمنيًا؛ آخر دفعة هي الأحدث
+                lastPayment = paymentList.lastOrNull()
                 paymentList.reverse()
 
-
+                bindStudent()
                 customAdapter.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(
                     this@DetailActivity,
-                    "حدث خطأ أثناء تحميل الدفعات",
+                    getString(R.string.failed_to_load_payments),
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        })
+        }
+        ref.addValueEventListener(listener)
+        dbRef = ref
+        studentListener = listener
+    }
 
-        dbRef.keepSynced(true)
+    override fun onStop() {
+        super.onStop()
+        studentListener?.let { dbRef?.removeEventListener(it) }
+        studentListener = null
+    }
 
+    private fun showSnackbar(message: String) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun getCurrentTime(): String {
+        val sdf = SimpleDateFormat("E, MMM dd, yyyy hh:mm:ss a", Locale.getDefault())
+        return sdf.format(Date())
     }
 
 }
