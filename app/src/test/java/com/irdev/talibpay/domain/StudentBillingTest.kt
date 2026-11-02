@@ -51,6 +51,61 @@ class StudentBillingTest {
     }
 
     @Test
+    fun `answering yes bills previous months since registration`() {
+        val existing = Student(registrationDate = "05/09/2026", monthlyFee = 0.0)
+        val start = billingStartFor(existing, 100.0, "05/09/2026", d("20/11/2026"), backdate = true)
+        assertEquals("05/09/2026", start)
+
+        // كأن lastBilledPeriod صُفّر عند الاحتساب: تُنشأ أيلول وتشرين الأول وتشرين الثاني
+        val enabled = existing.copy(monthlyFee = 100.0, billingStart = start, lastBilledPeriod = "")
+        assertEquals(
+            listOf("05/09/2026", "05/10/2026", "05/11/2026"),
+            enabled.periodsDue(d("20/11/2026")).map { it.dueDate.format() }
+        )
+    }
+
+    @Test
+    fun `answering no starts from the next billing cycle`() {
+        val existing = Student(registrationDate = "05/09/2026", monthlyFee = 0.0)
+        val start = billingStartFor(existing, 100.0, "05/09/2026", d("20/11/2026"), backdate = false)
+        val enabled = existing.copy(monthlyFee = 100.0, billingStart = start)
+        assertTrue(enabled.periodsDue(d("20/11/2026")).isEmpty())
+        assertEquals("05/12/2026", enabled.nextMonthlyDue(d("20/11/2026"))!!.format())
+    }
+
+    @Test
+    fun `backdate flag is ignored when the fee already existed`() {
+        val existing = Student(registrationDate = "05/09/2026", monthlyFee = 100.0, billingStart = "20/11/2026")
+        assertEquals("20/11/2026", billingStartFor(existing, 150.0, "05/09/2026", d("01/12/2026"), backdate = true))
+    }
+
+    @Test
+    fun `question is asked only when entering a fee for the first time with past months`() {
+        val noFee = Student(registrationDate = "05/09/2026", monthlyFee = 0.0)
+        val withFee = Student(registrationDate = "05/09/2026", monthlyFee = 100.0, billingStart = "05/09/2026")
+        val today = d("20/11/2026")
+
+        assertTrue(shouldAskToBackdate(noFee, 100.0, "05/09/2026", today))
+        // تعديل مبلغ موجود: لا سؤال
+        assertFalse(shouldAskToBackdate(withFee, 150.0, "05/09/2026", today))
+        // إضافة طالب جديد: لا سؤال
+        assertFalse(shouldAskToBackdate(null, 100.0, "05/09/2026", today))
+        // ترك الرسوم فارغة: لا سؤال
+        assertFalse(shouldAskToBackdate(noFee, 0.0, "05/09/2026", today))
+        // لا أشهر سابقة (التسجيل اليوم أو في المستقبل): لا سؤال
+        assertFalse(shouldAskToBackdate(noFee, 100.0, "20/11/2026", today))
+        assertFalse(shouldAskToBackdate(noFee, 100.0, "25/12/2026", today))
+    }
+
+    @Test
+    fun `past dues exclude today's due`() {
+        assertEquals(
+            listOf("05/09/2026", "05/10/2026"),
+            pastDuesSinceRegistration("05/09/2026", d("05/11/2026")).map { it.dueDate.format() }
+        )
+    }
+
+    @Test
     fun `student without billing start falls back to the registration date`() {
         val student = Student(registrationDate = "05/09/2026", monthlyFee = 100.0, lastBilledPeriod = "2026-10")
         assertEquals(listOf("05/11/2026"), student.periodsDue(d("06/11/2026")).map { it.dueDate.format() })

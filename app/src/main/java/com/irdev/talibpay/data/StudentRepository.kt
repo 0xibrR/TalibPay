@@ -11,6 +11,7 @@ import com.google.firebase.database.ValueEventListener
 import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.SimpleDate
 import com.irdev.talibpay.domain.billingStartFor
+import com.irdev.talibpay.domain.isEnablingMonthlyFee
 import com.irdev.talibpay.domain.periodsDue
 import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.domain.Money
@@ -45,7 +46,9 @@ data class StudentInput(
     val registrationDate: String,
     val monthlyFee: Double,
     val phoneNumber: String,
-    val notes: String
+    val notes: String,
+    /** عند إدخال الرسوم الشهرية لأول مرة: احتساب الأشهر السابقة منذ تاريخ التسجيل. */
+    val backdateMonthlyFees: Boolean = false
 )
 
 data class ChargeInput(
@@ -141,19 +144,25 @@ class StudentRepository(
     suspend fun updateStudent(studentId: String, input: StudentInput) {
         val ref = studentRef(studentId)
         val current = ref.get().await().getValue(Student::class.java)
-        val billingStart = billingStartFor(current, input.monthlyFee, input.registrationDate, today())
-        ref.updateChildren(
-            mapOf(
-                "name" to input.name,
-                "birthYear" to input.birthYear,
-                "registrationDate" to input.registrationDate,
-                "monthlyFee" to input.monthlyFee,
-                "billingStart" to billingStart,
-                "phoneNumber" to input.phoneNumber,
-                "notes" to input.notes,
-                "updatedAt" to clock()
-            )
-        ).await()
+        val enabling = isEnablingMonthlyFee(current, input.monthlyFee)
+        val backdate = enabling && input.backdateMonthlyFees
+        val billingStart = billingStartFor(
+            current, input.monthlyFee, input.registrationDate, today(), backdate
+        )
+        val updates = mutableMapOf<String, Any>(
+            "name" to input.name,
+            "birthYear" to input.birthYear,
+            "registrationDate" to input.registrationDate,
+            "monthlyFee" to input.monthlyFee,
+            "billingStart" to billingStart,
+            "phoneNumber" to input.phoneNumber,
+            "notes" to input.notes,
+            "updatedAt" to clock()
+        )
+        // احتساب الرسوم السابقة: نعيد الفوترة من تاريخ التسجيل. الأشهر الموجودة لا تتكرر
+        // لأن لكل شهر معرّفًا ثابتًا ويُتخطى إن وُجد (انظر generateDueCharges).
+        if (backdate) updates["lastBilledPeriod"] = ""
+        ref.updateChildren(updates).await()
         if (input.monthlyFee > 0) syncLedger(ref)
     }
 

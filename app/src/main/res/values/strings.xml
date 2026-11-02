@@ -126,6 +126,12 @@
     <string name="monthly_fee_value">%1$s · next due %2$s</string>
     <string name="monthly_fee_not_set">Not set (no automatic dues)</string>
     <string name="registration_date_required_for_fee">Set a registration date to enable the monthly fee</string>
+    <string name="backdate_title">Bill previous months?</string>
+    <string name="backdate_message">The student registered on %1$s. Do you want to bill the previous fees since the registration date (%2$s, %3$s in total)?
+
+Choose \"No\" if you already added these months manually, to avoid billing them twice.</string>
+    <string name="backdate_yes">Yes, bill them</string>
+    <string name="backdate_no">No, start from the next cycle</string>
     <string name="share_phone">📞 Phone Number: %1$s</string>
     <string name="share_payment_date">🗓️ Payment Date: %1$s</string>
     <string name="share_paid_cash">💰 Paid in Cash: %1$.2f NIS</string>
@@ -239,6 +245,10 @@
     <plurals name="students_count">
         <item quantity="one">%d student</item>
         <item quantity="other">%d students</item>
+    </plurals>
+    <plurals name="months_count">
+        <item quantity="one">%d month</item>
+        <item quantity="other">%d months</item>
     </plurals>
     <plurals name="payments_count">
         <item quantity="one">%d payment</item>

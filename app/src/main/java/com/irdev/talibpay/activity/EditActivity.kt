@@ -10,9 +10,13 @@ import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentInput
 import com.irdev.talibpay.databinding.ActivityEditBinding
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.pastDuesSinceRegistration
+import com.irdev.talibpay.domain.shouldAskToBackdate
+import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.optionalAmount
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showDatePicker
@@ -91,6 +95,33 @@ class EditActivity : AppCompatActivity() {
         }
         val phone = binding.edtPhoneNumberEdit.requireText() ?: return
         val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
+
+        // إدخال الرسوم الشهرية لأول مرة: نسأل عن احتساب الأشهر السابقة منذ التسجيل
+        val today = todaySimpleDate()
+        if (shouldAskToBackdate(viewModel.existing.value, monthlyFee, registrationDate, today)) {
+            val months = pastDuesSinceRegistration(registrationDate, today).size
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.backdate_title)
+                .setMessage(
+                    getString(
+                        R.string.backdate_message,
+                        registrationDate,
+                        resources.getQuantityString(R.plurals.months_count, months, months),
+                        money(Money.sum(List(months) { monthlyFee }))
+                    )
+                )
+                .setPositiveButton(R.string.backdate_yes) { _, _ ->
+                    viewModel.save(
+                        StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes, backdateMonthlyFees = true)
+                    )
+                }
+                .setNegativeButton(R.string.backdate_no) { _, _ ->
+                    viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes))
+                }
+                .setNeutralButton(R.string.cancel, null)
+                .show()
+            return
+        }
 
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.confirm_edit_title)

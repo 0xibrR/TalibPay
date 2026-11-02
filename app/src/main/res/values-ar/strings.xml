@@ -135,6 +135,12 @@
     <string name="monthly_fee_value">%1$s · الاستحقاق القادم %2$s</string>
     <string name="monthly_fee_not_set">غير محددة (لا مستحقات تلقائية)</string>
     <string name="registration_date_required_for_fee">حدّد تاريخ التسجيل لتفعيل الرسوم الشهرية</string>
+    <string name="backdate_title">احتساب الرسوم السابقة؟</string>
+    <string name="backdate_message">سُجّل الطالب بتاريخ %1$s. هل تريد احتساب الرسوم السابقة منذ تاريخ التسجيل (%2$s، بإجمالي %3$s)؟
+
+اختر \"لا\" إن كنت أضفت هذه الأشهر يدويًا من قبل، حتى لا تُحتسب مرتين.</string>
+    <string name="backdate_yes">نعم، احتسبها</string>
+    <string name="backdate_no">لا، من الدورة القادمة</string>
     <string name="share_phone">📞 رقم الهاتف: %1$s</string>
     <string name="share_payment_date">🗓️ تاريخ الدفع: %1$s</string>
     <string name="share_paid_cash">💰 مدفوع كاش: %1$.2f شيكل</string>
@@ -239,6 +245,14 @@
         <item quantity="few">%d طلاب</item>
         <item quantity="many">%d طالبًا</item>
         <item quantity="other">%d طالب</item>
+    </plurals>
+    <plurals name="months_count">
+        <item quantity="zero">لا أشهر</item>
+        <item quantity="one">شهر واحد</item>
+        <item quantity="two">شهران</item>
+        <item quantity="few">%d أشهر</item>
+        <item quantity="many">%d شهرًا</item>
+        <item quantity="other">%d شهر</item>
     </plurals>
     <plurals name="payments_count">
         <item quantity="zero">لا توجد دفعات</item>

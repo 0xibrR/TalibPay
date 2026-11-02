@@ -39,10 +39,39 @@ fun Student.nextMonthlyDue(today: SimpleDate): SimpleDate? {
  * - تفعيل الرسوم لطالب موجود: من اليوم، حتى لا تُكرَّر أشهر سُجّلت رسومها يدويًا سابقًا.
  * - تعديل طالب مفعّلة رسومه: يبقى كما هو، فتغيير القيمة أو تاريخ التسجيل يسري على القادم فقط.
  */
-fun billingStartFor(existing: Student?, newMonthlyFee: Double, registrationDate: String, today: SimpleDate): String =
+fun billingStartFor(
+    existing: Student?,
+    newMonthlyFee: Double,
+    registrationDate: String,
+    today: SimpleDate,
+    backdate: Boolean = false
+): String =
     when {
         newMonthlyFee <= 0 -> existing?.billingStart.orEmpty()
         existing == null -> registrationDate
-        existing.monthlyFee <= 0 || existing.billingStart.isBlank() -> today.format()
+        isEnablingMonthlyFee(existing, newMonthlyFee) -> if (backdate) registrationDate else today.format()
         else -> existing.billingStart
     }
+
+/** تُفعَّل الرسوم الشهرية لطالب موجود (لم تكن له رسوم شهرية من قبل). */
+fun isEnablingMonthlyFee(existing: Student?, newMonthlyFee: Double): Boolean =
+    existing != null && newMonthlyFee > 0 &&
+            (existing.monthlyFee <= 0 || existing.billingStart.isBlank())
+
+/**
+ * يُسأل المستخدم عن احتساب الرسوم السابقة فقط عند إدخال الرسوم الشهرية لأول مرة لطالب موجود،
+ * وفقط إن وُجدت أشهر سابقة يمكن احتسابها (تاريخ التسجيل في الماضي).
+ * تعديل مبلغ موجود لا يُظهر السؤال.
+ */
+fun shouldAskToBackdate(existing: Student?, newMonthlyFee: Double, registrationDate: String, today: SimpleDate): Boolean =
+    existing != null && existing.monthlyFee <= 0 && newMonthlyFee > 0 &&
+            pastDuesSinceRegistration(registrationDate, today).isNotEmpty()
+
+/**
+ * الأشهر السابقة (قبل اليوم) من تاريخ التسجيل، لعرض عددها في السؤال.
+ * استحقاق اليوم نفسه لا يُعد سابقًا: يُنشأ في الحالتين.
+ */
+fun pastDuesSinceRegistration(registrationDate: String, today: SimpleDate): List<BillingPeriod> {
+    val registration = SimpleDate.parse(registrationDate) ?: return emptyList()
+    return MonthlyBilling.periodsDue(registration, registration, null, today).filter { it.dueDate < today }
+}
