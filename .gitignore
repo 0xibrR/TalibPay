@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# إعدادات Android Studio المحلية وسجلات Kotlin
+/.idea/
+/.kotlin/
