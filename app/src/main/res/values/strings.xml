@@ -135,7 +135,7 @@
     <string name="profile">Profile</string>
     <string name="user_email_com">user@email.com</string>
     <string name="user_name">user name</string>
-    <string name="change_password">Change Password</string>
+    <string name="change_password">Change password</string>
     <string name="old_password">Current Password</string>
     <string name="new_password">New Password</string>
     <string name="confirm_new_password">Confirm New Password</string>
@@ -218,6 +218,10 @@
     <string name="paid_of_total">Paid %1$s of %2$s</string>
     <string name="labeled_amount">%1$s %2$s</string>
     <string name="settings_appearance">Appearance</string>
+    <string name="app_theme">App theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
     <string name="settings_account">Account</string>
     <string name="settings_danger_zone">Danger zone</string>
     <string name="none_value" translatable="false">—</string>

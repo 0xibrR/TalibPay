@@ -129,6 +129,18 @@
         <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.None</item>
     </style>
 
+    <!-- زر داخل مجموعة اختيار مقسّمة (Segmented): المحدد يأخذ لون secondaryContainer -->
+    <style name="Widget.TalibPay.SegmentedButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">26dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+    </style>
+
     <!-- عنوان قسم صغير -->
     <style name="TextAppearance.TalibPay.SectionTitle" parent="TextAppearance.Material3.TitleSmall">
         <item name="android:textColor">?attr/colorPrimary</item>

@@ -217,6 +217,10 @@
     <string name="paid_of_total">دُفع %1$s من %2$s</string>
     <string name="labeled_amount">%1$s %2$s</string>
     <string name="settings_appearance">المظهر</string>
+    <string name="app_theme">مظهر التطبيق</string>
+    <string name="theme_system">النظام</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_light">نهاري</string>
     <string name="settings_account">الحساب</string>
     <string name="settings_danger_zone">منطقة الخطر</string>
 

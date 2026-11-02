@@ -2,7 +2,6 @@ package com.irdev.talibpay.activity
 
 import android.app.Dialog
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -19,7 +18,6 @@ import com.irdev.talibpay.data.Reauthentication
 import com.irdev.talibpay.data.clearGoogleCredentialState
 import com.irdev.talibpay.data.requestGoogleIdToken
 import com.irdev.talibpay.databinding.ActivitySettingsBinding
-import com.irdev.talibpay.databinding.AlertDialogThemeSelectBinding
 import com.irdev.talibpay.databinding.DialogChangePasswordBinding
 import com.irdev.talibpay.databinding.DilaogEmailPasswordBinding
 import com.irdev.talibpay.util.LoadingDialog
@@ -57,7 +55,7 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.btnDeleteAccount.setOnClickListener { confirmDeleteAccount() }
         binding.btnLogout.setOnClickListener { confirmSignOut() }
-        binding.btnToggleTheme.setOnClickListener { showThemeDialog() }
+        setupThemeToggle()
         binding.btnChangePassword.setOnClickListener { showChangePasswordDialog() }
 
         val versionName = packageManager.getPackageInfo(packageName, 0).versionName
@@ -116,30 +114,25 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun showThemeDialog() {
-        val dialogBinding = AlertDialogThemeSelectBinding.inflate(layoutInflater)
-        val dialog = cardDialog(dialogBinding.root)
-
-        dialogBinding.deafultRadioButton.setText(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) R.string.system_default
-            else R.string.follow_battery_saver
+    /** اختيار المظهر مباشرة من مجموعة الأزرار: النظام / داكن / نهاري. */
+    private fun setupThemeToggle() {
+        // نحدد الاختيار الحالي قبل ربط المستمع حتى لا يُعاد تطبيق المظهر بلا داعٍ
+        binding.themeToggle.check(
+            when (ThemePrefs.get(this)) {
+                ThemePrefs.LIGHT -> R.id.btnThemeLight
+                ThemePrefs.DARK -> R.id.btnThemeDark
+                else -> R.id.btnThemeSystem
+            }
         )
-        when (ThemePrefs.get(this)) {
-            ThemePrefs.LIGHT -> dialogBinding.lightRadioButton.isChecked = true
-            ThemePrefs.DARK -> dialogBinding.darkRadioButton.isChecked = true
-            else -> dialogBinding.deafultRadioButton.isChecked = true
+        binding.themeToggle.addOnButtonCheckedListener { _, id, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val mode = when (id) {
+                R.id.btnThemeLight -> ThemePrefs.LIGHT
+                R.id.btnThemeDark -> ThemePrefs.DARK
+                else -> ThemePrefs.SYSTEM
+            }
+            if (mode != ThemePrefs.get(this)) ThemePrefs.set(this, mode)
         }
-        dialogBinding.themeButtonGroup.setOnCheckedChangeListener { _, id ->
-            ThemePrefs.set(
-                this, when (id) {
-                    R.id.lightRadioButton -> ThemePrefs.LIGHT
-                    R.id.darkRadioButton -> ThemePrefs.DARK
-                    else -> ThemePrefs.SYSTEM
-                }
-            )
-            dialog.dismiss()
-        }
-        dialog.show()
     }
 
     // ---------------- حذف الحساب ----------------
