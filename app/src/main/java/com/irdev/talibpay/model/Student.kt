@@ -7,6 +7,7 @@ data class Student(
     val id: String = "",
     val name: String = "",
     val birthYear: String = "",
+    val registrationDate: String = "", // تاريخ التسجيل dd/MM/yyyy
     val paidCash: Double = 0.0, // مجموع ما دفعه الطالب نقدًا
     val paidBank: Double = 0.0, // مجموع ما دفعه الطالب بنكيًا
     val paid: Double = 0.0, // مجموع ما دفعه الطالب

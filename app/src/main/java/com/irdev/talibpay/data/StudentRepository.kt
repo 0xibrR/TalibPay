@@ -38,6 +38,7 @@ data class StudentWithPayments(val student: Student, val ledger: StudentLedger) 
 data class StudentInput(
     val name: String,
     val birthYear: String,
+    val registrationDate: String,
     val phoneNumber: String,
     val notes: String
 )
@@ -119,6 +120,7 @@ class StudentRepository(
             id = id,
             name = input.name,
             birthYear = input.birthYear,
+            registrationDate = input.registrationDate,
             phoneNumber = input.phoneNumber,
             notes = input.notes,
             addedAt = now,
@@ -133,6 +135,7 @@ class StudentRepository(
             mapOf(
                 "name" to input.name,
                 "birthYear" to input.birthYear,
+                "registrationDate" to input.registrationDate,
                 "phoneNumber" to input.phoneNumber,
                 "notes" to input.notes,
                 "updatedAt" to clock()

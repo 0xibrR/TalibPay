@@ -118,6 +118,8 @@
     <string name="added">Added on</string>
     <string name="share_name">👤 Name: %1$s</string>
     <string name="share_birth_year">🎂 Year of Birth: %1$s</string>
+    <string name="share_registration_date">📅 Registration date: %1$s</string>
+    <string name="registration_date">Registration date</string>
     <string name="share_phone">📞 Phone Number: %1$s</string>
     <string name="share_payment_date">🗓️ Payment Date: %1$s</string>
     <string name="share_paid_cash">💰 Paid in Cash: %1$.2f NIS</string>

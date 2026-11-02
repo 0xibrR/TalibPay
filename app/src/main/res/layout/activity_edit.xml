@@ -64,6 +64,21 @@
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- تاريخ تسجيل الطالب (منتقي تاريخ) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.TalibPay.TextField"
+                    android:hint="@string/registration_date"
+                    app:startIconDrawable="@drawable/ic_calendar">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtRegistrationDateEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:cursorVisible="false"
+                        android:focusable="false"
+                        android:inputType="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.TalibPay.TextField"
                     android:hint="@string/phone_number"

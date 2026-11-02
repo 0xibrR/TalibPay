@@ -13,7 +13,9 @@ import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.showYearPicker
+import com.irdev.talibpay.util.todayDate
 import com.irdev.talibpay.viewmodel.StudentFormViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 
@@ -34,13 +36,19 @@ class AddActivity : AppCompatActivity() {
         binding.edtBirthYear.setOnClickListener {
             showYearPicker { binding.edtBirthYear.setText(it.toString()) }
         }
+        // تاريخ التسجيل: اليوم افتراضيًا، ويمكن تغييره من منتقي التاريخ
+        if (savedInstanceState == null) binding.edtRegistrationDate.setText(todayDate())
+        binding.edtRegistrationDate.setOnClickListener {
+            showDatePicker { binding.edtRegistrationDate.setText(it) }
+        }
 
         binding.btnAddStudent.setOnClickListener {
             val name = binding.edtStudentName.requireText() ?: return@setOnClickListener
             val birthYear = binding.edtBirthYear.requireText() ?: return@setOnClickListener
+            val registrationDate = binding.edtRegistrationDate.requireText() ?: return@setOnClickListener
             val phone = binding.edtPhoneNumber.requireText() ?: return@setOnClickListener
             val notes = binding.edtNotes.text?.toString()?.trim().orEmpty()
-            viewModel.save(StudentInput(name, birthYear, phone, notes))
+            viewModel.save(StudentInput(name, birthYear, registrationDate, phone, notes))
         }
 
         collectWhileStarted(viewModel.loading) { binding.btnAddStudent.isEnabled = !it }
@@ -64,6 +72,7 @@ class AddActivity : AppCompatActivity() {
     private fun clearForm() {
         binding.edtStudentName.text?.clear()
         binding.edtBirthYear.text?.clear()
+        binding.edtRegistrationDate.setText(todayDate())
         binding.edtPhoneNumber.text?.clear()
         binding.edtNotes.text?.clear()
         binding.edtStudentName.requestFocus()

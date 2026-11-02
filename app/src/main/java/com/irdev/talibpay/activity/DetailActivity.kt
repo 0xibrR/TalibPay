@@ -137,6 +137,7 @@ class DetailActivity : AppCompatActivity() {
             // معلومات الطالب
             rowPhone.bind(R.drawable.ic_phone, R.string.phone_number, student.phoneNumber)
             rowBirthYear.bind(R.drawable.ic_cake, R.string.year_of_birth, student.birthYear)
+            rowRegistrationDate.bind(R.drawable.ic_calendar, R.string.registration_date, student.registrationDate)
             rowAdded.bind(
                 R.drawable.ic_schedule, R.string.added,
                 formatTimestamp(student.addedAt, student.addedIn)
@@ -289,6 +290,7 @@ class DetailActivity : AppCompatActivity() {
         val shareText = (listOf(
             getString(R.string.share_name, s.name),
             getString(R.string.share_birth_year, s.birthYear),
+            getString(R.string.share_registration_date, s.registrationDate.ifBlank { getString(R.string.none_value) }),
             getString(R.string.share_phone, s.phoneNumber),
             "",
             getString(R.string.share_paid_cash, s.paidCash),

@@ -127,6 +127,8 @@
     <string name="added">أضيف في</string>
     <string name="share_name">👤 الاسم: %1$s</string>
     <string name="share_birth_year">🎂 سنة الميلاد: %1$s</string>
+    <string name="share_registration_date">📅 تاريخ التسجيل: %1$s</string>
+    <string name="registration_date">تاريخ التسجيل</string>
     <string name="share_phone">📞 رقم الهاتف: %1$s</string>
     <string name="share_payment_date">🗓️ تاريخ الدفع: %1$s</string>
     <string name="share_paid_cash">💰 مدفوع كاش: %1$.2f شيكل</string>

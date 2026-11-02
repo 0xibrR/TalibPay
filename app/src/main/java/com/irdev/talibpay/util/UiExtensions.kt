@@ -161,6 +161,11 @@ fun Context.showYearPicker(onPicked: (Int) -> Unit) {
         .show()
 }
 
+/** تاريخ اليوم بصيغة dd/MM/yyyy (نفس صيغة منتقي التاريخ). */
+fun todayDate(): String = String.format(
+    Locale.US, "%1\$td/%1\$tm/%1\$tY", Calendar.getInstance()
+)
+
 /** يعرض منتقي التاريخ ويعيد التاريخ بصيغة dd/MM/yyyy. */
 fun Context.showDatePicker(onPicked: (String) -> Unit) {
     val calendar = Calendar.getInstance()

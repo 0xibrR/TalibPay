@@ -13,7 +13,9 @@ import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.showYearPicker
+import com.irdev.talibpay.util.todayDate
 import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.StudentFormViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
@@ -38,6 +40,9 @@ class EditActivity : AppCompatActivity() {
         binding.edtBirthYearEdit.setOnClickListener {
             showYearPicker { binding.edtBirthYearEdit.setText(it.toString()) }
         }
+        binding.edtRegistrationDateEdit.setOnClickListener {
+            showDatePicker { binding.edtRegistrationDateEdit.setText(it) }
+        }
         binding.btnEditStudent.setOnClickListener { confirmSave() }
 
         collectWhileStarted(viewModel.existing) { student ->
@@ -45,6 +50,7 @@ class EditActivity : AppCompatActivity() {
             prefilled = true
             binding.edtStudentNameEdit.setText(student.name)
             binding.edtBirthYearEdit.setText(student.birthYear)
+            binding.edtRegistrationDateEdit.setText(student.registrationDate)
             binding.edtPhoneNumberEdit.setText(student.phoneNumber)
             binding.edtNotesEdit.setText(student.notes)
         }
@@ -66,6 +72,8 @@ class EditActivity : AppCompatActivity() {
     private fun confirmSave() {
         val name = binding.edtStudentNameEdit.requireText() ?: return
         val birthYear = binding.edtBirthYearEdit.requireText() ?: return
+        // اختياري هنا: الطلاب المضافون قبل هذه الميزة لا تاريخ تسجيل لهم
+        val registrationDate = binding.edtRegistrationDateEdit.text?.toString()?.trim().orEmpty()
         val phone = binding.edtPhoneNumberEdit.requireText() ?: return
         val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
 
@@ -73,7 +81,7 @@ class EditActivity : AppCompatActivity() {
             .setTitle(R.string.confirm_edit_title)
             .setMessage(R.string.confirm_edit_message)
             .setPositiveButton(R.string.ok) { _, _ ->
-                viewModel.save(StudentInput(name, birthYear, phone, notes))
+                viewModel.save(StudentInput(name, birthYear, registrationDate, phone, notes))
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

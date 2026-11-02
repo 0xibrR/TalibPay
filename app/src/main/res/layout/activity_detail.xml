@@ -279,6 +279,10 @@
                         layout="@layout/item_row_info" />
 
                     <include
+                        android:id="@+id/rowRegistrationDate"
+                        layout="@layout/item_row_info" />
+
+                    <include
                         android:id="@+id/rowAdded"
                         layout="@layout/item_row_info" />
 
