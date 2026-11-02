@@ -70,7 +70,7 @@ class EditPaymentActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.loading) { binding.btnEditPayment.isEnabled = !it }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> toast(event.res)
+                is UiEvent.Message -> toast(event)
                 UiEvent.Finished -> finish()
                 UiEvent.NotSignedIn -> {
                     startActivity(Intent(this, LoginActivity::class.java))

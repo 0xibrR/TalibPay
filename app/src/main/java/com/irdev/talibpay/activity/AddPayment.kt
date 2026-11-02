@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.irdev.talibpay.databinding.ActivityAddPaymentBinding
+import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.requireText
@@ -16,6 +17,7 @@ import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.PaymentFormViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
+import java.util.Locale
 
 class AddPayment : AppCompatActivity() {
 
@@ -49,10 +51,16 @@ class AddPayment : AppCompatActivity() {
             )
         }
 
+        // الرسوم الحالية للطالب تُعبّأ تلقائيًا (يمكن تعديلها عند تغيّر الرسوم أو وجود خصم)
+        collectWhileStarted(viewModel.currentFees) { fees ->
+            if (fees != null && binding.edtTotal.text.isNullOrEmpty()) {
+                binding.edtTotal.setText(Money.format(fees, Locale.US).replace(",", ""))
+            }
+        }
         collectWhileStarted(viewModel.loading) { binding.btnAddPayment.isEnabled = !it }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> toast(event.res)
+                is UiEvent.Message -> toast(event)
                 UiEvent.Finished -> finish()
                 UiEvent.NotSignedIn -> {
                     startActivity(Intent(this, LoginActivity::class.java))

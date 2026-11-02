@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.viewmodel.UiEvent
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -79,6 +80,12 @@ fun <T> LifecycleOwner.collectWhileStarted(flow: Flow<T>, action: suspend (T) ->
 
 fun Context.toast(@StringRes message: Int, long: Boolean = false) {
     Toast.makeText(this, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+}
+
+/** يعرض رسالة الـ ViewModel مع قيمتها إن وُجدت (مثل أقصى مبلغ مسموح). */
+fun Context.toast(message: UiEvent.Message) {
+    val text = if (message.arg != null) getString(message.res, message.arg) else getString(message.res)
+    Toast.makeText(this, text, Toast.LENGTH_LONG).show()
 }
 
 /** يعيد النص بعد قصّ المسافات، أو null مع إظهار خطأ إذا كان فارغًا. */

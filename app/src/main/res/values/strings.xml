@@ -186,6 +186,9 @@
     <string name="method_unpaid">Not Paid</string>
     <string name="no_payments">No payments</string>
     <string name="invalid_amount">Enter a valid amount</string>
+    <string name="fees_required">Enter the full fees (more than 0)</string>
+    <string name="method_mismatch">Payment method doesn\'t match the amounts: Cash needs a cash amount only, Bank a bank amount only, Part cash and part bank needs both, and Not paid needs none.</string>
+    <string name="paid_exceeds_fees">Total paid would exceed the fees. The most you can pay in this payment is %1$s ₪.</string>
     <string name="cash_amount">Cash %1$s</string>
     <string name="bank_amount">Bank %1$s</string>
 
@@ -203,6 +206,7 @@
     <string name="label_cash">Cash</string>
     <string name="label_bank">Bank</string>
     <string name="label_remaining">Remaining</string>
+    <string name="label_remaining_after">Remaining after</string>
     <string name="label_fees">Fees</string>
     <string name="label_paid">Paid</string>
     <string name="collection_rate">%1$d%% of fees collected</string>

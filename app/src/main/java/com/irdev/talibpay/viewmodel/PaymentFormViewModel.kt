@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.PaymentInput
 import com.irdev.talibpay.data.StudentRepository
+import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.PaymentMethod
 import com.irdev.talibpay.domain.PaymentValidation
 import com.irdev.talibpay.domain.validatePayment
@@ -27,16 +28,23 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
     /** الدفعة الحالية لتعبئة النموذج عند التعديل. */
     val existing: StateFlow<Payment?> = _existing.asStateFlow()
 
+    private val _currentFees = MutableStateFlow<Double?>(null)
+
+    /** رسوم الطالب الحالية لتعبئة حقل الرسوم عند إضافة دفعة جديدة. */
+    val currentFees: StateFlow<Double?> = _currentFees.asStateFlow()
+
     init {
-        val id = paymentId
-        if (id != null) {
-            viewModelScope.launch {
-                try {
-                    _existing.value = repository.getStudent(studentId)
-                        ?.payments?.firstOrNull { it.id == id }
-                } catch (e: Exception) {
-                    handleError(e)
+        viewModelScope.launch {
+            try {
+                val data = repository.getStudent(studentId) ?: return@launch
+                val id = paymentId
+                if (id != null) {
+                    _existing.value = data.payments.firstOrNull { it.id == id }
+                } else if (data.student.total > 0) {
+                    _currentFees.value = data.student.total
                 }
+            } catch (e: Exception) {
+                handleError(e)
             }
         }
     }
@@ -57,27 +65,32 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
             send(UiEvent.Message(R.string.please_choose_payment_method))
             return
         }
-        val amounts = when (val result = validatePayment(cashText, bankText, totalText)) {
-            is PaymentValidation.Valid -> result
-            PaymentValidation.InvalidAmount -> {
-                send(UiEvent.Message(R.string.invalid_amount))
-                return
+        runAction {
+            // التحقق تراكمي: نحتاج ما دفعه الطالب في دفعاته الأخرى
+            val payments = repository.getStudent(studentId)?.payments.orEmpty()
+            val paidByOthers = Money.sum(
+                payments.filter { it.id != paymentId }.map { Money.sum(listOf(it.cash, it.bank)) }
+            )
+            val amounts = when (
+                val result = validatePayment(cashText, bankText, totalText, method, paidByOthers)
+            ) {
+                is PaymentValidation.Valid -> result
+                PaymentValidation.InvalidAmount -> return@runAction send(UiEvent.Message(R.string.invalid_amount))
+                PaymentValidation.MissingFees -> return@runAction send(UiEvent.Message(R.string.fees_required))
+                PaymentValidation.MethodMismatch -> return@runAction send(UiEvent.Message(R.string.method_mismatch))
+                is PaymentValidation.PaidExceedsTotal -> return@runAction send(
+                    UiEvent.Message(R.string.paid_exceeds_fees, Money.format(result.maxAllowed))
+                )
             }
 
-            PaymentValidation.PaidExceedsTotal -> {
-                send(UiEvent.Message(R.string.The_amount_paid_may_not_be_greater_than_the_full_fee))
-                return
-            }
-        }
-        val input = PaymentInput(
-            cash = amounts.cash,
-            bank = amounts.bank,
-            total = amounts.total,
-            method = method,
-            paymentDate = paymentDate,
-            note = note
-        )
-        runAction {
+            val input = PaymentInput(
+                cash = amounts.cash,
+                bank = amounts.bank,
+                total = amounts.total,
+                method = method,
+                paymentDate = paymentDate,
+                note = note
+            )
             val id = paymentId
             if (id == null) {
                 repository.addPayment(studentId, input)

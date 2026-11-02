@@ -44,7 +44,7 @@ class PaymentAdapter : ListAdapter<Payment, PaymentAdapter.PaymentViewHolder>(Di
             tvCash.text = labeled(R.string.label_cash, payment.cash)
             tvBank.text = labeled(R.string.label_bank, payment.bank)
             tvTotalAmount.text = labeled(R.string.label_fees, payment.total)
-            tvRemainingTotal.text = labeled(R.string.label_remaining, payment.remaining)
+            tvRemainingTotal.text = labeled(R.string.label_remaining_after, payment.remaining)
 
             tvNote.text = payment.note
             tvNote.isVisible = payment.note.isNotBlank()

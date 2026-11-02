@@ -8,6 +8,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
+import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.PaymentMethod
 import com.irdev.talibpay.domain.StudentTotals
 import com.irdev.talibpay.model.Payment
@@ -168,8 +169,16 @@ class StudentRepository(
     private suspend fun recalculateTotals(studentRef: DatabaseReference) {
         val now = clock()
         studentRef.awaitTransaction { data ->
-            val payments = data.child(PAYMENTS).children.mapNotNull {
-                it.getValue(Payment::class.java)
+            val paymentsNode = data.child(PAYMENTS)
+            // مرتبة بالمفتاح، أي زمنيًا من الأقدم للأحدث
+            val payments = StudentTotals.withRunningBalance(
+                paymentsNode.children.mapNotNull { it.getValue(Payment::class.java) }
+            )
+            // تعديل أو حذف دفعة قديمة يغيّر رصيد كل الدفعات التي بعدها
+            for (payment in payments) {
+                val node = paymentsNode.child(payment.id)
+                node.child("paid").value = payment.paid
+                node.child("remaining").value = payment.remaining
             }
             val totals = StudentTotals.from(payments)
             data.child("paidCash").value = totals.paidCash
@@ -181,15 +190,16 @@ class StudentRepository(
         }
     }
 
+    // paid و remaining هنا مبدئيان؛ الرصيد التراكمي الصحيح يُكتب في recalculateTotals
     private fun PaymentInput.toPayment(id: String): Payment {
-        val totals = StudentTotals.from(listOf(Payment(cash = cash, bank = bank, total = total)))
+        val paid = Money.sum(listOf(cash, bank))
         return Payment(
             id = id,
             cash = cash,
             bank = bank,
-            paid = totals.paid,
+            paid = paid,
             total = total,
-            remaining = totals.remaining,
+            remaining = Money.subtract(total, paid).coerceAtLeast(0.0),
             paymentMethod = method.code,
             paymentDate = paymentDate,
             note = note
@@ -198,8 +208,20 @@ class StudentRepository(
 
     private fun DataSnapshot.toStudentWithPayments(): StudentWithPayments? {
         if (!exists()) return null
-        val student = getValue(Student::class.java) ?: return null
-        val payments = child(PAYMENTS).children.mapNotNull { it.getValue(Payment::class.java) }
+        val stored = getValue(Student::class.java) ?: return null
+        // نحسب المبالغ من الدفعات عند القراءة، فتظهر صحيحة حتى للبيانات القديمة
+        // التي حُفظت مجاميعها بالطريقة السابقة الخاطئة
+        val payments = StudentTotals.withRunningBalance(
+            child(PAYMENTS).children.mapNotNull { it.getValue(Payment::class.java) }
+        )
+        val totals = StudentTotals.from(payments)
+        val student = stored.copy(
+            paidCash = totals.paidCash,
+            paidBank = totals.paidBank,
+            paid = totals.paid,
+            total = totals.total,
+            remaining = totals.remaining
+        )
         return StudentWithPayments(student, payments)
     }
 

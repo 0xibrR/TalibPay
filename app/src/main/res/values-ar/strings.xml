@@ -187,6 +187,9 @@
     <string name="method_unpaid">غير مدفوع</string>
     <string name="no_payments">لا يوجد دفعات</string>
     <string name="invalid_amount">أدخل مبلغًا صحيحًا</string>
+    <string name="fees_required">أدخل الرسوم الكاملة (أكبر من 0)</string>
+    <string name="method_mismatch">طريقة الدفع لا تطابق المبالغ: النقدي يحتاج مبلغًا نقديًا فقط، والبنكي مبلغًا بنكيًا فقط، و\"جزء نقدي وجزء بنكي\" يحتاج الاثنين، و\"غير مدفوع\" بدون مبالغ.</string>
+    <string name="paid_exceeds_fees">مجموع المدفوع سيتجاوز الرسوم. أقصى مبلغ يمكن دفعه في هذه الدفعة هو %1$s ₪.</string>
     <string name="cash_amount">كاش %1$s</string>
     <string name="bank_amount">بنكي %1$s</string>
 
@@ -202,6 +205,7 @@
     <string name="label_cash">نقدي</string>
     <string name="label_bank">بنكي</string>
     <string name="label_remaining">المتبقي</string>
+    <string name="label_remaining_after">المتبقي بعدها</string>
     <string name="label_fees">الرسوم</string>
     <string name="label_paid">المدفوع</string>
     <string name="collection_rate">تم تحصيل %1$d٪ من الرسوم</string>
