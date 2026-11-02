@@ -15,9 +15,19 @@
             "paidBank": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "paid": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "total": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "charges": {
+              "$chargeId": {
+                ".validate": "newData.hasChildren(['id', 'amount']) && newData.child('id').val() === $chargeId",
+                "title": { ".validate": "newData.isString() && newData.val().length <= 100" },
+                "amount": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+                "dueDate": { ".validate": "newData.isString() && newData.val().length <= 10" },
+                "note": { ".validate": "newData.isString() && newData.val().length <= 500" }
+              }
+            },
             "payments": {
               "$paymentId": {
                 ".validate": "newData.hasChildren(['id', 'cash', 'bank', 'total']) && newData.child('id').val() === $paymentId",
+                "chargeId": { ".validate": "newData.isString() && newData.val().length <= 64" },
                 "cash": { ".validate": "newData.isNumber() && newData.val() >= 0" },
                 "bank": { ".validate": "newData.isNumber() && newData.val() >= 0" },
                 "total": { ".validate": "newData.isNumber() && newData.val() >= 0" },

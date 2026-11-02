@@ -186,9 +186,6 @@
     <string name="method_unpaid">Not Paid</string>
     <string name="no_payments">No payments</string>
     <string name="invalid_amount">Enter a valid amount</string>
-    <string name="fees_required">Enter the full fees (more than 0)</string>
-    <string name="method_mismatch">Payment method doesn\'t match the amounts: Cash needs a cash amount only, Bank a bank amount only, Part cash and part bank needs both, and Not paid needs none.</string>
-    <string name="paid_exceeds_fees">Total paid would exceed the fees. The most you can pay in this payment is %1$s ₪.</string>
     <string name="cash_amount">Cash %1$s</string>
     <string name="bank_amount">Bank %1$s</string>
 
@@ -206,7 +203,6 @@
     <string name="label_cash">Cash</string>
     <string name="label_bank">Bank</string>
     <string name="label_remaining">Remaining</string>
-    <string name="label_remaining_after">Remaining after</string>
     <string name="label_fees">Fees</string>
     <string name="label_paid">Paid</string>
     <string name="collection_rate">%1$d%% of fees collected</string>
@@ -215,7 +211,6 @@
     <string name="no_payments_hint">No payments yet. Tap \"Add payment\" to record one.</string>
     <string name="section_amounts">Amounts</string>
     <string name="section_details">Payment details</string>
-    <string name="full_fees_helper">The full fees required from the student</string>
     <string name="status_fully_paid">Fully paid</string>
     <string name="status_remaining">%1$s remaining</string>
     <string name="status_no_fees">No fees recorded yet</string>
@@ -237,6 +232,58 @@
     <plurals name="payments_count">
         <item quantity="one">%d payment</item>
         <item quantity="other">%d payments</item>
+    </plurals>
+
+    <!-- المستحقات -->
+    <string name="due_legacy_title">Fees</string>
+    <string name="dues_title">Dues</string>
+    <string name="add_due">Add due</string>
+    <string name="edit_due">Edit due</string>
+    <string name="delete_due">Delete due</string>
+    <string name="delete_due_message">Delete the due \"%1$s\"?</string>
+    <string name="due_options">Due options</string>
+    <string name="due_explanation">A due is an amount the student owes, like a month\'s or a term\'s fees. Payments are recorded against a due, so you always know what each payment was for.</string>
+    <string name="due_title">Due name</string>
+    <string name="due_title_helper">e.g. September fees, Term 1, Registration</string>
+    <string name="due_title_month">Fees – %1$s</string>
+    <string name="due_amount">Amount</string>
+    <string name="due_date_optional">Due date (optional)</string>
+    <string name="due_paid_so_far">Already paid: %1$s ₪. The amount can\'t be lower.</string>
+    <string name="due_title_required">Enter a name for the due</string>
+    <string name="due_amount_required">Enter an amount greater than 0</string>
+    <string name="due_below_paid">The amount can\'t be less than what\'s already paid (%1$s ₪)</string>
+    <string name="due_added">Due added</string>
+    <string name="due_deleted">Due deleted</string>
+    <string name="due_has_payments">This due has payments. Delete its payments first, or edit the due instead.</string>
+    <string name="no_dues_hint">No dues yet. Add a due (e.g. September fees), then record payments against it.</string>
+    <string name="no_open_dues_title">Nothing to pay</string>
+    <string name="no_open_dues">All dues are fully paid. Add a new due to record a payment.</string>
+    <string name="record_payment">Record payment</string>
+    <string name="pay_this_due">Pay toward this due</string>
+    <string name="due_amount_with_date">Amount %1$s · due %2$s</string>
+    <string name="due_amount_only">Amount %1$s</string>
+    <string name="due_status_paid">Paid</string>
+    <string name="due_status_partial">Partially paid</string>
+    <string name="due_status_unpaid">Unpaid</string>
+    <string name="due_summary">Paid %1$s · Left %2$s</string>
+    <string name="remaining_after_payment">Left after: %1$s</string>
+    <string name="payment_of_due">%1$s for %2$s</string>
+    <string name="delete_payment">Delete payment</string>
+    <string name="delete_payment_message">Delete the payment of %1$s on %2$s? The due\'s balance will be recalculated.</string>
+    <string name="payment_deleted">Payment deleted</string>
+    <string name="payment_for_due">For due</string>
+    <string name="choose_due">Choose the due this payment is for</string>
+    <string name="due_option">%1$s — left %2$s</string>
+    <string name="due_helper">Due amount %1$s · you can pay up to %2$s</string>
+    <string name="payment_preview">This payment: %1$s · left on the due after it: %2$s</string>
+    <string name="payment_preview_exceeds">This payment (%1$s) is more than what\'s left on the due (%2$s)</string>
+    <string name="payment_amount_required">Enter a cash or bank amount</string>
+    <string name="payment_exceeds_due">The payment is more than what\'s left on this due. The most you can pay is %1$s ₪.</string>
+    <string name="share_due_line">• %1$s: paid %2$s of %3$s (left %4$s)</string>
+
+    <plurals name="dues_count">
+        <item quantity="one">%d due</item>
+        <item quantity="other">%d dues</item>
     </plurals>
 
     <!-- الترتيب يطابق PaymentMethod.entries -->

@@ -187,9 +187,6 @@
     <string name="method_unpaid">غير مدفوع</string>
     <string name="no_payments">لا يوجد دفعات</string>
     <string name="invalid_amount">أدخل مبلغًا صحيحًا</string>
-    <string name="fees_required">أدخل الرسوم الكاملة (أكبر من 0)</string>
-    <string name="method_mismatch">طريقة الدفع لا تطابق المبالغ: النقدي يحتاج مبلغًا نقديًا فقط، والبنكي مبلغًا بنكيًا فقط، و\"جزء نقدي وجزء بنكي\" يحتاج الاثنين، و\"غير مدفوع\" بدون مبالغ.</string>
-    <string name="paid_exceeds_fees">مجموع المدفوع سيتجاوز الرسوم. أقصى مبلغ يمكن دفعه في هذه الدفعة هو %1$s ₪.</string>
     <string name="cash_amount">كاش %1$s</string>
     <string name="bank_amount">بنكي %1$s</string>
 
@@ -205,7 +202,6 @@
     <string name="label_cash">نقدي</string>
     <string name="label_bank">بنكي</string>
     <string name="label_remaining">المتبقي</string>
-    <string name="label_remaining_after">المتبقي بعدها</string>
     <string name="label_fees">الرسوم</string>
     <string name="label_paid">المدفوع</string>
     <string name="collection_rate">تم تحصيل %1$d٪ من الرسوم</string>
@@ -214,7 +210,6 @@
     <string name="no_payments_hint">لا توجد دفعات بعد. اضغط \"إضافة دفعة\" لتسجيل دفعة.</string>
     <string name="section_amounts">المبالغ</string>
     <string name="section_details">تفاصيل الدفعة</string>
-    <string name="full_fees_helper">الرسوم الكاملة المطلوبة من الطالب</string>
     <string name="status_fully_paid">مدفوع بالكامل</string>
     <string name="status_remaining">متبقٍ %1$s</string>
     <string name="status_no_fees">لم تُسجَّل رسوم بعد</string>
@@ -243,6 +238,62 @@
         <item quantity="few">%d دفعات</item>
         <item quantity="many">%d دفعة</item>
         <item quantity="other">%d دفعة</item>
+    </plurals>
+
+    <!-- المستحقات -->
+    <string name="due_legacy_title">الرسوم</string>
+    <string name="dues_title">المستحقات</string>
+    <string name="add_due">إضافة مستحق</string>
+    <string name="edit_due">تعديل المستحق</string>
+    <string name="delete_due">حذف المستحق</string>
+    <string name="delete_due_message">حذف المستحق \"%1$s\"؟</string>
+    <string name="due_options">خيارات المستحق</string>
+    <string name="due_explanation">المستحق هو مبلغ مطلوب من الطالب، مثل رسوم شهر أو فصل. تُسجَّل الدفعات مقابل المستحق، فتعرف دائمًا لأي شيء دُفع كل مبلغ.</string>
+    <string name="due_title">اسم المستحق</string>
+    <string name="due_title_helper">مثل: رسوم أيلول، الفصل الأول، رسوم التسجيل</string>
+    <string name="due_title_month">رسوم %1$s</string>
+    <string name="due_amount">القيمة</string>
+    <string name="due_date_optional">تاريخ الاستحقاق (اختياري)</string>
+    <string name="due_paid_so_far">دُفع منه حتى الآن %1$s ₪، ولا يمكن أن تقل القيمة عنه.</string>
+    <string name="due_title_required">أدخل اسمًا للمستحق</string>
+    <string name="due_amount_required">أدخل قيمة أكبر من 0</string>
+    <string name="due_below_paid">لا يمكن أن تقل القيمة عمّا دُفع منها (%1$s ₪)</string>
+    <string name="due_added">تمت إضافة المستحق</string>
+    <string name="due_deleted">تم حذف المستحق</string>
+    <string name="due_has_payments">لهذا المستحق دفعات. احذف دفعاته أولًا، أو عدّل المستحق بدل حذفه.</string>
+    <string name="no_dues_hint">لا توجد مستحقات بعد. أضف مستحقًا (مثل رسوم أيلول) ثم سجّل الدفعات مقابله.</string>
+    <string name="no_open_dues_title">لا يوجد مبلغ مستحق</string>
+    <string name="no_open_dues">كل المستحقات مدفوعة بالكامل. أضف مستحقًا جديدًا لتسجيل دفعة.</string>
+    <string name="record_payment">تسجيل دفعة</string>
+    <string name="pay_this_due">دفعة لهذا المستحق</string>
+    <string name="due_amount_with_date">القيمة %1$s · تستحق %2$s</string>
+    <string name="due_amount_only">القيمة %1$s</string>
+    <string name="due_status_paid">مدفوع</string>
+    <string name="due_status_partial">مدفوع جزئيًا</string>
+    <string name="due_status_unpaid">غير مدفوع</string>
+    <string name="due_summary">دُفع %1$s · متبقٍ %2$s</string>
+    <string name="remaining_after_payment">المتبقي بعدها: %1$s</string>
+    <string name="payment_of_due">%1$s لـ %2$s</string>
+    <string name="delete_payment">حذف الدفعة</string>
+    <string name="delete_payment_message">حذف دفعة %1$s بتاريخ %2$s؟ سيُعاد حساب رصيد المستحق.</string>
+    <string name="payment_deleted">تم حذف الدفعة</string>
+    <string name="payment_for_due">لأي مستحق</string>
+    <string name="choose_due">اختر المستحق الذي تُدفع له هذه الدفعة</string>
+    <string name="due_option">%1$s — متبقٍ %2$s</string>
+    <string name="due_helper">قيمة المستحق %1$s · يمكن دفع حتى %2$s</string>
+    <string name="payment_preview">هذه الدفعة: %1$s · المتبقي من المستحق بعدها: %2$s</string>
+    <string name="payment_preview_exceeds">هذه الدفعة (%1$s) أكبر من المتبقي على المستحق (%2$s)</string>
+    <string name="payment_amount_required">أدخل مبلغًا نقديًا أو بنكيًا</string>
+    <string name="payment_exceeds_due">الدفعة أكبر من المتبقي على هذا المستحق. أقصى مبلغ يمكن دفعه هو %1$s ₪.</string>
+    <string name="share_due_line">• %1$s: دُفع %2$s من %3$s (متبقٍ %4$s)</string>
+
+    <plurals name="dues_count">
+        <item quantity="zero">لا مستحقات</item>
+        <item quantity="one">مستحق واحد</item>
+        <item quantity="two">مستحقان</item>
+        <item quantity="few">%d مستحقات</item>
+        <item quantity="many">%d مستحقًا</item>
+        <item quantity="other">%d مستحق</item>
     </plurals>
 
     <!-- الترتيب يطابق PaymentMethod.entries -->

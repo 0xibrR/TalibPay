@@ -4,4 +4,5 @@ package com.irdev.talibpay.util
 object Extras {
     const val STUDENT_ID = "studentId"
     const val PAYMENT_ID = "paymentId"
+    const val CHARGE_ID = "chargeId"
 }

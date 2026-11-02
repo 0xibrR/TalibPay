@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- بطاقة مستحق: قيمته، ما دُفع منه وما بقي، ودفعاته -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.TalibPay.Card.Outlined"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/card_padding">
+
+        <!-- العنوان والقيمة -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/card_padding"
+            android:paddingEnd="4dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvDueTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="viewStart"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    tools:text="رسوم أيلول" />
+
+                <TextView
+                    android:id="@+id/tvDueAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.TalibPay.Caption"
+                    tools:text="القيمة 100 ₪ · تستحق 01/09/2026" />
+            </LinearLayout>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipDueStatus"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:focusable="false"
+                tools:text="مدفوع جزئيًا" />
+
+            <ImageButton
+                android:id="@+id/btnDueMenu"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/due_options"
+                android:src="@drawable/ic_more_vert"
+                app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/dueProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/card_padding"
+            android:layout_marginTop="12dp"
+            android:max="100"
+            app:trackColor="?attr/colorSurfaceContainerHighest"
+            app:trackCornerRadius="3dp"
+            app:trackThickness="6dp"
+            tools:progress="50" />
+
+        <TextView
+            android:id="@+id/tvDueSummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/card_padding"
+            android:layout_marginTop="6dp"
+            android:textAlignment="viewStart"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            tools:text="دُفع 50 ₪ · متبقٍ 50 ₪" />
+
+        <!-- دفعات هذا المستحق (تُضاف من الكود) -->
+        <LinearLayout
+            android:id="@+id/duePayments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPayDue"
+            style="@style/Widget.Material3.Button.TonalButton.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/card_padding"
+            android:layout_marginBottom="8dp"
+            android:text="@string/pay_this_due"
+            app:icon="@drawable/ic_add" />
+
+        <View
+            android:id="@+id/dueBottomSpace"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:visibility="gone" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

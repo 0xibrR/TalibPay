@@ -62,11 +62,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.AddPayment"
+            android:name=".activity.ChargeFormActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.EditPaymentActivity"
+            android:name=".activity.PaymentFormActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity

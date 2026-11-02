@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.model.Charge
 import com.irdev.talibpay.viewmodel.UiEvent
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import kotlinx.coroutines.flow.Flow
@@ -64,6 +65,10 @@ fun AppCompatActivity.setupToolbar(toolbar: MaterialToolbar, showUp: Boolean = t
 /** المبلغ مع رمز العملة بتنسيق لغة الجهاز. */
 fun Context.money(value: Double): String =
     getString(R.string.amount_currency, Money.format(value))
+
+/** اسم المستحق، أو "الرسوم" لمستحق البيانات القديمة الذي لا اسم له. */
+fun Context.dueTitle(charge: Charge): String =
+    charge.title.ifBlank { getString(R.string.due_legacy_title) }
 
 /** نسبة المدفوع من الرسوم (0..100). */
 fun paidPercent(paid: Double, total: Double): Int =

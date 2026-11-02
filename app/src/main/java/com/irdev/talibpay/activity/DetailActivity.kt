@@ -6,35 +6,37 @@ import android.graphics.Canvas
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import androidx.appcompat.app.AppCompatActivity
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.irdev.talibpay.R
-import com.irdev.talibpay.adapter.PaymentAdapter
+import com.irdev.talibpay.adapter.DueAdapter
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityDetailBinding
 import com.irdev.talibpay.databinding.ItemRowInfoBinding
-import com.irdev.talibpay.domain.PaymentMethod
+import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
-import com.irdev.talibpay.util.setupToolbar
-import com.irdev.talibpay.util.attachSwipeActions
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.dueTitle
 import com.irdev.talibpay.util.formatTimestamp
 import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.paidPercent
+import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.viewmodel.DetailViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 import java.io.File
@@ -44,7 +46,11 @@ class DetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailBinding
     private val viewModel: DetailViewModel by viewModels()
-    private val adapter = PaymentAdapter()
+    private val adapter = DueAdapter(
+        onPay = { due -> openPaymentForm(dueId = due.charge.id) },
+        onDueMenu = ::showDueMenu,
+        onPaymentClick = ::showPaymentOptions
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,24 +66,31 @@ class DetailActivity : AppCompatActivity() {
             return
         }
 
-        binding.recyclerViewPayment.layoutManager = LinearLayoutManager(this)
-        binding.recyclerViewPayment.adapter = adapter
-        binding.recyclerViewPayment.attachSwipeActions(
-            onEdit = { position -> openEditPayment(adapter.currentList[position]) },
-            onDelete = { position -> confirmDeletePayment(adapter.currentList[position]) }
-        )
+        binding.recyclerViewDues.layoutManager = LinearLayoutManager(this)
+        binding.recyclerViewDues.adapter = adapter
 
+        binding.btnAddDue.setOnClickListener { openChargeForm(null) }
         binding.fabAddPayment.setOnClickListener {
-            startActivity(
-                Intent(this, AddPayment::class.java)
-                    .putExtra(Extras.STUDENT_ID, viewModel.studentId)
-            )
+            // لا دفعة بلا مستحق مفتوح: نوجّه المستخدم لإضافة مستحق أولًا
+            val data = viewModel.student.value
+            if (data != null && data.ledger.openDues.isEmpty()) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.no_open_dues_title)
+                    .setMessage(R.string.no_open_dues)
+                    .setPositiveButton(R.string.add_due) { _, _ -> openChargeForm(null) }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+            } else {
+                openPaymentForm()
+            }
         }
 
         collectWhileStarted(viewModel.student) { it?.let(::render) }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> Snackbar.make(binding.root, event.res, Snackbar.LENGTH_LONG).show()
+                is UiEvent.Message -> Snackbar.make(binding.root, event.res, Snackbar.LENGTH_LONG)
+                    .setAnchorView(binding.fabAddPayment).show()
+
                 UiEvent.Finished -> finish()
                 UiEvent.NotSignedIn -> {
                     startActivity(Intent(this, LoginActivity::class.java))
@@ -91,14 +104,12 @@ class DetailActivity : AppCompatActivity() {
 
     private fun render(data: StudentWithPayments) {
         val student = data.student
-        val last = data.lastPayment
 
         with(binding) {
-            // البطاقة العلوية: الاسم والحالة والتقدم
+            // البطاقة العلوية: الاسم والحالة والتقدم الإجمالي
             tvName.text = student.name
             tvInitial.text = student.name.firstOrNull()?.toString() ?: "?"
-            val percent = paidPercent(student.paid, student.total)
-            studentProgress.setProgressCompat(percent, true)
+            studentProgress.setProgressCompat(paidPercent(student.paid, student.total), true)
             tvProgressLabel.text =
                 getString(R.string.paid_of_total, money(student.paid), money(student.total))
             when {
@@ -114,11 +125,18 @@ class DetailActivity : AppCompatActivity() {
             tvStatTotal.text = money(student.total)
             tvStatRemaining.text = money(student.remaining)
 
+            // المستحقات
+            val dueCount = data.dues.size
+            val paymentCount = data.payments.size
+            tvDuesCount.text = listOf(
+                resources.getQuantityString(R.plurals.dues_count, dueCount, dueCount),
+                resources.getQuantityString(R.plurals.payments_count, paymentCount, paymentCount)
+            ).joinToString(" · ")
+            tvNoDues.isVisible = data.dues.isEmpty()
+
             // معلومات الطالب
             rowPhone.bind(R.drawable.ic_phone, R.string.phone_number, student.phoneNumber)
             rowBirthYear.bind(R.drawable.ic_cake, R.string.year_of_birth, student.birthYear)
-            rowPaymentMethod.bind(R.drawable.ic_cash, R.string.payment_method, methodLabel(last))
-            rowPaymentDate.bind(R.drawable.ic_calendar, R.string.payment_date, last?.paymentDate.orEmpty())
             rowAdded.bind(
                 R.drawable.ic_schedule, R.string.added,
                 formatTimestamp(student.addedAt, student.addedIn)
@@ -128,15 +146,9 @@ class DetailActivity : AppCompatActivity() {
                 formatTimestamp(student.updatedAt, student.lastModified)
             )
             rowNotes.bind(R.drawable.ic_notes, R.string.notes, student.notes)
-
-            // الدفعات
-            tvPaymentsCount.text =
-                resources.getQuantityString(R.plurals.payments_count, data.payments.size, data.payments.size)
-            tvNoPayments.isVisible = data.payments.isEmpty()
         }
 
-        // الأحدث أولًا
-        adapter.submitList(data.payments.reversed())
+        adapter.submitList(data.dues)
     }
 
     /** @param color null = لون نص البطاقة (حالة محايدة). */
@@ -154,29 +166,76 @@ class DetailActivity : AppCompatActivity() {
         tvValue.text = value.ifBlank { getString(R.string.none_value) }
     }
 
-    private fun methodLabel(payment: Payment?): String {
-        if (payment == null) return getString(R.string.no_payments)
-        return PaymentMethod.fromStored(payment.paymentMethod)?.let { getString(it.label) }
-            ?: payment.paymentMethod
+    // ---------------- التنقل ----------------
+
+    private fun openChargeForm(chargeId: String?) {
+        startActivity(
+            Intent(this, ChargeFormActivity::class.java)
+                .putExtra(Extras.STUDENT_ID, viewModel.studentId)
+                .apply { if (chargeId != null) putExtra(Extras.CHARGE_ID, chargeId) }
+        )
     }
 
-    private fun openEditPayment(payment: Payment) {
+    private fun openPaymentForm(dueId: String? = null, paymentId: String? = null) {
         startActivity(
-            Intent(this, EditPaymentActivity::class.java)
+            Intent(this, PaymentFormActivity::class.java)
                 .putExtra(Extras.STUDENT_ID, viewModel.studentId)
-                .putExtra(Extras.PAYMENT_ID, payment.id)
+                .apply {
+                    if (dueId != null) putExtra(Extras.CHARGE_ID, dueId)
+                    if (paymentId != null) putExtra(Extras.PAYMENT_ID, paymentId)
+                }
         )
+    }
+
+    // ---------------- خيارات المستحق والدفعة ----------------
+
+    private fun showDueMenu(due: DueSummary, anchor: View) {
+        PopupMenu(this, anchor).apply {
+            menu.add(0, MENU_EDIT, 0, R.string.edit_due)
+            menu.add(0, MENU_DELETE, 1, R.string.delete_due)
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    MENU_EDIT -> openChargeForm(due.charge.id)
+                    MENU_DELETE -> confirmDeleteDue(due)
+                }
+                true
+            }
+        }.show()
+    }
+
+    private fun confirmDeleteDue(due: DueSummary) {
+        if (due.payments.isNotEmpty()) {
+            // نفس قاعدة الـ ViewModel، لكن نوضحها قبل طلب التأكيد
+            viewModel.deleteDue(due)
+            return
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.delete_due)
+            .setMessage(getString(R.string.delete_due_message, dueTitle(due.charge)))
+            .setPositiveButton(R.string.delete) { _, _ -> viewModel.deleteDue(due) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun showPaymentOptions(due: DueSummary, payment: Payment) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.payment_of_due, money(payment.paid), dueTitle(due.charge)))
+            .setItems(arrayOf(getString(R.string.edit_pyment), getString(R.string.delete_payment))) { _, which ->
+                if (which == 0) openPaymentForm(paymentId = payment.id) else confirmDeletePayment(payment)
+            }
+            .show()
     }
 
     private fun confirmDeletePayment(payment: Payment) {
         MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.delete_title_payment, ""))
-            .setMessage(getString(R.string.delete_message_payment, ""))
-            .setPositiveButton(R.string.ok) { _, _ -> viewModel.deletePayment(payment.id) }
+            .setTitle(R.string.delete_payment)
+            .setMessage(getString(R.string.delete_payment_message, money(payment.paid), payment.paymentDate))
+            .setPositiveButton(R.string.delete) { _, _ -> viewModel.deletePayment(payment.id) }
             .setNegativeButton(R.string.cancel, null)
-            .setCancelable(false)
             .show()
     }
+
+    // ---------------- القائمة العلوية ----------------
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.detail_menu, menu)
@@ -221,24 +280,30 @@ class DetailActivity : AppCompatActivity() {
 
     private fun shareAsText(data: StudentWithPayments) {
         val s = data.student
-        val last = data.lastPayment
-        val shareText = listOf(
+        val dueLines = data.dues.map { due ->
+            getString(
+                R.string.share_due_line,
+                dueTitle(due.charge), money(due.paid), money(due.charge.amount), money(due.remaining)
+            )
+        }
+        val shareText = (listOf(
             getString(R.string.share_name, s.name),
             getString(R.string.share_birth_year, s.birthYear),
             getString(R.string.share_phone, s.phoneNumber),
-            getString(R.string.share_payment_date, last?.paymentDate.orEmpty()),
             "",
             getString(R.string.share_paid_cash, s.paidCash),
             getString(R.string.share_paid_bank, s.paidBank),
             getString(R.string.share_paid_total, s.paid),
             getString(R.string.share_total_amount, s.total),
             getString(R.string.share_remaining, s.remaining),
-            getString(R.string.share_payment_method, methodLabel(last)),
+            "",
+            getString(R.string.dues_title)
+        ) + dueLines + listOf(
             "",
             getString(R.string.share_notes, s.notes),
             getString(R.string.share_added_at, formatTimestamp(s.addedAt, s.addedIn)),
             getString(R.string.share_last_modified, formatTimestamp(s.updatedAt, s.lastModified))
-        ).joinToString("\n")
+        )).joinToString("\n")
 
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -266,5 +331,10 @@ class DetailActivity : AppCompatActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(shareIntent, getString(R.string.share_chooser_title)))
+    }
+
+    private companion object {
+        const val MENU_EDIT = 1
+        const val MENU_DELETE = 2
     }
 }

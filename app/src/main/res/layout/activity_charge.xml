@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- إضافة/تعديل مستحق على الطالب -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
@@ -13,8 +14,7 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="@string/add_payment" />
+            android:layout_height="?attr/actionBarSize" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -37,93 +37,51 @@
                 app:layout_constraintWidth_max="@dimen/form_max_width">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/section_amounts"
-                    android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/due_explanation"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.TalibPay.TextField"
-                    android:hint="@string/full_fees"
-                    app:helperText="@string/full_fees_helper"
-                    app:startIconDrawable="@drawable/ic_receipt"
+                    android:hint="@string/due_title"
+                    app:helperText="@string/due_title_helper"
+                    app:startIconDrawable="@drawable/ic_receipt">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtChargeTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="textCapSentences"
+                        android:maxLength="100" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/amountLayout"
+                    style="@style/Widget.TalibPay.TextField"
+                    android:hint="@string/due_amount"
+                    app:startIconDrawable="@drawable/ic_cash"
                     app:suffixText="@string/currency_symbol">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edtTotal"
+                        android:id="@+id/edtChargeAmount"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:imeOptions="actionNext"
                         android:inputType="numberDecimal" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.TalibPay.TextField"
-                        android:layout_width="0dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:hint="@string/label_cash"
-                        app:suffixText="@string/currency_symbol">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edtPaidCash"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:imeOptions="actionNext"
-                            android:inputType="numberDecimal" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.TalibPay.TextField"
-                        android:layout_width="0dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:hint="@string/label_bank"
-                        app:suffixText="@string/currency_symbol">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edtPaidBank"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:imeOptions="actionDone"
-                            android:inputType="numberDecimal" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/section_details"
-                    android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.TalibPay.TextField.Dropdown"
-                    android:hint="@string/payment_method"
-                    app:startIconDrawable="@drawable/ic_bank">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/spinnerPaymentMethod"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none" />
-                </com.google.android.material.textfield.TextInputLayout>
-
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.TalibPay.TextField"
-                    android:hint="@string/payment_date"
+                    android:hint="@string/due_date_optional"
+                    app:endIconMode="clear_text"
                     app:startIconDrawable="@drawable/ic_calendar">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edtPaymentDate"
+                        android:id="@+id/edtChargeDueDate"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:cursorVisible="false"
@@ -134,22 +92,20 @@
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.TalibPay.TextField"
                     android:hint="@string/additional_notes_optional"
-                    app:counterEnabled="true"
-                    app:counterMaxLength="2000"
                     app:startIconDrawable="@drawable/ic_notes">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edtNotes_Payment"
+                        android:id="@+id/edtChargeNote"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="top|start"
                         android:inputType="textMultiLine|textCapSentences"
-                        android:maxLength="2000"
+                        android:maxLength="500"
                         android:minLines="2" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnAddPayment"
+                    android:id="@+id/btnSaveCharge"
                     style="@style/Widget.TalibPay.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

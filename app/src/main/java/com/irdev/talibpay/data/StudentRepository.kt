@@ -8,9 +8,11 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
+import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.Money
-import com.irdev.talibpay.domain.PaymentMethod
-import com.irdev.talibpay.domain.StudentTotals
+import com.irdev.talibpay.domain.StudentLedger
+import com.irdev.talibpay.domain.methodFor
+import com.irdev.talibpay.model.Charge
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.model.Student
 import kotlinx.coroutines.channels.awaitClose
@@ -23,8 +25,13 @@ import kotlin.coroutines.resumeWithException
 
 class NotSignedInException : IllegalStateException("User is not signed in")
 
-/** الطالب مع دفعاته مرتبة من الأقدم للأحدث (مفاتيح push زمنية). */
-data class StudentWithPayments(val student: Student, val payments: List<Payment>) {
+/**
+ * الطالب مع دفتر حسابه (المستحقات ودفعات كل منها).
+ * مبالغ [student] محسوبة من الدفتر عند القراءة، فتبقى صحيحة حتى للبيانات القديمة.
+ */
+data class StudentWithPayments(val student: Student, val ledger: StudentLedger) {
+    val dues: List<DueSummary> get() = ledger.dues
+    val payments: List<Payment> get() = ledger.payments
     val lastPayment: Payment? get() = payments.lastOrNull()
 }
 
@@ -35,18 +42,24 @@ data class StudentInput(
     val notes: String
 )
 
+data class ChargeInput(
+    val title: String,
+    val amount: Double,
+    val dueDate: String,
+    val note: String
+)
+
 data class PaymentInput(
+    val chargeId: String,
     val cash: Double,
     val bank: Double,
-    val total: Double,
-    val method: PaymentMethod,
     val paymentDate: String,
     val note: String
 )
 
 /**
- * كل الوصول لبيانات الطلاب والدفعات في Firebase يمر من هنا.
- * المسار: TalibPay/{uid}/students/{studentId}/payments/{paymentId}
+ * كل الوصول لبيانات الطلاب في Firebase يمر من هنا.
+ * المسار: TalibPay/{uid}/students/{studentId}/{charges|payments}/{id}
  */
 class StudentRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -96,6 +109,8 @@ class StudentRepository(
     suspend fun getStudent(studentId: String): StudentWithPayments? =
         studentRef(studentId).get().await().toStudentWithPayments()
 
+    // ---------------- الطلاب ----------------
+
     suspend fun addStudent(input: StudentInput) {
         val ref = studentsRef().push()
         val id = ref.key ?: error("push() returned no key")
@@ -112,7 +127,7 @@ class StudentRepository(
         ref.setValue(student).await()
     }
 
-    /** يحدّث بيانات الطالب الأساسية فقط، دون المساس بالمبالغ أو الدفعات. */
+    /** يحدّث بيانات الطالب الأساسية فقط، دون المساس بالمستحقات أو الدفعات. */
     suspend fun updateStudent(studentId: String, input: StudentInput) {
         studentRef(studentId).updateChildren(
             mapOf(
@@ -129,10 +144,14 @@ class StudentRepository(
         studentRef(studentId).removeValue().await()
     }
 
-    /** يستعيد الطالب كما كان، مع كل دفعاته (للتراجع عن الحذف). */
+    /** يستعيد الطالب كما كان، مع مستحقاته ودفعاته (للتراجع عن الحذف). */
     suspend fun restoreStudent(data: StudentWithPayments) {
         val ref = studentRef(data.student.id)
         ref.setValue(data.student).await()
+        val charges = data.dues.map { it.charge }
+        if (charges.isNotEmpty()) {
+            ref.child(CHARGES).setValue(charges.associateBy { it.id }).await()
+        }
         if (data.payments.isNotEmpty()) {
             ref.child(PAYMENTS).setValue(data.payments.associateBy { it.id }).await()
         }
@@ -142,45 +161,99 @@ class StudentRepository(
         studentsRef().removeValue().await()
     }
 
+    // ---------------- المستحقات ----------------
+
+    suspend fun addCharge(studentId: String, input: ChargeInput) {
+        val ref = studentRef(studentId)
+        val chargeRef = ref.child(CHARGES).push()
+        val id = chargeRef.key ?: error("push() returned no key")
+        chargeRef.setValue(
+            Charge(
+                id = id,
+                title = input.title,
+                amount = input.amount,
+                dueDate = input.dueDate,
+                note = input.note,
+                createdAt = clock()
+            )
+        ).await()
+        recalculate(ref)
+    }
+
+    suspend fun updateCharge(studentId: String, chargeId: String, input: ChargeInput) {
+        val ref = studentRef(studentId)
+        // updateChildren يُنشئ المستحق إن كان مشتقًا من بيانات قديمة ولم يُحفظ بعد
+        ref.child(CHARGES).child(chargeId).updateChildren(
+            mapOf(
+                "id" to chargeId,
+                "title" to input.title,
+                "amount" to input.amount,
+                "dueDate" to input.dueDate,
+                "note" to input.note
+            )
+        ).await()
+        recalculate(ref)
+    }
+
+    /** يُستدعى فقط لمستحق بلا دفعات (يتحقق منه الـ ViewModel). */
+    suspend fun deleteCharge(studentId: String, chargeId: String) {
+        val ref = studentRef(studentId)
+        ref.child(CHARGES).child(chargeId).removeValue().await()
+        recalculate(ref)
+    }
+
+    // ---------------- الدفعات ----------------
+
     suspend fun addPayment(studentId: String, input: PaymentInput) {
         val ref = studentRef(studentId)
         val paymentRef = ref.child(PAYMENTS).push()
         val id = paymentRef.key ?: error("push() returned no key")
         paymentRef.setValue(input.toPayment(id)).await()
-        recalculateTotals(ref)
+        recalculate(ref)
     }
 
     suspend fun updatePayment(studentId: String, paymentId: String, input: PaymentInput) {
         val ref = studentRef(studentId)
         ref.child(PAYMENTS).child(paymentId).setValue(input.toPayment(paymentId)).await()
-        recalculateTotals(ref)
+        recalculate(ref)
     }
 
     suspend fun deletePayment(studentId: String, paymentId: String) {
         val ref = studentRef(studentId)
         ref.child(PAYMENTS).child(paymentId).removeValue().await()
-        recalculateTotals(ref)
+        recalculate(ref)
     }
 
     /**
-     * يعيد حساب مجاميع الطالب من دفعاته داخل transaction،
-     * فتبقى المجاميع مطابقة للدفعات حتى مع التعديل من أكثر من جهاز.
+     * يعيد بناء دفتر الطالب داخل transaction ويكتب القيم المحسوبة:
+     * - يحفظ مستحق "الرسوم" القديم إن كان مشتقًا من دفعات بلا مستحق (ترحيل تلقائي).
+     * - يربط كل دفعة بمستحقها ويكتب المتبقي بعدها وطريقة الدفع.
+     * - يكتب مجاميع الطالب.
      */
-    private suspend fun recalculateTotals(studentRef: DatabaseReference) {
+    private suspend fun recalculate(studentRef: DatabaseReference) {
         val now = clock()
         studentRef.awaitTransaction { data ->
+            val chargesNode = data.child(CHARGES)
             val paymentsNode = data.child(PAYMENTS)
-            // مرتبة بالمفتاح، أي زمنيًا من الأقدم للأحدث
-            val payments = StudentTotals.withRunningBalance(
-                paymentsNode.children.mapNotNull { it.getValue(Payment::class.java) }
-            )
-            // تعديل أو حذف دفعة قديمة يغيّر رصيد كل الدفعات التي بعدها
-            for (payment in payments) {
-                val node = paymentsNode.child(payment.id)
-                node.child("paid").value = payment.paid
-                node.child("remaining").value = payment.remaining
+            val charges = chargesNode.children.mapNotNull { it.getValue(Charge::class.java) }
+            val payments = paymentsNode.children.mapNotNull { it.getValue(Payment::class.java) }
+            val ledger = StudentLedger.build(charges, payments)
+
+            for (due in ledger.dues) {
+                if (due.isLegacy && !chargesNode.hasChild(due.charge.id)) {
+                    chargesNode.child(due.charge.id).value = due.charge
+                }
+                for (payment in due.payments) {
+                    val node = paymentsNode.child(payment.id)
+                    node.child("chargeId").value = payment.chargeId
+                    node.child("paid").value = payment.paid
+                    node.child("total").value = payment.total
+                    node.child("remaining").value = payment.remaining
+                    node.child("paymentMethod").value = payment.paymentMethod
+                }
             }
-            val totals = StudentTotals.from(payments)
+
+            val totals = ledger.totals
             data.child("paidCash").value = totals.paidCash
             data.child("paidBank").value = totals.paidBank
             data.child("paid").value = totals.paid
@@ -190,31 +263,26 @@ class StudentRepository(
         }
     }
 
-    // paid و remaining هنا مبدئيان؛ الرصيد التراكمي الصحيح يُكتب في recalculateTotals
-    private fun PaymentInput.toPayment(id: String): Payment {
-        val paid = Money.sum(listOf(cash, bank))
-        return Payment(
-            id = id,
-            cash = cash,
-            bank = bank,
-            paid = paid,
-            total = total,
-            remaining = Money.subtract(total, paid).coerceAtLeast(0.0),
-            paymentMethod = method.code,
-            paymentDate = paymentDate,
-            note = note
-        )
-    }
+    // القيم المحسوبة هنا مبدئية؛ القيم النهائية تُكتب في recalculate
+    private fun PaymentInput.toPayment(id: String): Payment = Payment(
+        id = id,
+        chargeId = chargeId,
+        cash = cash,
+        bank = bank,
+        paid = Money.sum(listOf(cash, bank)),
+        paymentMethod = methodFor(cash, bank).code,
+        paymentDate = paymentDate,
+        note = note
+    )
 
     private fun DataSnapshot.toStudentWithPayments(): StudentWithPayments? {
         if (!exists()) return null
         val stored = getValue(Student::class.java) ?: return null
-        // نحسب المبالغ من الدفعات عند القراءة، فتظهر صحيحة حتى للبيانات القديمة
-        // التي حُفظت مجاميعها بالطريقة السابقة الخاطئة
-        val payments = StudentTotals.withRunningBalance(
+        val ledger = StudentLedger.build(
+            child(CHARGES).children.mapNotNull { it.getValue(Charge::class.java) },
             child(PAYMENTS).children.mapNotNull { it.getValue(Payment::class.java) }
         )
-        val totals = StudentTotals.from(payments)
+        val totals = ledger.totals
         val student = stored.copy(
             paidCash = totals.paidCash,
             paidBank = totals.paidBank,
@@ -222,12 +290,13 @@ class StudentRepository(
             total = totals.total,
             remaining = totals.remaining
         )
-        return StudentWithPayments(student, payments)
+        return StudentWithPayments(student, ledger)
     }
 
     private companion object {
         const val ROOT = "TalibPay"
         const val STUDENTS = "students"
+        const val CHARGES = "charges"
         const val PAYMENTS = "payments"
     }
 }

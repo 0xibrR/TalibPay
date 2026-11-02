@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.irdev.talibpay.data.StudentRepository
 import com.irdev.talibpay.data.StudentWithPayments
+import com.irdev.talibpay.domain.DueSummary
+import com.irdev.talibpay.R
 import com.irdev.talibpay.util.Extras
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +26,19 @@ class DetailViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() {
 
     fun deletePayment(paymentId: String) = runAction {
         repository.deletePayment(studentId, paymentId)
+        send(UiEvent.Message(R.string.payment_deleted))
+    }
+
+    /** لا يُحذف مستحق له دفعات، حتى لا تضيع الدفعات أو تُنسب لغيره. */
+    fun deleteDue(due: DueSummary) {
+        if (due.payments.isNotEmpty()) {
+            send(UiEvent.Message(R.string.due_has_payments))
+            return
+        }
+        runAction {
+            repository.deleteCharge(studentId, due.charge.id)
+            send(UiEvent.Message(R.string.due_deleted))
+        }
     }
 
     fun deleteStudent() = runAction {
