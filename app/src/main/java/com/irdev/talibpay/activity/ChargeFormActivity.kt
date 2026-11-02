@@ -8,16 +8,16 @@ import androidx.appcompat.app.AppCompatActivity
 import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityChargeBinding
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.dueTitle
+import com.irdev.talibpay.util.monthName
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.ChargeFormViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 /** إضافة مستحق جديد على الطالب أو تعديل مستحق موجود. */
@@ -26,6 +26,7 @@ class ChargeFormActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChargeBinding
     private val viewModel: ChargeFormViewModel by viewModels()
     private var prefilled = false
+    private var generatedTitle: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +44,8 @@ class ChargeFormActivity : AppCompatActivity() {
         binding.btnSaveCharge.setOnClickListener {
             viewModel.save(
                 title = binding.edtChargeTitle.text?.toString().orEmpty(),
+                keepGeneratedTitle = generatedTitle != null &&
+                    binding.edtChargeTitle.text?.toString()?.trim() == generatedTitle,
                 amountText = binding.edtChargeAmount.text?.toString().orEmpty(),
                 dueDate = binding.edtChargeDueDate.text?.toString().orEmpty(),
                 note = binding.edtChargeNote.text?.toString()?.trim().orEmpty()
@@ -55,6 +58,8 @@ class ChargeFormActivity : AppCompatActivity() {
             val due = prefill.due
             if (due != null) {
                 binding.edtChargeTitle.setText(dueTitle(due.charge))
+                // اسم مولَّد (رسوم شهرية أو قديمة): إن لم يغيّره المستخدم يبقى مولَّدًا ويُترجم مع اللغة
+                if (due.charge.title.isBlank()) generatedTitle = dueTitle(due.charge)
                 binding.edtChargeAmount.setText(plainAmount(due.charge.amount))
                 binding.edtChargeDueDate.setText(due.charge.dueDate)
                 binding.edtChargeNote.setText(due.charge.note)
@@ -64,7 +69,7 @@ class ChargeFormActivity : AppCompatActivity() {
                 }
             } else {
                 // اقتراح: رسوم الشهر الحالي بنفس قيمة آخر مستحق
-                val month = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
+                val month = monthName(todaySimpleDate().yearMonth)
                 binding.edtChargeTitle.setText(getString(R.string.due_title_month, month))
                 prefill.suggestedAmount?.let { binding.edtChargeAmount.setText(plainAmount(it)) }
             }

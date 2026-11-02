@@ -12,6 +12,7 @@ data class Charge(
     val title: String = "",
     val amount: Double = 0.0,
     val dueDate: String = "", // اختياري: dd/MM/yyyy
+    val period: String = "", // yyyy-MM للرسوم الشهرية التلقائية، فارغ للمستحقات اليدوية
     val note: String = "",
     val createdAt: Long = 0
 )

@@ -1,5 +1,6 @@
 package com.irdev.talibpay.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentRepository
@@ -11,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 data class DashboardSummary(
     val cash: Double = 0.0,
@@ -33,6 +36,20 @@ class MainViewModel : BaseViewModel() {
 
     private val repository = StudentRepository()
     private val query = MutableStateFlow("")
+
+    init {
+        // عند فتح التطبيق: إنشاء الرسوم الشهرية التي حان موعدها (ومنها أشهر فاتت دون فتح التطبيق).
+        // فشلها لا يمنع عرض البيانات، وستُعاد المحاولة في المهمة اليومية وعند الفتح التالي.
+        viewModelScope.launch {
+            try {
+                repository.generateMonthlyDues()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("MainViewModel", "Monthly dues generation failed", e)
+            }
+        }
+    }
 
     private val allStudents = repository.observeStudents()
         .catch {

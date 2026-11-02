@@ -120,6 +120,12 @@
     <string name="share_birth_year">🎂 Year of Birth: %1$s</string>
     <string name="share_registration_date">📅 Registration date: %1$s</string>
     <string name="registration_date">Registration date</string>
+    <string name="monthly_fee">Monthly fee</string>
+    <string name="monthly_fee_optional">Monthly fee (optional)</string>
+    <string name="monthly_fee_helper">A due is created automatically every month on the registration day</string>
+    <string name="monthly_fee_value">%1$s · next due %2$s</string>
+    <string name="monthly_fee_not_set">Not set (no automatic dues)</string>
+    <string name="registration_date_required_for_fee">Set a registration date to enable the monthly fee</string>
     <string name="share_phone">📞 Phone Number: %1$s</string>
     <string name="share_payment_date">🗓️ Payment Date: %1$s</string>
     <string name="share_paid_cash">💰 Paid in Cash: %1$.2f NIS</string>

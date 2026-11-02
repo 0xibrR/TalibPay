@@ -28,6 +28,8 @@ import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityDetailBinding
 import com.irdev.talibpay.databinding.ItemRowInfoBinding
 import com.irdev.talibpay.domain.DueSummary
+import com.irdev.talibpay.domain.nextMonthlyDue
+import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
@@ -138,6 +140,13 @@ class DetailActivity : AppCompatActivity() {
             rowPhone.bind(R.drawable.ic_phone, R.string.phone_number, student.phoneNumber)
             rowBirthYear.bind(R.drawable.ic_cake, R.string.year_of_birth, student.birthYear)
             rowRegistrationDate.bind(R.drawable.ic_calendar, R.string.registration_date, student.registrationDate)
+            // الرسوم الشهرية وموعد الاستحقاق القادم
+            val nextDue = student.nextMonthlyDue(todaySimpleDate())
+            rowMonthlyFee.bind(
+                R.drawable.ic_cash, R.string.monthly_fee,
+                if (nextDue != null) getString(R.string.monthly_fee_value, money(student.monthlyFee), nextDue.format())
+                else getString(R.string.monthly_fee_not_set)
+            )
             rowAdded.bind(
                 R.drawable.ic_schedule, R.string.added,
                 formatTimestamp(student.addedAt, student.addedIn)

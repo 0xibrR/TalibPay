@@ -129,6 +129,12 @@
     <string name="share_birth_year">🎂 سنة الميلاد: %1$s</string>
     <string name="share_registration_date">📅 تاريخ التسجيل: %1$s</string>
     <string name="registration_date">تاريخ التسجيل</string>
+    <string name="monthly_fee">الرسوم الشهرية</string>
+    <string name="monthly_fee_optional">الرسوم الشهرية (اختياري)</string>
+    <string name="monthly_fee_helper">يُنشأ مستحق تلقائيًا كل شهر في يوم التسجيل</string>
+    <string name="monthly_fee_value">%1$s · الاستحقاق القادم %2$s</string>
+    <string name="monthly_fee_not_set">غير محددة (لا مستحقات تلقائية)</string>
+    <string name="registration_date_required_for_fee">حدّد تاريخ التسجيل لتفعيل الرسوم الشهرية</string>
     <string name="share_phone">📞 رقم الهاتف: %1$s</string>
     <string name="share_payment_date">🗓️ تاريخ الدفع: %1$s</string>
     <string name="share_paid_cash">💰 مدفوع كاش: %1$.2f شيكل</string>

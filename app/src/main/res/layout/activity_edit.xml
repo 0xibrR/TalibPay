@@ -79,6 +79,23 @@
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- الرسوم الشهرية: تُنشأ تلقائيًا في يوم التسجيل من كل شهر (اختياري) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/monthlyFeeLayoutEdit"
+                    style="@style/Widget.TalibPay.TextField"
+                    android:hint="@string/monthly_fee_optional"
+                    app:helperText="@string/monthly_fee_helper"
+                    app:startIconDrawable="@drawable/ic_cash"
+                    app:suffixText="@string/currency_symbol">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtMonthlyFeeEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
+
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.TalibPay.TextField"
                     android:hint="@string/phone_number"

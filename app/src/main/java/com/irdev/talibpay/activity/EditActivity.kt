@@ -9,9 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentInput
 import com.irdev.talibpay.databinding.ActivityEditBinding
+import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.optionalAmount
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.showYearPicker
@@ -19,6 +21,7 @@ import com.irdev.talibpay.util.todayDate
 import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.StudentFormViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
+import java.util.Locale
 
 class EditActivity : AppCompatActivity() {
 
@@ -51,6 +54,11 @@ class EditActivity : AppCompatActivity() {
             binding.edtStudentNameEdit.setText(student.name)
             binding.edtBirthYearEdit.setText(student.birthYear)
             binding.edtRegistrationDateEdit.setText(student.registrationDate)
+            if (student.monthlyFee > 0) {
+                binding.edtMonthlyFeeEdit.setText(
+                    Money.format(student.monthlyFee, Locale.US).replace(",", "")
+                )
+            }
             binding.edtPhoneNumberEdit.setText(student.phoneNumber)
             binding.edtNotesEdit.setText(student.notes)
         }
@@ -74,6 +82,13 @@ class EditActivity : AppCompatActivity() {
         val birthYear = binding.edtBirthYearEdit.requireText() ?: return
         // اختياري هنا: الطلاب المضافون قبل هذه الميزة لا تاريخ تسجيل لهم
         val registrationDate = binding.edtRegistrationDateEdit.text?.toString()?.trim().orEmpty()
+        val monthlyFee = binding.edtMonthlyFeeEdit.optionalAmount() ?: return
+        // الرسوم الشهرية تُحسب من يوم التسجيل، فلا تُفعَّل بدونه
+        if (monthlyFee > 0 && registrationDate.isEmpty()) {
+            binding.edtRegistrationDateEdit.error = getString(R.string.registration_date_required_for_fee)
+            toast(R.string.registration_date_required_for_fee)
+            return
+        }
         val phone = binding.edtPhoneNumberEdit.requireText() ?: return
         val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
 
@@ -81,7 +96,7 @@ class EditActivity : AppCompatActivity() {
             .setTitle(R.string.confirm_edit_title)
             .setMessage(R.string.confirm_edit_message)
             .setPositiveButton(R.string.ok) { _, _ ->
-                viewModel.save(StudentInput(name, birthYear, registrationDate, phone, notes))
+                viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes))
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

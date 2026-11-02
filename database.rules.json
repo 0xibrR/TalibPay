@@ -10,6 +10,9 @@
             "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
             "birthYear": { ".validate": "newData.isString() && newData.val().length <= 4" },
             "registrationDate": { ".validate": "newData.isString() && newData.val().length <= 10" },
+            "monthlyFee": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "billingStart": { ".validate": "newData.isString() && newData.val().length <= 10" },
+            "lastBilledPeriod": { ".validate": "newData.isString() && newData.val().length <= 7" },
             "phoneNumber": { ".validate": "newData.isString() && newData.val().length <= 30" },
             "notes": { ".validate": "newData.isString() && newData.val().length <= 2000" },
             "paidCash": { ".validate": "newData.isNumber() && newData.val() >= 0" },
@@ -22,6 +25,7 @@
                 "title": { ".validate": "newData.isString() && newData.val().length <= 100" },
                 "amount": { ".validate": "newData.isNumber() && newData.val() >= 0" },
                 "dueDate": { ".validate": "newData.isString() && newData.val().length <= 10" },
+                "period": { ".validate": "newData.isString() && newData.val().length <= 7" },
                 "note": { ".validate": "newData.isString() && newData.val().length <= 500" }
               }
             },

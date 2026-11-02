@@ -8,6 +8,9 @@ data class Student(
     val name: String = "",
     val birthYear: String = "",
     val registrationDate: String = "", // تاريخ التسجيل dd/MM/yyyy
+    val monthlyFee: Double = 0.0, // الرسوم الشهرية؛ 0 = لا رسوم تلقائية
+    val billingStart: String = "", // أول تاريخ تُحسب منه الرسوم الشهرية dd/MM/yyyy
+    val lastBilledPeriod: String = "", // آخر شهر أُنشئت رسومه yyyy-MM (يمنع التكرار)
     val paidCash: Double = 0.0, // مجموع ما دفعه الطالب نقدًا
     val paidBank: Double = 0.0, // مجموع ما دفعه الطالب بنكيًا
     val paid: Double = 0.0, // مجموع ما دفعه الطالب

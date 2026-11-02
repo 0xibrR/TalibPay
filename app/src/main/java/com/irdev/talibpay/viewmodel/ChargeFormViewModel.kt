@@ -47,7 +47,11 @@ class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() 
         }
     }
 
-    fun save(title: String, amountText: String, dueDate: String, note: String) {
+    /**
+     * @param keepGeneratedTitle الاسم المعروض مولَّد (رسوم شهرية أو قديمة) ولم يغيّره المستخدم:
+     * نبقيه فارغًا في البيانات ليبقى مولَّدًا ويُترجم مع لغة التطبيق.
+     */
+    fun save(title: String, keepGeneratedTitle: Boolean, amountText: String, dueDate: String, note: String) {
         if (studentId.isEmpty()) {
             send(UiEvent.Message(R.string.error_generic))
             return
@@ -66,7 +70,7 @@ class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() 
                     UiEvent.Message(R.string.due_below_paid, Money.format(result.alreadyPaid))
                 )
             }
-            val input = ChargeInput(valid.title, valid.amount, dueDate, note)
+            val input = ChargeInput(if (keepGeneratedTitle) "" else valid.title, valid.amount, dueDate, note)
             if (id == null) {
                 repository.addCharge(studentId, input)
                 send(UiEvent.Message(R.string.due_added))

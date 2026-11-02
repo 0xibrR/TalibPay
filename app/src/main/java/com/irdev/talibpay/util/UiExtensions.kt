@@ -18,6 +18,7 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.os.ConfigurationCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -29,11 +30,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.YearMonth
 import com.irdev.talibpay.model.Charge
 import com.irdev.talibpay.viewmodel.UiEvent
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -67,8 +70,23 @@ fun Context.money(value: Double): String =
     getString(R.string.amount_currency, Money.format(value))
 
 /** اسم المستحق، أو "الرسوم" لمستحق البيانات القديمة الذي لا اسم له. */
-fun Context.dueTitle(charge: Charge): String =
-    charge.title.ifBlank { getString(R.string.due_legacy_title) }
+fun Context.dueTitle(charge: Charge): String {
+    if (charge.title.isNotBlank()) return charge.title
+    // الرسوم الشهرية التلقائية: اسمها من شهرها بلغة التطبيق الحالية
+    val month = YearMonth.parse(charge.period)
+        ?: return getString(R.string.due_legacy_title)
+    return getString(R.string.due_title_month, monthName(month))
+}
+
+/** اسم الشهر والسنة بلغة التطبيق (مثل "تشرين الثاني 2026" أو "November 2026"). */
+fun Context.monthName(month: YearMonth): String {
+    val locale = ConfigurationCompat.getLocales(resources.configuration)[0] ?: Locale.getDefault()
+    val calendar = Calendar.getInstance().apply {
+        clear()
+        set(month.year, month.month - 1, 1)
+    }
+    return SimpleDateFormat("MMMM yyyy", locale).format(calendar.time)
+}
 
 /** نسبة المدفوع من الرسوم (0..100). */
 fun paidPercent(paid: Double, total: Double): Int =
@@ -100,6 +118,15 @@ fun EditText.requireText(): String? {
         error = context.getString(R.string.enter_value)
         return null
     }
+    return value
+}
+
+/** مبلغ اختياري: الحقل الفارغ = 0، والقيمة غير الصالحة تُظهر خطأ وتعيد null. */
+fun EditText.optionalAmount(): Double? {
+    val raw = text?.toString()?.trim().orEmpty()
+    if (raw.isEmpty()) return 0.0
+    val value = Money.parse(raw)
+    if (value == null) error = context.getString(R.string.invalid_amount)
     return value
 }
 

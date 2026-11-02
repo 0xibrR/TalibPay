@@ -9,6 +9,10 @@ import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import com.irdev.talibpay.domain.DueSummary
+import com.irdev.talibpay.domain.SimpleDate
+import com.irdev.talibpay.domain.billingStartFor
+import com.irdev.talibpay.domain.periodsDue
+import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.StudentLedger
 import com.irdev.talibpay.domain.methodFor
@@ -39,6 +43,7 @@ data class StudentInput(
     val name: String,
     val birthYear: String,
     val registrationDate: String,
+    val monthlyFee: Double,
     val phoneNumber: String,
     val notes: String
 )
@@ -121,27 +126,52 @@ class StudentRepository(
             name = input.name,
             birthYear = input.birthYear,
             registrationDate = input.registrationDate,
+            monthlyFee = input.monthlyFee,
+            billingStart = billingStartFor(null, input.monthlyFee, input.registrationDate, today()),
             phoneNumber = input.phoneNumber,
             notes = input.notes,
             addedAt = now,
             updatedAt = now
         )
         ref.setValue(student).await()
+        if (input.monthlyFee > 0) syncLedger(ref)
     }
 
     /** يحدّث بيانات الطالب الأساسية فقط، دون المساس بالمستحقات أو الدفعات. */
     suspend fun updateStudent(studentId: String, input: StudentInput) {
-        studentRef(studentId).updateChildren(
+        val ref = studentRef(studentId)
+        val current = ref.get().await().getValue(Student::class.java)
+        val billingStart = billingStartFor(current, input.monthlyFee, input.registrationDate, today())
+        ref.updateChildren(
             mapOf(
                 "name" to input.name,
                 "birthYear" to input.birthYear,
                 "registrationDate" to input.registrationDate,
+                "monthlyFee" to input.monthlyFee,
+                "billingStart" to billingStart,
                 "phoneNumber" to input.phoneNumber,
                 "notes" to input.notes,
                 "updatedAt" to clock()
             )
         ).await()
+        if (input.monthlyFee > 0) syncLedger(ref)
     }
+
+    /**
+     * ينشئ الرسوم الشهرية التي حان موعدها لكل الطلاب (عند فتح التطبيق وفي المهمة اليومية).
+     * آمن للتكرار: كل شهر له معرّف ثابت، والإنشاء داخل transaction.
+     */
+    suspend fun generateMonthlyDues() {
+        val today = today()
+        val students = studentsRef().get().await().children
+        for (snapshot in students) {
+            val student = snapshot.getValue(Student::class.java) ?: continue
+            // فحص سريع قبل الـ transaction لتجنّب الكتابة لطلاب لا شيء مستحق عليهم الآن
+            if (student.periodsDue(today).isNotEmpty()) syncLedger(snapshot.ref)
+        }
+    }
+
+    private fun today(): SimpleDate = todaySimpleDate(clock())
 
     suspend fun deleteStudent(studentId: String) {
         studentRef(studentId).removeValue().await()
@@ -180,7 +210,7 @@ class StudentRepository(
                 createdAt = clock()
             )
         ).await()
-        recalculate(ref)
+        syncLedger(ref)
     }
 
     suspend fun updateCharge(studentId: String, chargeId: String, input: ChargeInput) {
@@ -195,14 +225,14 @@ class StudentRepository(
                 "note" to input.note
             )
         ).await()
-        recalculate(ref)
+        syncLedger(ref)
     }
 
     /** يُستدعى فقط لمستحق بلا دفعات (يتحقق منه الـ ViewModel). */
     suspend fun deleteCharge(studentId: String, chargeId: String) {
         val ref = studentRef(studentId)
         ref.child(CHARGES).child(chargeId).removeValue().await()
-        recalculate(ref)
+        syncLedger(ref)
     }
 
     // ---------------- الدفعات ----------------
@@ -212,19 +242,19 @@ class StudentRepository(
         val paymentRef = ref.child(PAYMENTS).push()
         val id = paymentRef.key ?: error("push() returned no key")
         paymentRef.setValue(input.toPayment(id)).await()
-        recalculate(ref)
+        syncLedger(ref)
     }
 
     suspend fun updatePayment(studentId: String, paymentId: String, input: PaymentInput) {
         val ref = studentRef(studentId)
         ref.child(PAYMENTS).child(paymentId).setValue(input.toPayment(paymentId)).await()
-        recalculate(ref)
+        syncLedger(ref)
     }
 
     suspend fun deletePayment(studentId: String, paymentId: String) {
         val ref = studentRef(studentId)
         ref.child(PAYMENTS).child(paymentId).removeValue().await()
-        recalculate(ref)
+        syncLedger(ref)
     }
 
     /**
@@ -233,9 +263,11 @@ class StudentRepository(
      * - يربط كل دفعة بمستحقها ويكتب المتبقي بعدها وطريقة الدفع.
      * - يكتب مجاميع الطالب.
      */
-    private suspend fun recalculate(studentRef: DatabaseReference) {
+    private suspend fun syncLedger(studentRef: DatabaseReference) {
         val now = clock()
+        val today = today()
         studentRef.awaitTransaction { data ->
+            data.generateDueCharges(today, now)
             val chargesNode = data.child(CHARGES)
             val paymentsNode = data.child(PAYMENTS)
             val charges = chargesNode.children.mapNotNull { it.getValue(Charge::class.java) }
@@ -264,6 +296,26 @@ class StudentRepository(
             data.child("remaining").value = totals.remaining
             data.child("updatedAt").value = now
         }
+    }
+
+    /** ينشئ رسوم الأشهر التي حان موعدها داخل الـ transaction، بمعرّف ثابت لكل شهر. */
+    private fun MutableData.generateDueCharges(today: SimpleDate, now: Long) {
+        val student = getValue(Student::class.java) ?: return
+        val periods = student.periodsDue(today)
+        if (periods.isEmpty()) return
+        val chargesNode = child(CHARGES)
+        periods.forEachIndexed { index, period ->
+            if (!chargesNode.hasChild(period.chargeId)) {
+                chargesNode.child(period.chargeId).value = Charge(
+                    id = period.chargeId,
+                    amount = student.monthlyFee,
+                    dueDate = period.dueDate.format(),
+                    period = period.month.key,
+                    createdAt = now + index
+                )
+            }
+        }
+        child("lastBilledPeriod").value = periods.last().month.key
     }
 
     // القيم المحسوبة هنا مبدئية؛ القيم النهائية تُكتب في recalculate

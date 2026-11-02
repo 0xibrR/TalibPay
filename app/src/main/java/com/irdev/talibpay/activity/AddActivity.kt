@@ -12,6 +12,7 @@ import com.irdev.talibpay.databinding.ActivityAddBinding
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.optionalAmount
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.showYearPicker
@@ -46,9 +47,10 @@ class AddActivity : AppCompatActivity() {
             val name = binding.edtStudentName.requireText() ?: return@setOnClickListener
             val birthYear = binding.edtBirthYear.requireText() ?: return@setOnClickListener
             val registrationDate = binding.edtRegistrationDate.requireText() ?: return@setOnClickListener
+            val monthlyFee = binding.edtMonthlyFee.optionalAmount() ?: return@setOnClickListener
             val phone = binding.edtPhoneNumber.requireText() ?: return@setOnClickListener
             val notes = binding.edtNotes.text?.toString()?.trim().orEmpty()
-            viewModel.save(StudentInput(name, birthYear, registrationDate, phone, notes))
+            viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes))
         }
 
         collectWhileStarted(viewModel.loading) { binding.btnAddStudent.isEnabled = !it }
@@ -73,6 +75,7 @@ class AddActivity : AppCompatActivity() {
         binding.edtStudentName.text?.clear()
         binding.edtBirthYear.text?.clear()
         binding.edtRegistrationDate.setText(todayDate())
+        binding.edtMonthlyFee.text?.clear()
         binding.edtPhoneNumber.text?.clear()
         binding.edtNotes.text?.clear()
         binding.edtStudentName.requestFocus()

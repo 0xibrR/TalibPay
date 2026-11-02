@@ -283,6 +283,10 @@
                         layout="@layout/item_row_info" />
 
                     <include
+                        android:id="@+id/rowMonthlyFee"
+                        layout="@layout/item_row_info" />
+
+                    <include
                         android:id="@+id/rowAdded"
                         layout="@layout/item_row_info" />
 
