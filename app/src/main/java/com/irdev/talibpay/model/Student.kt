@@ -16,6 +16,7 @@ data class Student(
     val paid: Double = 0.0, // مجموع ما دفعه الطالب
     val total: Double = 0.0, // الرسوم المطلوبة من الطالب
     val remaining: Double = 0.0, // المتبقي على الطالب
+    val walletBalance: Double = 0.0, // رصيد المحفظة (نسخة للعرض؛ المصدر حركات المحفظة)
     val phoneNumber: String = "",
     val notes: String = "",
     val addedAt: Long = 0, // وقت الإضافة (epoch millis)

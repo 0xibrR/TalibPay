@@ -246,6 +246,25 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
         <item quantity="one">%d student</item>
         <item quantity="other">%d students</item>
     </plurals>
+    <!-- المحفظة -->
+    <string name="wallet_title">Wallet</string>
+    <string name="wallet_balance">Credit balance</string>
+    <string name="wallet_refund">Refund</string>
+    <string name="wallet_empty">No wallet activity yet. Any amount paid above a due is added here and used automatically for new dues.</string>
+    <string name="wallet_deposit">Added from an overpayment</string>
+    <string name="wallet_use">Used for %1$s</string>
+    <string name="wallet_refund_entry">Refunded to the student</string>
+    <string name="wallet_available">Available: %1$s</string>
+    <string name="refund_title">Refund from wallet</string>
+    <string name="refund_amount">Refund amount</string>
+    <string name="refund_exceeds_balance">The amount is more than the wallet balance (%1$s ₪)</string>
+    <string name="refund_done">Refund recorded</string>
+    <string name="refund_balance_changed">The wallet balance has changed. Check it and try again.</string>
+    <string name="payment_locked_by_wallet">This payment added credit to the wallet, so it can\'t be edited or deleted.</string>
+    <string name="payment_preview_credit">This payment: %1$s · %2$s will go to the student\'s wallet</string>
+    <string name="due_helper_wallet">Due amount %1$s · left %2$s · any extra goes to the wallet</string>
+    <string name="due_wallet_used">From wallet: %1$s</string>
+    <string name="payment_to_wallet">%1$s to wallet</string>
     <plurals name="months_count">
         <item quantity="one">%d month</item>
         <item quantity="other">%d months</item>
@@ -275,7 +294,7 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="due_below_paid">The amount can\'t be less than what\'s already paid (%1$s ₪)</string>
     <string name="due_added">Due added</string>
     <string name="due_deleted">Due deleted</string>
-    <string name="due_has_payments">This due has payments. Delete its payments first, or edit the due instead.</string>
+    <string name="due_has_payments">This due has payments or a wallet deduction, so it can\'t be deleted. Edit it instead.</string>
     <string name="no_dues_hint">No dues yet. Add a due (e.g. September fees), then record payments against it.</string>
     <string name="no_open_dues_title">Nothing to pay</string>
     <string name="no_open_dues">All dues are fully paid. Add a new due to record a payment.</string>

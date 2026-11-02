@@ -1,5 +1,6 @@
 package com.irdev.talibpay.activity
 
+import android.content.res.ColorStateList
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -12,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
@@ -27,9 +29,16 @@ import com.irdev.talibpay.adapter.DueAdapter
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityDetailBinding
 import com.irdev.talibpay.databinding.ItemRowInfoBinding
+import com.irdev.talibpay.databinding.DialogRefundBinding
+import com.irdev.talibpay.databinding.ItemWalletEntryBinding
 import com.irdev.talibpay.domain.DueSummary
+import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.RefundValidation
+import com.irdev.talibpay.domain.WalletEntryType
+import com.irdev.talibpay.domain.entryType
 import com.irdev.talibpay.domain.nextMonthlyDue
 import com.irdev.talibpay.domain.todaySimpleDate
+import com.irdev.talibpay.domain.validateRefund
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
@@ -43,6 +52,7 @@ import com.irdev.talibpay.viewmodel.DetailViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Locale
 
 class DetailActivity : AppCompatActivity() {
 
@@ -72,6 +82,7 @@ class DetailActivity : AppCompatActivity() {
         binding.recyclerViewDues.adapter = adapter
 
         binding.btnAddDue.setOnClickListener { openChargeForm(null) }
+        binding.btnWalletRefund.setOnClickListener { showRefundDialog() }
         binding.fabAddPayment.setOnClickListener {
             // لا دفعة بلا مستحق مفتوح: نوجّه المستخدم لإضافة مستحق أولًا
             val data = viewModel.student.value
@@ -90,8 +101,11 @@ class DetailActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.student) { it?.let(::render) }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> Snackbar.make(binding.root, event.res, Snackbar.LENGTH_LONG)
-                    .setAnchorView(binding.fabAddPayment).show()
+                is UiEvent.Message -> Snackbar.make(
+                    binding.root,
+                    if (event.arg != null) getString(event.res, event.arg) else getString(event.res),
+                    Snackbar.LENGTH_LONG
+                ).setAnchorView(binding.fabAddPayment).show()
 
                 UiEvent.Finished -> finish()
                 UiEvent.NotSignedIn -> {
@@ -159,6 +173,69 @@ class DetailActivity : AppCompatActivity() {
         }
 
         adapter.submitList(data.dues)
+        renderWallet(data)
+    }
+
+    /** المحفظة: الرصيد وسجل الحركات (الأحدث أولًا). */
+    private fun renderWallet(data: StudentWithPayments) {
+        val balance = data.ledger.walletBalance
+        binding.tvWalletBalance.text = money(balance)
+        binding.tvWalletBalance.setTextColor(
+            ContextCompat.getColor(this, if (balance > 0) R.color.status_paid else R.color.method_none)
+        )
+        binding.btnWalletRefund.isEnabled = balance > 0
+        binding.tvWalletEmpty.isVisible = data.walletEntries.isEmpty()
+
+        val container = binding.walletEntries
+        container.removeAllViews()
+        data.walletEntries.asReversed().forEach { entry ->
+            val row = ItemWalletEntryBinding.inflate(layoutInflater, container, true)
+            val type = entry.entryType
+            val dueTitle = data.ledger.due(entry.chargeId)?.let { dueTitle(it.charge) }.orEmpty()
+            row.tvEntryTitle.text = when (type) {
+                WalletEntryType.DEPOSIT -> getString(R.string.wallet_deposit)
+                WalletEntryType.USE -> getString(R.string.wallet_use, dueTitle)
+                WalletEntryType.REFUND -> getString(R.string.wallet_refund_entry)
+                null -> entry.type
+            }
+            row.tvEntryDetails.text = listOf(formatTimestamp(entry.createdAt), entry.note)
+                .filter { it.isNotBlank() }.joinToString(" · ")
+            val incoming = type == WalletEntryType.DEPOSIT
+            row.tvEntryAmount.text = (if (incoming) "+" else "−") + money(entry.amount)
+            val color = ContextCompat.getColor(
+                this, if (incoming) R.color.status_paid else R.color.method_mixed
+            )
+            row.tvEntryAmount.setTextColor(color)
+            row.entryDot.backgroundTintList = ColorStateList.valueOf(color)
+        }
+    }
+
+    private fun showRefundDialog() {
+        val balance = viewModel.student.value?.ledger?.walletBalance ?: return
+        val dialogBinding = DialogRefundBinding.inflate(layoutInflater)
+        dialogBinding.edtRefundAmount.setText(Money.format(balance, Locale.US).replace(",", ""))
+        dialogBinding.refundAmountLayout.helperText = getString(R.string.wallet_available, money(balance))
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.refund_title)
+            .setView(dialogBinding.root)
+            .setPositiveButton(R.string.wallet_refund, null)
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+        // التحقق داخل الحوار حتى لا يُغلق ويضيع ما كتبه المستخدم عند الخطأ
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val amountText = dialogBinding.edtRefundAmount.text?.toString().orEmpty()
+            val error = when (val result = validateRefund(amountText, balance)) {
+                is RefundValidation.Valid -> null
+                RefundValidation.InvalidAmount -> getString(R.string.invalid_amount)
+                is RefundValidation.ExceedsBalance ->
+                    getString(R.string.refund_exceeds_balance, Money.format(result.balance))
+            }
+            dialogBinding.refundAmountLayout.error = error
+            if (error == null) {
+                viewModel.refund(amountText, dialogBinding.edtRefundNote.text?.toString()?.trim().orEmpty())
+                dialog.dismiss()
+            }
+        }
     }
 
     /** @param color null = لون نص البطاقة (حالة محايدة). */
@@ -228,8 +305,18 @@ class DetailActivity : AppCompatActivity() {
     }
 
     private fun showPaymentOptions(due: DueSummary, payment: Payment) {
+        val title = getString(R.string.payment_of_due, money(payment.paid), dueTitle(due.charge))
+        // دفعة أضافت رصيدًا للمحفظة مقفلة: تعديلها أو حذفها قد يجعل الرصيد سالبًا
+        if (payment.credited > 0) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(title)
+                .setMessage(R.string.payment_locked_by_wallet)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+            return
+        }
         MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.payment_of_due, money(payment.paid), dueTitle(due.charge)))
+            .setTitle(title)
             .setItems(arrayOf(getString(R.string.edit_pyment), getString(R.string.delete_payment))) { _, which ->
                 if (which == 0) openPaymentForm(paymentId = payment.id) else confirmDeletePayment(payment)
             }
@@ -240,7 +327,7 @@ class DetailActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.delete_payment)
             .setMessage(getString(R.string.delete_payment_message, money(payment.paid), payment.paymentDate))
-            .setPositiveButton(R.string.delete) { _, _ -> viewModel.deletePayment(payment.id) }
+            .setPositiveButton(R.string.delete) { _, _ -> viewModel.deletePayment(payment) }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }

@@ -136,18 +136,22 @@ class PaymentFormActivity : AppCompatActivity() {
         val amount = Money.sum(listOf(cash, bank))
         val after = Money.subtract(available, amount)
 
+        // دفعة جديدة: ما يزيد عن المتبقي يُضاف لمحفظة الطالب. التعديل: لا يتجاوز المتبقي
+        val creditsWallet = !viewModel.isEditing
         binding.dueLayout.error = null
         binding.dueLayout.helperText = getString(
-            R.string.due_helper, money(due.charge.amount), money(available)
+            if (creditsWallet) R.string.due_helper_wallet else R.string.due_helper,
+            money(due.charge.amount), money(available)
         )
-        binding.tvPaymentPreview.text = if (after < 0) {
-            getString(R.string.payment_preview_exceeds, money(amount), money(available))
-        } else {
-            getString(R.string.payment_preview, money(amount), money(after))
+        val (text, color) = when {
+            after >= 0 -> getString(R.string.payment_preview, money(amount), money(after)) to R.color.method_none
+            creditsWallet -> getString(
+                R.string.payment_preview_credit, money(amount), money(Money.subtract(amount, available))
+            ) to R.color.status_paid
+            else -> getString(R.string.payment_preview_exceeds, money(amount), money(available)) to R.color.status_due
         }
-        binding.tvPaymentPreview.setTextColor(
-            ContextCompat.getColor(this, if (after < 0) R.color.status_due else R.color.method_none)
-        )
+        binding.tvPaymentPreview.text = text
+        binding.tvPaymentPreview.setTextColor(ContextCompat.getColor(this, color))
     }
 
     // أرقام لاتينية بدون فواصل آلاف حتى يقبلها حقل الإدخال الرقمي

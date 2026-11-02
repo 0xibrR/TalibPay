@@ -5,6 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.irdev.talibpay.data.StudentRepository
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.domain.DueSummary
+import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.RefundValidation
+import com.irdev.talibpay.domain.validateRefund
+import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
 import com.irdev.talibpay.util.Extras
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,14 +28,37 @@ class DetailViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() {
         .catch { handleError(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    fun deletePayment(paymentId: String) = runAction {
-        repository.deletePayment(studentId, paymentId)
-        send(UiEvent.Message(R.string.payment_deleted))
+    fun deletePayment(payment: Payment) {
+        // دفعة أضافت رصيدًا للمحفظة لا تُحذف حتى لا يختل رصيد المحفظة
+        if (payment.credited > 0) {
+            send(UiEvent.Message(R.string.payment_locked_by_wallet))
+            return
+        }
+        runAction {
+            repository.deletePayment(studentId, payment.id)
+            send(UiEvent.Message(R.string.payment_deleted))
+        }
     }
 
-    /** لا يُحذف مستحق له دفعات، حتى لا تضيع الدفعات أو تُنسب لغيره. */
+    /** استرداد مبلغ من المحفظة للطالب (يُسجَّل كحركة، لا يُعدَّل أي سجل سابق). */
+    fun refund(amountText: String, note: String) {
+        val balance = student.value?.ledger?.walletBalance ?: 0.0
+        val amount = when (val result = validateRefund(amountText, balance)) {
+            is RefundValidation.Valid -> result.amount
+            RefundValidation.InvalidAmount -> return send(UiEvent.Message(R.string.invalid_amount))
+            is RefundValidation.ExceedsBalance -> return send(
+                UiEvent.Message(R.string.refund_exceeds_balance, Money.format(result.balance))
+            )
+        }
+        runAction {
+            repository.refundFromWallet(studentId, amount, note)
+            send(UiEvent.Message(R.string.refund_done))
+        }
+    }
+
+    /** لا يُحذف مستحق له دفعات أو خصم من المحفظة، حتى لا تضيع حركات مالية. */
     fun deleteDue(due: DueSummary) {
-        if (due.payments.isNotEmpty()) {
+        if (due.hasActivity) {
             send(UiEvent.Message(R.string.due_has_payments))
             return
         }

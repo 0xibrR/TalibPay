@@ -14,7 +14,9 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.GoogleCredentialException
+import com.irdev.talibpay.data.InsufficientWalletBalanceException
 import com.irdev.talibpay.data.NotSignedInException
+import com.irdev.talibpay.data.PaymentLockedByWalletException
 
 const val MIN_PASSWORD_LENGTH = 8
 
@@ -38,5 +40,7 @@ fun errorMessageRes(e: Throwable?): Int = when (e) {
     is NoCredentialException -> R.string.no_google_account_found
     is GetCredentialException, is GoogleCredentialException -> R.string.google_sign_in_failed
     is NotSignedInException -> R.string.user_not_found
+    is InsufficientWalletBalanceException -> R.string.refund_balance_changed
+    is PaymentLockedByWalletException -> R.string.payment_locked_by_wallet
     else -> R.string.error_generic
 }

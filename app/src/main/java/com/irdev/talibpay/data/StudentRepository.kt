@@ -16,10 +16,13 @@ import com.irdev.talibpay.domain.periodsDue
 import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.StudentLedger
+import com.irdev.talibpay.domain.Wallet
+import com.irdev.talibpay.domain.WalletEntryType
 import com.irdev.talibpay.domain.methodFor
 import com.irdev.talibpay.model.Charge
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.model.Student
+import com.irdev.talibpay.model.WalletEntry
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -30,14 +33,21 @@ import kotlin.coroutines.resumeWithException
 
 class NotSignedInException : IllegalStateException("User is not signed in")
 
+/** الاسترداد أكبر من رصيد المحفظة الحالي (ربما تغيّر من جهاز آخر). */
+class InsufficientWalletBalanceException : IllegalStateException("Wallet balance is not enough")
+
+/** دفعة أضافت رصيدًا للمحفظة: لا تُعدَّل ولا تُحذف حتى لا يختل رصيد المحفظة. */
+class PaymentLockedByWalletException : IllegalStateException("Payment credited the wallet")
+
 /**
- * الطالب مع دفتر حسابه (المستحقات ودفعات كل منها).
+ * الطالب مع دفتر حسابه (المستحقات ودفعات كل منها، وحركات المحفظة).
  * مبالغ [student] محسوبة من الدفتر عند القراءة، فتبقى صحيحة حتى للبيانات القديمة.
  */
 data class StudentWithPayments(val student: Student, val ledger: StudentLedger) {
     val dues: List<DueSummary> get() = ledger.dues
     val payments: List<Payment> get() = ledger.payments
     val lastPayment: Payment? get() = payments.lastOrNull()
+    val walletEntries: List<WalletEntry> get() = ledger.walletEntries
 }
 
 data class StudentInput(
@@ -197,6 +207,9 @@ class StudentRepository(
         if (data.payments.isNotEmpty()) {
             ref.child(PAYMENTS).setValue(data.payments.associateBy { it.id }).await()
         }
+        if (data.walletEntries.isNotEmpty()) {
+            ref.child(WALLET).setValue(data.walletEntries.associateBy { it.id }).await()
+        }
     }
 
     suspend fun deleteAllStudents() {
@@ -205,21 +218,26 @@ class StudentRepository(
 
     // ---------------- المستحقات ----------------
 
+    /** مستحق جديد يُسدَّد تلقائيًا من رصيد المحفظة إن وُجد (في نفس الـ transaction). */
     suspend fun addCharge(studentId: String, input: ChargeInput) {
         val ref = studentRef(studentId)
-        val chargeRef = ref.child(CHARGES).push()
-        val id = chargeRef.key ?: error("push() returned no key")
-        chargeRef.setValue(
-            Charge(
-                id = id,
-                title = input.title,
-                amount = input.amount,
-                dueDate = input.dueDate,
-                note = input.note,
-                createdAt = clock()
-            )
-        ).await()
-        syncLedger(ref)
+        val id = ref.child(CHARGES).push().key ?: error("push() returned no key")
+        val charge = Charge(
+            id = id,
+            title = input.title,
+            amount = input.amount,
+            dueDate = input.dueDate,
+            note = input.note,
+            createdAt = clock()
+        )
+        syncLedger(ref) { data ->
+            val chargesNode = data.child(CHARGES)
+            if (chargesNode.hasChild(id)) emptyList()
+            else {
+                chargesNode.child(id).value = charge
+                listOf(id)
+            }
+        }
     }
 
     suspend fun updateCharge(studentId: String, chargeId: String, input: ChargeInput) {
@@ -246,24 +264,87 @@ class StudentRepository(
 
     // ---------------- الدفعات ----------------
 
+    /**
+     * تسجيل دفعة: ما يزيد عن المتبقي على مستحقها يُضاف للمحفظة.
+     * الدفعة وحركة الإيداع تُكتبان معًا في transaction واحدة، والمتبقي يُحسب من أحدث البيانات،
+     * فلا يتكرر الإيداع ولا يُحسب خطأً حتى لو سُجلت دفعتان لنفس المستحق من جهازين.
+     */
     suspend fun addPayment(studentId: String, input: PaymentInput) {
         val ref = studentRef(studentId)
-        val paymentRef = ref.child(PAYMENTS).push()
-        val id = paymentRef.key ?: error("push() returned no key")
-        paymentRef.setValue(input.toPayment(id)).await()
-        syncLedger(ref)
+        val id = ref.child(PAYMENTS).push().key ?: error("push() returned no key")
+        val now = clock()
+        syncLedger(ref) { data ->
+            val paymentsNode = data.child(PAYMENTS)
+            if (!paymentsNode.hasChild(id)) {
+                val dueRemaining = data.ledger().due(input.chargeId)?.remaining ?: 0.0
+                val amount = Money.sum(listOf(input.cash, input.bank))
+                val allocation = Wallet.allocate(amount, dueRemaining)
+                paymentsNode.child(id).value = input.toPayment(id).copy(credited = allocation.credited)
+                if (allocation.credited > 0) {
+                    val depositId = Wallet.depositId(id)
+                    data.child(WALLET).child(depositId).value = WalletEntry(
+                        id = depositId,
+                        type = WalletEntryType.DEPOSIT.name,
+                        amount = allocation.credited,
+                        chargeId = input.chargeId,
+                        paymentId = id,
+                        createdAt = now
+                    )
+                }
+            }
+            emptyList()
+        }
     }
 
+    /** تعديل دفعة لم تُضف للمحفظة (المبلغ لا يتجاوز المتبقي، يتحقق منه الـ ViewModel). */
     suspend fun updatePayment(studentId: String, paymentId: String, input: PaymentInput) {
         val ref = studentRef(studentId)
-        ref.child(PAYMENTS).child(paymentId).setValue(input.toPayment(paymentId)).await()
-        syncLedger(ref)
+        var locked = false
+        syncLedger(ref) { data ->
+            val node = data.child(PAYMENTS).child(paymentId)
+            locked = (node.child("credited").getValue(Double::class.java) ?: 0.0) > 0
+            if (!locked) node.value = input.toPayment(paymentId)
+            emptyList()
+        }
+        if (locked) throw PaymentLockedByWalletException()
     }
 
     suspend fun deletePayment(studentId: String, paymentId: String) {
         val ref = studentRef(studentId)
-        ref.child(PAYMENTS).child(paymentId).removeValue().await()
-        syncLedger(ref)
+        var locked = false
+        syncLedger(ref) { data ->
+            val node = data.child(PAYMENTS).child(paymentId)
+            locked = (node.child("credited").getValue(Double::class.java) ?: 0.0) > 0
+            if (!locked) node.value = null
+            emptyList()
+        }
+        if (locked) throw PaymentLockedByWalletException()
+    }
+
+    // ---------------- المحفظة ----------------
+
+    /** استرداد مبلغ من المحفظة للطالب؛ يُرفض إن تجاوز الرصيد الحالي وقت التنفيذ. */
+    suspend fun refundFromWallet(studentId: String, amount: Double, note: String) {
+        val ref = studentRef(studentId)
+        val id = "ref-" + (ref.child(WALLET).push().key ?: error("push() returned no key"))
+        val now = clock()
+        var refunded = false
+        syncLedger(ref) { data ->
+            val walletNode = data.child(WALLET)
+            refunded = walletNode.hasChild(id)
+            if (!refunded && amount <= data.ledger().walletBalance) {
+                walletNode.child(id).value = WalletEntry(
+                    id = id,
+                    type = WalletEntryType.REFUND.name,
+                    amount = amount,
+                    note = note,
+                    createdAt = now
+                )
+                refunded = true
+            }
+            emptyList()
+        }
+        if (!refunded) throw InsufficientWalletBalanceException()
     }
 
     /**
@@ -272,16 +353,23 @@ class StudentRepository(
      * - يربط كل دفعة بمستحقها ويكتب المتبقي بعدها وطريقة الدفع.
      * - يكتب مجاميع الطالب.
      */
-    private suspend fun syncLedger(studentRef: DatabaseReference) {
+    /**
+     * @param mutate تعديل يُطبَّق داخل نفس الـ transaction قبل إعادة الحساب
+     * (إضافة دفعة أو مستحق...)، ويعيد معرّفات المستحقات الجديدة التي أنشأها.
+     */
+    private suspend fun syncLedger(
+        studentRef: DatabaseReference,
+        mutate: (MutableData) -> List<String> = { emptyList() }
+    ) {
         val now = clock()
         val today = today()
         studentRef.awaitTransaction { data ->
-            data.generateDueCharges(today, now)
+            val newCharges = mutate(data) + data.generateDueCharges(today, now)
+            data.applyWalletToNewCharges(newCharges, now)
+
             val chargesNode = data.child(CHARGES)
             val paymentsNode = data.child(PAYMENTS)
-            val charges = chargesNode.children.mapNotNull { it.getValue(Charge::class.java) }
-            val payments = paymentsNode.children.mapNotNull { it.getValue(Payment::class.java) }
-            val ledger = StudentLedger.build(charges, payments)
+            val ledger = data.ledger()
 
             for (due in ledger.dues) {
                 if (due.isLegacy && !chargesNode.hasChild(due.charge.id)) {
@@ -303,16 +391,53 @@ class StudentRepository(
             data.child("paid").value = totals.paid
             data.child("total").value = totals.total
             data.child("remaining").value = totals.remaining
+            data.child("walletBalance").value = totals.walletBalance
             data.child("updatedAt").value = now
         }
     }
 
-    /** ينشئ رسوم الأشهر التي حان موعدها داخل الـ transaction، بمعرّف ثابت لكل شهر. */
-    private fun MutableData.generateDueCharges(today: SimpleDate, now: Long) {
-        val student = getValue(Student::class.java) ?: return
+    /** دفتر الطالب من البيانات الحالية داخل الـ transaction. */
+    private fun MutableData.ledger(): StudentLedger = StudentLedger.build(
+        child(CHARGES).children.mapNotNull { it.getValue(Charge::class.java) },
+        child(PAYMENTS).children.mapNotNull { it.getValue(Payment::class.java) },
+        child(WALLET).children.mapNotNull { it.getValue(WalletEntry::class.java) }
+    )
+
+    /**
+     * يسدد المستحقات الجديدة من رصيد المحفظة، الأقدم أولًا، كليًا أو جزئيًا.
+     * حركة الخصم معرّفها ثابت لكل مستحق (use-{id})، فلا يُخصم للمستحق نفسه مرتين.
+     * الخصم ليس دفعة: لا يظهر في النقدي أو البنكي.
+     */
+    private fun MutableData.applyWalletToNewCharges(chargeIds: List<String>, now: Long) {
+        if (chargeIds.isEmpty()) return
+        val walletNode = child(WALLET)
+        chargeIds.forEachIndexed { index, chargeId ->
+            val useId = Wallet.useId(chargeId)
+            if (walletNode.hasChild(useId)) return@forEachIndexed
+            val ledger = ledger()
+            val due = ledger.due(chargeId) ?: return@forEachIndexed
+            val amount = Wallet.useFor(ledger.walletBalance, due.remaining)
+            if (amount <= 0) return@forEachIndexed
+            walletNode.child(useId).value = WalletEntry(
+                id = useId,
+                type = WalletEntryType.USE.name,
+                amount = amount,
+                chargeId = chargeId,
+                createdAt = now + index
+            )
+        }
+    }
+
+    /**
+     * ينشئ رسوم الأشهر التي حان موعدها داخل الـ transaction، بمعرّف ثابت لكل شهر.
+     * @return معرّفات المستحقات التي أُنشئت فعلًا الآن
+     */
+    private fun MutableData.generateDueCharges(today: SimpleDate, now: Long): List<String> {
+        val student = getValue(Student::class.java) ?: return emptyList()
         val periods = student.periodsDue(today)
-        if (periods.isEmpty()) return
+        if (periods.isEmpty()) return emptyList()
         val chargesNode = child(CHARGES)
+        val created = mutableListOf<String>()
         periods.forEachIndexed { index, period ->
             if (!chargesNode.hasChild(period.chargeId)) {
                 chargesNode.child(period.chargeId).value = Charge(
@@ -322,9 +447,11 @@ class StudentRepository(
                     period = period.month.key,
                     createdAt = now + index
                 )
+                created += period.chargeId
             }
         }
         child("lastBilledPeriod").value = periods.last().month.key
+        return created
     }
 
     // القيم المحسوبة هنا مبدئية؛ القيم النهائية تُكتب في recalculate
@@ -344,7 +471,8 @@ class StudentRepository(
         val stored = getValue(Student::class.java) ?: return null
         val ledger = StudentLedger.build(
             child(CHARGES).children.mapNotNull { it.getValue(Charge::class.java) },
-            child(PAYMENTS).children.mapNotNull { it.getValue(Payment::class.java) }
+            child(PAYMENTS).children.mapNotNull { it.getValue(Payment::class.java) },
+            child(WALLET).children.mapNotNull { it.getValue(WalletEntry::class.java) }
         )
         val totals = ledger.totals
         val student = stored.copy(
@@ -352,7 +480,8 @@ class StudentRepository(
             paidBank = totals.paidBank,
             paid = totals.paid,
             total = totals.total,
-            remaining = totals.remaining
+            remaining = totals.remaining,
+            walletBalance = totals.walletBalance
         )
         return StudentWithPayments(student, ledger)
     }
@@ -362,6 +491,7 @@ class StudentRepository(
         const val STUDENTS = "students"
         const val CHARGES = "charges"
         const val PAYMENTS = "payments"
+        const val WALLET = "wallet"
     }
 }
 

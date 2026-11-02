@@ -192,6 +192,84 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- المحفظة: الرصيد الدائن وسجل الحركات -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/wallet_title"
+                android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/walletCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="@dimen/card_padding"
+                    android:paddingBottom="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="@dimen/card_padding">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/wallet_balance"
+                                android:textAppearance="@style/TextAppearance.TalibPay.Caption" />
+
+                            <TextView
+                                android:id="@+id/tvWalletBalance"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                                android:textStyle="bold"
+                                tools:text="50 ₪" />
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnWalletRefund"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/wallet_refund" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvWalletEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:paddingHorizontal="@dimen/card_padding"
+                        android:paddingBottom="8dp"
+                        android:text="@string/wallet_empty"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <!-- سجل الحركات (يُعبّأ من الكود، الأحدث أولًا) -->
+                    <LinearLayout
+                        android:id="@+id/walletEntries"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- المستحقات: كل مستحق مع ما دُفع منه ودفعاته -->
             <LinearLayout
                 android:layout_width="match_parent"

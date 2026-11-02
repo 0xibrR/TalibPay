@@ -29,7 +29,8 @@ data class PaymentFormState(
     /** المتاح للدفع في المستحق: المتبقي عليه + قيمة الدفعة المعدَّلة إن كانت منه. */
     fun availableFor(dueId: String): Double {
         val due = dues.firstOrNull { it.charge.id == dueId } ?: return 0.0
-        val own = existing?.takeIf { it.chargeId == dueId }?.paid ?: 0.0
+        // الجزء المطبَّق فقط من الدفعة المعدَّلة (الزيادة التي ذهبت للمحفظة لا تُحسب)
+        val own = existing?.takeIf { it.chargeId == dueId }?.let { Money.subtract(it.paid, it.credited) } ?: 0.0
         return Money.sum(listOf(due.remaining, own))
     }
 }
@@ -79,10 +80,22 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
             // نقرأ أحدث البيانات قبل التحقق، فقد تكون دفعة أخرى سُجّلت من جهاز آخر
             val due = repository.getStudent(studentId)?.ledger?.due(dueId)
                 ?: return@runAction send(UiEvent.Message(R.string.choose_due))
-            val paidByOthers = Money.sum(due.payments.filter { it.id != paymentId }.map { it.paid })
+            val editing = due.payments.firstOrNull { it.id == paymentId }
+            // دفعة أضافت رصيدًا للمحفظة لا تُعدَّل حتى لا يختل رصيد المحفظة
+            if (editing != null && editing.credited > 0) {
+                return@runAction send(UiEvent.Message(R.string.payment_locked_by_wallet))
+            }
+            // ما سُدِّد من المستحق بغير هذه الدفعة: خصم المحفظة + الجزء المطبَّق من الدفعات الأخرى
+            val paidByOthers = Money.sum(
+                listOf(due.walletUsed) +
+                    due.payments.filter { it.id != paymentId }.map { Money.subtract(it.paid, it.credited) }
+            )
 
             val amounts = when (
-                val result = validatePayment(cashText, bankText, due.charge.amount, paidByOthers)
+                // دفعة جديدة: ما يزيد عن المتبقي يذهب للمحفظة. التعديل: لا يتجاوز المتبقي
+                val result = validatePayment(
+                    cashText, bankText, due.charge.amount, paidByOthers, allowCredit = paymentId == null
+                )
             ) {
                 is PaymentValidation.Valid -> result
                 PaymentValidation.InvalidAmount -> return@runAction send(UiEvent.Message(R.string.invalid_amount))

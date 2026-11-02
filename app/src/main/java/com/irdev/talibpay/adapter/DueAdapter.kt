@@ -56,9 +56,11 @@ class DueAdapter(
 
             dueProgress.setProgressCompat(paidPercent(due.paid, charge.amount), false)
             dueProgress.setIndicatorColor(color)
-            tvDueSummary.text = context.getString(
-                R.string.due_summary, context.money(due.paid), context.money(due.remaining)
-            )
+            tvDueSummary.text = listOfNotNull(
+                context.getString(R.string.due_summary, context.money(due.paid), context.money(due.remaining)),
+                // ما سُدِّد من المحفظة (ليس دفعة، فلا يظهر في قائمة الدفعات)
+                if (due.walletUsed > 0) context.getString(R.string.due_wallet_used, context.money(due.walletUsed)) else null
+            ).joinToString("\n")
 
             // الدفعات: الأحدث أولًا، مع المتبقي من المستحق بعد كل دفعة
             duePayments.removeAllViews()
@@ -71,6 +73,7 @@ class DueAdapter(
                     .filter { it.isNotBlank() }.joinToString(" · ")
                 row.tvPaymentDetails.text = listOf(
                     context.getString(R.string.remaining_after_payment, context.money(payment.remaining)),
+                    if (payment.credited > 0) context.getString(R.string.payment_to_wallet, context.money(payment.credited)) else "",
                     payment.note
                 ).filter { it.isNotBlank() }.joinToString(" · ")
                 row.tvPaymentAmount.text = context.money(payment.paid)

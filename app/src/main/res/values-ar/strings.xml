@@ -246,6 +246,25 @@
         <item quantity="many">%d طالبًا</item>
         <item quantity="other">%d طالب</item>
     </plurals>
+    <!-- المحفظة -->
+    <string name="wallet_title">المحفظة</string>
+    <string name="wallet_balance">الرصيد الدائن</string>
+    <string name="wallet_refund">استرداد</string>
+    <string name="wallet_empty">لا توجد حركات بعد. أي مبلغ يُدفع زيادة عن المستحق يُضاف هنا ويُستخدم تلقائيًا للمستحقات الجديدة.</string>
+    <string name="wallet_deposit">إيداع من زيادة دفعة</string>
+    <string name="wallet_use">خصم لـ %1$s</string>
+    <string name="wallet_refund_entry">استرداد للطالب</string>
+    <string name="wallet_available">المتاح: %1$s</string>
+    <string name="refund_title">استرداد من المحفظة</string>
+    <string name="refund_amount">مبلغ الاسترداد</string>
+    <string name="refund_exceeds_balance">المبلغ أكبر من رصيد المحفظة (%1$s ₪)</string>
+    <string name="refund_done">تم تسجيل الاسترداد</string>
+    <string name="refund_balance_changed">تغيّر رصيد المحفظة. تحقق منه وحاول مرة أخرى.</string>
+    <string name="payment_locked_by_wallet">أضافت هذه الدفعة رصيدًا للمحفظة، لذا لا يمكن تعديلها أو حذفها.</string>
+    <string name="payment_preview_credit">هذه الدفعة: %1$s · سيُضاف %2$s لمحفظة الطالب</string>
+    <string name="due_helper_wallet">قيمة المستحق %1$s · المتبقي %2$s · الزيادة تذهب للمحفظة</string>
+    <string name="due_wallet_used">من المحفظة: %1$s</string>
+    <string name="payment_to_wallet">%1$s للمحفظة</string>
     <plurals name="months_count">
         <item quantity="zero">لا أشهر</item>
         <item quantity="one">شهر واحد</item>
@@ -283,7 +302,7 @@
     <string name="due_below_paid">لا يمكن أن تقل القيمة عمّا دُفع منها (%1$s ₪)</string>
     <string name="due_added">تمت إضافة المستحق</string>
     <string name="due_deleted">تم حذف المستحق</string>
-    <string name="due_has_payments">لهذا المستحق دفعات. احذف دفعاته أولًا، أو عدّل المستحق بدل حذفه.</string>
+    <string name="due_has_payments">لهذا المستحق دفعات أو خصم من المحفظة، لذا لا يمكن حذفه. عدّله بدلًا من ذلك.</string>
     <string name="no_dues_hint">لا توجد مستحقات بعد. أضف مستحقًا (مثل رسوم أيلول) ثم سجّل الدفعات مقابله.</string>
     <string name="no_open_dues_title">لا يوجد مبلغ مستحق</string>
     <string name="no_open_dues">كل المستحقات مدفوعة بالكامل. أضف مستحقًا جديدًا لتسجيل دفعة.</string>

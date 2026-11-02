@@ -13,6 +13,7 @@ data class Payment(
     val cash: Double = 0.0, // المبلغ النقدي
     val bank: Double = 0.0, // المبلغ البنكي
     val paid: Double = 0.0, // نقدي + بنكي
+    val credited: Double = 0.0, // الزيادة عن المتبقي على المستحق، أُضيفت لمحفظة الطالب
     val total: Double = 0.0, // قيمة المستحق وقت الدفعة
     val remaining: Double = 0.0, // المتبقي من المستحق بعد هذه الدفعة
     val paymentMethod: String = "",
