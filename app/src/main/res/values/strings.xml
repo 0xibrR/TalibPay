@@ -180,12 +180,22 @@
     <string name="error_weak_password">Password must be at least 8 characters.</string>
     <string name="error_generic">Something went wrong. Please try again.</string>
 
+    <string name="method_cash">Cash</string>
+    <string name="method_mixed">Part cash and part bank</string>
+    <string name="method_bank">Bank</string>
+    <string name="method_unpaid">Not Paid</string>
+    <string name="no_payments">No payments</string>
+    <string name="invalid_amount">Enter a valid amount</string>
+    <string name="cash_amount">Cash %1$s</string>
+    <string name="bank_amount">Bank %1$s</string>
+
+    <!-- الترتيب يطابق PaymentMethod.entries -->
     <string-array name="payment_methods">
-        <item>Select payment method</item>
-        <item>Cash</item>
-        <item>Part cash and part bank</item>
-        <item>Bank</item>
-        <item>Not Paid</item>
+        <item>@string/select_payment_method</item>
+        <item>@string/method_cash</item>
+        <item>@string/method_mixed</item>
+        <item>@string/method_bank</item>
+        <item>@string/method_unpaid</item>
     </string-array>
 
     <string name="default_web_client_id">913851560456-ld9ksu4la9fk50s40ioe4j5lthbdjqpn.apps.googleusercontent.com</string>

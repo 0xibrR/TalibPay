@@ -1,208 +1,80 @@
 package com.irdev.talibpay.activity
 
-import android.annotation.SuppressLint
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.FirebaseAuth
-import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
-import com.irdev.talibpay.data.recalculateStudentTotals
-import com.irdev.talibpay.data.studentRef
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
+import com.irdev.talibpay.databinding.ActivityEditPaymentBinding
+import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.PaymentMethod
+import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.showDatePicker
+import com.irdev.talibpay.util.toast
+import com.irdev.talibpay.viewmodel.PaymentFormViewModel
+import com.irdev.talibpay.viewmodel.UiEvent
 import java.util.Locale
 
 class EditPaymentActivity : AppCompatActivity() {
-    @SuppressLint("MissingInflatedId")
+
+    private lateinit var binding: ActivityEditPaymentBinding
+    private val viewModel: PaymentFormViewModel by viewModels()
+    private var prefilled = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_edit_payment)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        binding = ActivityEditPaymentBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        applySystemBarInsets(binding.main)
         title = getString(R.string.edit_pyment)
+        prefilled = savedInstanceState != null
 
-        val id = intent.getStringExtra("id") ?: ""
-        val cash = intent.getDoubleExtra("cash", 0.0)
-        val bank = intent.getDoubleExtra("bank", 0.0)
-        val total = intent.getDoubleExtra("total", 0.0)
-        val paymentMethod = intent.getStringExtra("paymentMethod") ?: ""
-        val paymentDate = intent.getStringExtra("paymentDate") ?: ""
-        val note = intent.getStringExtra("note") ?: ""
-
-
-        val edtPaidCash = findViewById<TextInputEditText>(R.id.edtPaidCash_edit)
-        val edtPaidBank = findViewById<TextInputEditText>(R.id.edtPaidBank_edit)
-        val edtTotal = findViewById<TextInputEditText>(R.id.edtTotal_edit)
-        val spinnerPaymentMethod = findViewById<Spinner>(R.id.spinnerPaymentMethod_edit)
-        val edtPaymentDate = findViewById<TextInputEditText>(R.id.edtPaymentDate_edit)
-        val edtNotesPayment = findViewById<TextInputEditText>(R.id.edtNotes_Payment_edit)
-        val btnEditPayment = findViewById<MaterialButton>(R.id.btnEditPayment)
-
-        edtPaidCash.setText(cash.toString())
-        edtPaidBank.setText(bank.toString())
-        edtTotal.setText(total.toString())
-        edtPaymentDate.setText(paymentDate)
-        edtNotesPayment.setText(note)
-
-        val paymentMethods = resources.getStringArray(R.array.payment_methods)
-        val index = paymentMethods.indexOf(paymentMethod)
-        if (index >= 0) {
-            spinnerPaymentMethod.setSelection(index)
-        } else {
-            spinnerPaymentMethod.setSelection(0) // الخيار الافتراضي "اختر طريقة الدفع"
+        binding.edtPaymentDateEdit.setOnClickListener {
+            showDatePicker { binding.edtPaymentDateEdit.setText(it) }
         }
 
-
-        btnEditPayment.setOnClickListener {
-            val paidCashStr = edtPaidCash.text?.toString()?.trim().orEmpty()
-            val paidBankStr = edtPaidBank.text?.toString()?.trim().orEmpty()
-            val totalStr = edtTotal.text?.toString()?.trim().orEmpty()
-            val paymentDate = edtPaymentDate.text?.toString()?.trim().orEmpty()
-            val selectedPaymentMethod = spinnerPaymentMethod.selectedItem?.toString().orEmpty()
-
-            // التحقق من اختيار طريقة الدفع
-            if (selectedPaymentMethod == getString(R.string.select_payment_method)) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.please_choose_payment_method),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
-
-            // التحقق من الحقول
-            val ok =
-                check(edtPaidCash) && check(edtPaidBank) && check(edtTotal) && check(edtPaymentDate)
-            if (!ok) return@setOnClickListener
-
-            // التحويل لأرقام
-            val paidCash = paidCashStr.toDoubleOrNull() ?: 0.0
-            val paidBank = paidBankStr.toDoubleOrNull() ?: 0.0
-            val totalVal =
-                if (totalStr.isNotEmpty()) totalStr.toDoubleOrNull() ?: (paidCash + paidBank)
-                else (paidCash + paidBank)
-
-            val paidVal = paidCash + paidBank
-            val remainingVal = totalVal - paidVal
-
-            if (paidVal > totalVal) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.The_amount_paid_may_not_be_greater_than_the_full_fee),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
-
-            val studentId = intent.getStringExtra("studentId") ?: ""
-            val paymentId = intent.getStringExtra("id") ?: ""
-            val note = edtNotesPayment.text?.toString().orEmpty()
-
-            val user = FirebaseAuth.getInstance().currentUser
-            when {
-                user == null -> {
-                    Toast.makeText(this, getString(R.string.user_not_found), Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
-                    return@setOnClickListener
-                }
-
-                studentId.isEmpty() -> {
-                    Toast.makeText(this, "لم يتم تمرير معرف الطالب", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                paymentId.isEmpty() -> {
-                    Toast.makeText(this, "لم يتم تمرير معرف الدفعة", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-            }
-
-
-            // تكوين كائن الدفعة الجديد
-            val updatedPayment = Payment(
-                id = paymentId,
-                cash = paidCash,
-                bank = paidBank,
-                paid = paidVal,
-                total = totalVal,
-                remaining = remainingVal,
-                paymentMethod = selectedPaymentMethod,
-                paymentDate = paymentDate,
-                note = note
+        binding.btnEditPayment.setOnClickListener {
+            val total = binding.edtTotalEdit.requireText() ?: return@setOnClickListener
+            val date = binding.edtPaymentDateEdit.requireText() ?: return@setOnClickListener
+            viewModel.save(
+                cashText = binding.edtPaidCashEdit.text?.toString().orEmpty().ifBlank { "0" },
+                bankText = binding.edtPaidBankEdit.text?.toString().orEmpty().ifBlank { "0" },
+                totalText = total,
+                methodPosition = binding.spinnerPaymentMethodEdit.selectedItemPosition,
+                paymentDate = date,
+                note = binding.edtNotesPaymentEdit.text?.toString()?.trim().orEmpty()
             )
-
-            // التحديث في Firebase ثم إعادة حساب مجاميع الطالب من دفعاته
-            val dbRef = studentRef(user.uid, studentId)
-            btnEditPayment.isEnabled = false
-            dbRef.child("payments").child(paymentId)
-                .setValue(updatedPayment)
-                .addOnSuccessListener {
-                    recalculateStudentTotals(dbRef, getCurrentTime()) { ok ->
-                        Toast.makeText(
-                            this,
-                            getString(
-                                if (ok) R.string.updated_successfully
-                                else R.string.failed_to_update_student
-                            ),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        if (ok) finish() else btnEditPayment.isEnabled = true // رجوع لصفحة التفاصيل
-                    }
-                }
-                .addOnFailureListener {
-                    btnEditPayment.isEnabled = true
-                    Toast.makeText(
-                        this,
-                        getString(R.string.updated_failed),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
         }
 
-    }
-
-    private fun getCurrentTime(): String {
-        val sdf = SimpleDateFormat("E, MMM dd, yyyy hh:mm:ss a", Locale.getDefault())
-        return sdf.format(Date())
-    }
-
-    private fun showDatePickerDialog(editText: EditText) {
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        val datePickerDialog =
-            DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
-                val formattedDate =
-                    "%02d/%02d/%04d".format(selectedDay, selectedMonth + 1, selectedYear)
-                editText.setText(formattedDate)
-            }, year, month, day)
-
-        datePickerDialog.show()
-    }
-
-    private fun check(editText: EditText): Boolean {
-        if (editText.text.isEmpty()) {
-            editText.error = getString(R.string.enter_value)
-            return false
+        collectWhileStarted(viewModel.existing) { payment ->
+            if (payment == null || prefilled) return@collectWhileStarted
+            prefilled = true
+            // أرقام لاتينية بدون فواصل آلاف حتى يقبلها حقل الإدخال الرقمي
+            binding.edtPaidCashEdit.setText(Money.format(payment.cash, Locale.US).replace(",", ""))
+            binding.edtPaidBankEdit.setText(Money.format(payment.bank, Locale.US).replace(",", ""))
+            binding.edtTotalEdit.setText(Money.format(payment.total, Locale.US).replace(",", ""))
+            binding.edtPaymentDateEdit.setText(payment.paymentDate)
+            binding.edtNotesPaymentEdit.setText(payment.note)
+            binding.spinnerPaymentMethodEdit.setSelection(
+                PaymentMethod.spinnerPositionOf(PaymentMethod.fromStored(payment.paymentMethod))
+            )
         }
-        return true
+        collectWhileStarted(viewModel.loading) { binding.btnEditPayment.isEnabled = !it }
+        collectWhileStarted(viewModel.events) { event ->
+            when (event) {
+                is UiEvent.Message -> toast(event.res)
+                UiEvent.Finished -> finish()
+                UiEvent.NotSignedIn -> {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finishAffinity()
+                }
+
+                else -> Unit
+            }
+        }
     }
 }

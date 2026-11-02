@@ -1,291 +1,151 @@
 package com.irdev.talibpay.activity
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.PopupWindow
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.graphics.toColorInt
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
-import com.irdev.talibpay.model.Student
 import com.irdev.talibpay.adapter.StudentAdapter
-import com.irdev.talibpay.data.studentRef
-import com.irdev.talibpay.util.canAccessApp
+import com.irdev.talibpay.data.StudentWithPayments
+import com.irdev.talibpay.databinding.ActivityMainBinding
+import com.irdev.talibpay.databinding.AlertDialogDeleteAllBinding
+import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.util.Extras
+import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.attachSwipeActions
+import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.viewmodel.MainUiState
+import com.irdev.talibpay.viewmodel.MainViewModel
+import com.irdev.talibpay.viewmodel.UiEvent
 import com.ncorti.slidetoact.SlideToActView
-import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 
-@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
-    private val studentList = ArrayList<Student>()
-    private val allStudents = ArrayList<Student>()
-    private lateinit var customAdapter: StudentAdapter
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels()
+    private val adapter = StudentAdapter { openDetail(it) }
 
-    // القيمة الخام لكل طالب (مع دفعاته) لاستعادتها كاملة عند التراجع عن الحذف
-    private val rawStudents = HashMap<String, Any?>()
-    private var studentsRef: DatabaseReference? = null
-    private var studentsListener: ValueEventListener? = null
-
-
-    @SuppressLint("MissingInflatedId", "UseKtx", "InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        // ربط عناصر الواجهة
-        recyclerView = findViewById(R.id.recyclerView)
-        val btnAddStudent = findViewById<FloatingActionButton>(R.id.newStudentFAB)
-        val paymentSummary = findViewById<LinearLayout>(R.id.payment_summary_layout)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        applySystemBarInsets(binding.main)
 
-        paymentSummary.setOnClickListener {
-            val inflater = LayoutInflater.from(this)
-            val view = inflater.inflate(R.layout.tooltip_payment_summary, null)
-
-            val popup = PopupWindow(
-                view,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                true
-            )
-            popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            popup.elevation = 10f
-
-            // عرض البوب أب تحت الأيقونة
-            popup.showAsDropDown(paymentSummary, -20, 0)
-        }
-
-        // إعداد RecyclerView
-        customAdapter = StudentAdapter(studentList)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = customAdapter
-
-        // زر الإضافة
-        btnAddStudent.setOnClickListener {
-            startActivity(Intent(this, AddActivity::class.java))
-        }
-
-
-        val itemTouchHelper = ItemTouchHelper(object :
-            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ) = false
-
-            @SuppressLint("UseKtx", "NotifyDataSetChanged")
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                val student = customAdapter.getStudentAt(position) ?: return
-
-                when (direction) {
-                    ItemTouchHelper.LEFT -> {
-                        val builder = AlertDialog.Builder(this@MainActivity)
-                            .setTitle(getString(R.string.delete_title_with_name, student.name))
-                            .setMessage(getString(R.string.delete_message_with_name, student.name))
-
-                        builder.setPositiveButton(getString(R.string.ok)) { dialog, _ ->
-                            val currentUser = FirebaseAuth.getInstance().currentUser
-                            currentUser?.let { user ->
-                                // نحتفظ بالعقدة كاملة (مع الدفعات) حتى يستعيدها التراجع بلا فقدان
-                                val rawStudent = rawStudents[student.id]
-
-                                // حذف من Firebase
-                                studentRef(user.uid, student.id).removeValue()
-                                    .addOnSuccessListener {
-                                        showUndoSnackbar(student, rawStudent)
-                                    }
-                                    .addOnFailureListener {
-                                        customAdapter.notifyItemChanged(position)
-                                        Snackbar.make(
-                                            findViewById(android.R.id.content),
-                                            getString(R.string.deleted_failed),
-                                            Snackbar.LENGTH_LONG
-                                        ).show()
-                                    }
-                            }
-                            dialog.dismiss()
-                        }
-
-                        builder.setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-                            customAdapter.notifyItemChanged(position)
-                            dialog.dismiss()
-                        }
-
-                        val dialog = builder.create()
-                        dialog.setCanceledOnTouchOutside(false)
-                        dialog.setCancelable(false)
-                        dialog.show()
-                    }
-
-                    ItemTouchHelper.RIGHT -> {
-                        customAdapter.notifyItemChanged(position)
-                        val intent = Intent(this@MainActivity, EditActivity::class.java).apply {
-                            putExtra("id", student.id)
-                            putExtra("name", student.name)
-                            putExtra("birthYear", student.birthYear)
-                            putExtra("paidCash", student.paidCash)
-                            putExtra("paidBank", student.paidBank)
-                            putExtra("paid", student.paid)
-                            putExtra("total", student.total)
-                            putExtra("remaining", student.remaining)
-                            putExtra("phoneNumber", student.phoneNumber)
-                            putExtra("notes", student.notes)
-                            putExtra("addedIn", student.addedIn)
-                        }
-                        startActivity(intent)
-                    }
-                }
-            }
-
-
-            override fun onChildDraw(
-                c: Canvas,
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                dX: Float,
-                dY: Float,
-                actionState: Int,
-                isCurrentlyActive: Boolean
-            ) {
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                    if (dX > 0) {
-                        RecyclerViewSwipeDecorator.Builder(
-                            c,
-                            recyclerView,
-                            viewHolder,
-                            dX,
-                            dY,
-                            actionState,
-                            isCurrentlyActive
-                        )
-                            .addBackgroundColor("#2196F3".toColorInt())
-                            .addActionIcon(R.drawable.ic_edit)
-                            .create()
-                            .decorate()
-                    } else {
-                        RecyclerViewSwipeDecorator.Builder(
-                            c,
-                            recyclerView,
-                            viewHolder,
-                            dX,
-                            dY,
-                            actionState,
-                            isCurrentlyActive
-                        )
-                            .addBackgroundColor("#F44336".toColorInt())
-                            .addActionIcon(R.drawable.ic_delete)
-                            .create()
-                            .decorate()
-                    }
-                }
-                super.onChildDraw(
-                    c,
-                    recyclerView,
-                    viewHolder,
-                    dX,
-                    dY,
-                    actionState,
-                    isCurrentlyActive
-                )
-            }
-        })
-
-        itemTouchHelper.attachToRecyclerView(recyclerView)
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-        loadData()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // إزالة المستمع حتى لا تتراكم المستمعات مع كل عودة للشاشة
-        studentsListener?.let { studentsRef?.removeEventListener(it) }
-        studentsListener = null
-    }
-
-    private fun showUndoSnackbar(student: Student, rawStudent: Any?) {
-        val snackbar = Snackbar.make(
-            findViewById(android.R.id.content),
-            getString(R.string.deleted_successfully_with_name, student.name),
-            Snackbar.LENGTH_LONG
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.attachSwipeActions(
+            onEdit = { position -> openEdit(adapter.currentList[position]) },
+            onDelete = { position -> confirmDelete(adapter.currentList[position]) }
         )
 
-        snackbar.setAction(getString(R.string.undo)) {
-            // القائمة تتحدث تلقائيًا من المستمع بعد الاستعادة
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser == null) {
-                Snackbar.make(
-                    findViewById(android.R.id.content),
-                    getString(R.string.user_not_found),
-                    Snackbar.LENGTH_LONG
-                ).show()
+        binding.newStudentFAB.setOnClickListener {
+            startActivity(Intent(this, AddActivity::class.java))
+        }
+        binding.paymentSummaryLayout.setOnClickListener { showSummaryTooltip() }
+
+        collectWhileStarted(viewModel.uiState, ::render)
+        collectWhileStarted(viewModel.events, ::onEvent)
+    }
+
+    private fun render(state: MainUiState) {
+        binding.progressBarNotes.isVisible = state.loading
+        binding.linearLayoutEmpty.isVisible = !state.loading && !state.hasAnyStudent
+        binding.recyclerView.isVisible = !state.loading && state.hasAnyStudent
+
+        binding.txtCashValue.text = Money.format(state.summary.cash)
+        binding.txtBankValue.text = Money.format(state.summary.bank)
+        binding.txtPaidValue.text = Money.format(state.summary.paid)
+        binding.txtRemainingValue.text = Money.format(state.summary.remaining)
+
+        adapter.submitList(state.students)
+    }
+
+    private fun onEvent(event: UiEvent) {
+        when (event) {
+            is UiEvent.StudentDeleted -> showUndoSnackbar(event.student)
+            is UiEvent.Message -> snackbar(
+                if (event.arg != null) getString(event.res, event.arg) else getString(event.res)
+            )
+
+            UiEvent.NotSignedIn -> {
                 startActivity(Intent(this, LoginActivity::class.java))
                 finish()
-                return@setAction
             }
 
-            studentRef(currentUser.uid, student.id).setValue(rawStudent ?: student)
-                .addOnSuccessListener {
-                    Snackbar.make(
-                        findViewById(android.R.id.content),
-                        getString(R.string.restored_successfully_with_name, student.name),
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                }
-                .addOnFailureListener {
-                    Snackbar.make(
-                        findViewById(android.R.id.content),
-                        getString(R.string.restored_failed_with_name, student.name),
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                }
+            else -> Unit
         }
+    }
 
-        snackbar.setAnchorView(R.id.newStudentFAB).show()
+    private fun openDetail(item: StudentWithPayments) {
+        startActivity(
+            Intent(this, DetailActivity::class.java)
+                .putExtra(Extras.STUDENT_ID, item.student.id)
+        )
+    }
+
+    private fun openEdit(item: StudentWithPayments) {
+        startActivity(
+            Intent(this, EditActivity::class.java)
+                .putExtra(Extras.STUDENT_ID, item.student.id)
+        )
+    }
+
+    private fun confirmDelete(item: StudentWithPayments) {
+        val name = item.student.name
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.delete_title_with_name, name))
+            .setMessage(getString(R.string.delete_message_with_name, name))
+            .setPositiveButton(R.string.ok) { _, _ -> viewModel.deleteStudent(item) }
+            .setNegativeButton(R.string.cancel, null)
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun showUndoSnackbar(item: StudentWithPayments) {
+        Snackbar.make(
+            binding.root,
+            getString(R.string.deleted_successfully_with_name, item.student.name),
+            Snackbar.LENGTH_LONG
+        )
+            .setAction(R.string.undo) { viewModel.undoDelete(item) }
+            .setAnchorView(binding.newStudentFAB)
+            .show()
+    }
+
+    private fun snackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+            .setAnchorView(binding.newStudentFAB)
+            .show()
+    }
+
+    @SuppressLint("InflateParams")
+    private fun showSummaryTooltip() {
+        val view = LayoutInflater.from(this).inflate(R.layout.tooltip_payment_summary, null)
+        PopupWindow(
+            view,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        ).apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = 10f
+            showAsDropDown(binding.paymentSummaryLayout, -20, 0)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -293,210 +153,62 @@ class MainActivity : AppCompatActivity() {
 
         val searchItem = menu.findItem(R.id.search_menu_item)
         val searchView = searchItem.actionView as SearchView
-
-        // إعداد SearchView
-        searchView.queryHint = getString(R.string.search_hint) // نص تلميحي
-        searchView.maxWidth = Integer.MAX_VALUE // لجعل شريط البحث يأخذ أقصى عرض ممكن
-
+        searchView.queryHint = getString(R.string.search_hint)
+        searchView.maxWidth = Integer.MAX_VALUE
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            private var searchRunnable: Runnable? = null
-            private val handler = Handler(Looper.getMainLooper())
-
             override fun onQueryTextChange(newText: String): Boolean {
-                searchRunnable?.let { handler.removeCallbacks(it) }
-                searchRunnable = Runnable { filterStudents(newText) }
-                handler.postDelayed(searchRunnable!!, 300) // تأخير 300 مللي ثانية
+                viewModel.setQuery(newText)
                 return true
             }
 
             override fun onQueryTextSubmit(query: String): Boolean {
-                // معالجة عند الضغط على زر البحث في الكيبورد
-                filterStudents(query)
+                viewModel.setQuery(query)
                 return true
             }
         })
-
         searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem): Boolean = true
 
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-                customAdapter.updateData(ArrayList(allStudents))
+                viewModel.setQuery("")
                 return true
             }
         })
-
-
         return true
     }
 
-    @SuppressLint("UseKtx")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.settings_menu_item -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+                return true
             }
 
             R.id.deleteAll_menu_item -> {
-                val inflater = LayoutInflater.from(this)
-                val view = inflater.inflate(R.layout.alert_dialog_delete_all, null)
-                val slide = view.findViewById<SlideToActView>(R.id.slideConfirm)
-                val btnCancel = view.findViewById<ImageView>(R.id.img_btn_cancel_dialog)
-                val dialog = AlertDialog.Builder(this)
-                    .setView(view)
-                    .create()
-
-                dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                dialog.setCanceledOnTouchOutside(false)
-                dialog.setCancelable(false)
-                dialog.show()
-
-                slide.onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
-                    @SuppressLint("NotifyDataSetChanged")
-                    override fun onSlideComplete(view: SlideToActView) {
-                        val currentUser = FirebaseAuth.getInstance().currentUser
-                        if (currentUser != null) {
-                            val userId = currentUser.uid
-                            val databaseRef =
-                                FirebaseDatabase.getInstance().getReference("TalibPay")
-                                    .child(userId).child("students")
-
-                            databaseRef.removeValue()
-                                .addOnSuccessListener {
-                                    Snackbar.make(
-                                        findViewById(android.R.id.content),
-                                        getString(R.string.delete_all_note),
-                                        Snackbar.LENGTH_LONG
-                                    ).show()
-                                }
-                                .addOnFailureListener { e ->
-                                    Snackbar.make(
-                                        findViewById(android.R.id.content),
-                                        getString(R.string.deleted_failed),
-                                        Snackbar.LENGTH_LONG
-                                    ).show()
-                                }
-                        } else {
-                            Snackbar.make(
-                                findViewById(android.R.id.content),
-                                getString(R.string.user_not_found),
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-
-                        dialog.dismiss()
-                    }
-                }
-
-                btnCancel.setOnClickListener {
-                    dialog.dismiss()
-                }
+                showDeleteAllDialog()
+                return true
             }
-
         }
         return super.onOptionsItemSelected(item)
     }
 
-    private fun filterStudents(query: String) {
-        val filteredList = if (query.isBlank()) {
-            ArrayList(allStudents)
-        } else {
-            allStudents.filter { student ->
-                student.name.contains(query, ignoreCase = true) ||
-                        student.phoneNumber.contains(query, ignoreCase = true) ||
-                        student.paidCash.toString().contains(query) ||
-                        student.paidBank.toString().contains(query) ||
-                        student.remaining.toString().contains(query)
-            }.toCollection(ArrayList())
-        }
+    private fun showDeleteAllDialog() {
+        val dialogBinding = AlertDialogDeleteAllBinding.inflate(layoutInflater)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogBinding.root)
+            .setCancelable(false)
+            .create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.show()
 
-        customAdapter.updateData(filteredList)
-    }
-
-    private fun loadData() {
-        val emptyLayout = findViewById<LinearLayout>(R.id.linearLayout_empty)
-        val progressBar = findViewById<ProgressBar>(R.id.progressBar_notes)
-        val txtCashValue = findViewById<TextView>(R.id.txtCashValue)
-        val txtBankValue = findViewById<TextView>(R.id.txtBankValue)
-        val txtPaidValue = findViewById<TextView>(R.id.txtPaidValue)
-        val txtRemainingValue = findViewById<TextView>(R.id.txtRemainingValue)
-
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser == null || !currentUser.canAccessApp()) {
-            Toast.makeText(this, getString(R.string.user_not_found), Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
-
-        val userId = currentUser.uid
-        val databaseRef = FirebaseDatabase.getInstance().getReference("TalibPay")
-            .child(userId).child("students")
-
-        progressBar.isVisible = true
-        emptyLayout.isVisible = false
-        recyclerView.isVisible = false
-
-        val listener = object : ValueEventListener {
-            @SuppressLint("NotifyDataSetChanged", "SetTextI18n")
-            override fun onDataChange(snapshot: DataSnapshot) {
-                allStudents.clear()
-                studentList.clear()
-                rawStudents.clear()
-                customAdapter.lastPaymentsMap.clear()
-
-                var totalCash = 0.0
-                var totalBank = 0.0
-                var totalPaid = 0.0
-                var totalRemaining = 0.0
-
-                if (!snapshot.exists() || snapshot.childrenCount == 0L) {
-                    emptyLayout.isVisible = true
-                    recyclerView.isVisible = false
-                } else {
-                    for (stuSnap in snapshot.children) {
-                        val student = stuSnap.getValue(Student::class.java)
-                        student?.let {
-                            allStudents.add(it)
-                            studentList.add(it)
-                            rawStudents[it.id] = stuSnap.value
-
-                            // الدفعات موجودة أصلًا داخل عقدة الطالب، فلا حاجة لاستعلام لكل طالب
-                            stuSnap.child("payments").children.lastOrNull()
-                                ?.getValue(Payment::class.java)
-                                ?.let { last -> customAdapter.lastPaymentsMap[it.id] = last }
-
-                            totalCash += it.paidCash
-                            totalBank += it.paidBank
-                            totalPaid += it.paid
-                            totalRemaining += it.remaining
-                        }
-                    }
-
-                    emptyLayout.isVisible = false
-                    recyclerView.isVisible = true
+        dialogBinding.slideConfirm.onSlideCompleteListener =
+            object : SlideToActView.OnSlideCompleteListener {
+                override fun onSlideComplete(view: SlideToActView) {
+                    viewModel.deleteAll()
+                    dialog.dismiss()
                 }
-
-                txtCashValue.text = totalCash.toString()
-                txtBankValue.text = totalBank.toString()
-                txtPaidValue.text = totalPaid.toString()
-                txtRemainingValue.text = totalRemaining.toString()
-
-                progressBar.isVisible = false
-                customAdapter.notifyDataSetChanged()
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                progressBar.isVisible = false
-                Log.e("Firebase", "Loading students failed", error.toException())
-                Toast.makeText(this@MainActivity, getString(R.string.error_generic), Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-
-        databaseRef.addValueEventListener(listener)
-        databaseRef.keepSynced(true)
-        studentsRef = databaseRef
-        studentsListener = listener
+        dialogBinding.imgBtnCancelDialog.setOnClickListener { dialog.dismiss() }
     }
-
 }

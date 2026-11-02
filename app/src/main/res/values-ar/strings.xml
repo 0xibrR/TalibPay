@@ -181,12 +181,22 @@
     <string name="delete_title_payment">حذف الدفعة %1$s</string>
     <string name="delete_message_payment">هل أنت متأكد أنك تريد حذف %1$s؟!</string>
 
+    <string name="method_cash">نقدي</string>
+    <string name="method_mixed">جزء نقدي وجزء بنكي</string>
+    <string name="method_bank">بنكي</string>
+    <string name="method_unpaid">غير مدفوع</string>
+    <string name="no_payments">لا يوجد دفعات</string>
+    <string name="invalid_amount">أدخل مبلغًا صحيحًا</string>
+    <string name="cash_amount">كاش %1$s</string>
+    <string name="bank_amount">بنكي %1$s</string>
+
+    <!-- الترتيب يطابق PaymentMethod.entries -->
     <string-array name="payment_methods">
-        <item>اختر طريقة الدفع</item>
-        <item>نقدي</item>
-        <item>جزء نقدي وجزء بنكي</item>
-        <item>بنكي</item>
-        <item>غير مدفوع</item>
+        <item>@string/select_payment_method</item>
+        <item>@string/method_cash</item>
+        <item>@string/method_mixed</item>
+        <item>@string/method_bank</item>
+        <item>@string/method_unpaid</item>
     </string-array>
 
     <string name="default_web_client_id">913851560456-ld9ksu4la9fk50s40ioe4j5lthbdjqpn.apps.googleusercontent.com</string>

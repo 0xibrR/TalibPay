@@ -2,159 +2,78 @@ package com.irdev.talibpay.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.EditText
-import android.widget.NumberPicker
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.R
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import com.irdev.talibpay.data.StudentInput
+import com.irdev.talibpay.databinding.ActivityEditBinding
+import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.showYearPicker
+import com.irdev.talibpay.util.toast
+import com.irdev.talibpay.viewmodel.StudentFormViewModel
+import com.irdev.talibpay.viewmodel.UiEvent
 
 class EditActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityEditBinding
+    private val viewModel: StudentFormViewModel by viewModels()
+    private var prefilled = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_edit)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
+        binding = ActivityEditBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        applySystemBarInsets(binding.main)
         title = getString(R.string.edit_student)
+        // بعد تدوير الشاشة يحتفظ النظام بما كتبه المستخدم، فلا نعيد التعبئة
+        prefilled = savedInstanceState != null
 
-        val edtStudentName = findViewById<TextInputEditText>(R.id.edtStudentNameEdit)
-        val edtBirthYear = findViewById<TextInputEditText>(R.id.edtBirthYearEdit)
-        val edtPhoneNumber = findViewById<TextInputEditText>(R.id.edtPhoneNumberEdit)
-        val edtNotes = findViewById<TextInputEditText>(R.id.edtNotesEdit)
-        val btnEditStudent = findViewById<MaterialButton>(R.id.btnEditStudent)
-
-        val intent = intent
-        val studentId = intent.getStringExtra("id") ?: ""
-        val name = intent.getStringExtra("name") ?: ""
-        val birthYear = intent.getStringExtra("birthYear") ?: ""
-        val phoneNumber = intent.getStringExtra("phoneNumber") ?: ""
-        val notes = intent.getStringExtra("notes") ?: ""
-
-        edtStudentName.setText(name)
-        edtBirthYear.setText(birthYear)
-        edtPhoneNumber.setText(phoneNumber)
-        edtNotes.setText(notes)
-
-
-        edtBirthYear.setOnClickListener {
-            showYearPicker(edtBirthYear)
+        binding.edtBirthYearEdit.setOnClickListener {
+            showYearPicker { binding.edtBirthYearEdit.setText(it.toString()) }
         }
+        binding.btnEditStudent.setOnClickListener { confirmSave() }
 
-        btnEditStudent.setOnClickListener { view ->
+        collectWhileStarted(viewModel.existing) { student ->
+            if (student == null || prefilled) return@collectWhileStarted
+            prefilled = true
+            binding.edtStudentNameEdit.setText(student.name)
+            binding.edtBirthYearEdit.setText(student.birthYear)
+            binding.edtPhoneNumberEdit.setText(student.phoneNumber)
+            binding.edtNotesEdit.setText(student.notes)
+        }
+        collectWhileStarted(viewModel.loading) { binding.btnEditStudent.isEnabled = !it }
+        collectWhileStarted(viewModel.events) { event ->
+            when (event) {
+                is UiEvent.Message -> toast(event.res)
+                UiEvent.Finished -> finish()
+                UiEvent.NotSignedIn -> {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finishAffinity()
+                }
 
-
-            if (check(edtStudentName) && check(edtBirthYear) && check(edtPhoneNumber)) {
-
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.confirm_edit_title))
-                    .setMessage(getString(R.string.confirm_edit_message))
-                    .setPositiveButton(getString(R.string.ok)) { _, _ ->
-
-                        val currentUser = FirebaseAuth.getInstance().currentUser
-                        if (currentUser == null) {
-                            Toast.makeText(
-                                this,
-                                getString(R.string.user_not_found),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            startActivity(Intent(this, LoginActivity::class.java))
-                            finish()
-                            return@setPositiveButton
-                        }
-
-                        val userId = currentUser.uid
-                        val databaseRef =
-                            FirebaseDatabase.getInstance().getReference("TalibPay").child(userId)
-
-                        val updatedName = edtStudentName.text.toString().trim()
-                        val updatedBirthYear = edtBirthYear.text.toString().trim()
-                        val updatedPhoneNumber = edtPhoneNumber.text.toString().trim()
-                        val updatedNotes = edtNotes.text.toString().trim()
-
-                        // تحديث الحقول المعدّلة فقط حتى لا تُمسح المبالغ والدفعات
-                        val updates = mapOf<String, Any>(
-                            "name" to updatedName,
-                            "birthYear" to updatedBirthYear,
-                            "phoneNumber" to updatedPhoneNumber,
-                            "notes" to updatedNotes,
-                            "lastModified" to getCurrentTime()
-                        )
-
-                        databaseRef.child("students").child(studentId).updateChildren(updates)
-                            .addOnSuccessListener {
-                                Toast.makeText(
-                                    this,
-                                    getString(R.string.updated_successfully),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                startActivity(
-                                    Intent(this, MainActivity::class.java)
-                                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                                )
-                                finish()
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(
-                                    this,
-                                    getString(R.string.updated_failed),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-
-                    }
-                    .setNegativeButton(getString(R.string.cancel), null)
-                    .show()
+                else -> Unit
             }
         }
     }
 
-    private fun showYearPicker(editText: EditText) {
-        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-
-        val dialogView = layoutInflater.inflate(R.layout.dialog_year_picker, null)
-        val numberPicker = dialogView.findViewById<NumberPicker>(R.id.yearPicker)
-
-        numberPicker.minValue = 1980
-        numberPicker.maxValue = currentYear
-        numberPicker.value = currentYear
+    private fun confirmSave() {
+        val name = binding.edtStudentNameEdit.requireText() ?: return
+        val birthYear = binding.edtBirthYearEdit.requireText() ?: return
+        val phone = binding.edtPhoneNumberEdit.requireText() ?: return
+        val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
 
         AlertDialog.Builder(this)
-            .setTitle(getString(R.string.select_year_of_birth))
-            .setView(dialogView)
-            .setPositiveButton(getString(R.string.ok)) { _, _ ->
-                editText.setText(numberPicker.value.toString())
+            .setTitle(R.string.confirm_edit_title)
+            .setMessage(R.string.confirm_edit_message)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                viewModel.save(StudentInput(name, birthYear, phone, notes))
             }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .create()
+            .setNegativeButton(R.string.cancel, null)
             .show()
-    }
-
-    private fun getCurrentTime(): String {
-        val sdf = SimpleDateFormat("E, MMM dd, yyyy hh:mm:ss a", Locale.getDefault())
-        return sdf.format(Date())
-    }
-
-    private fun check(editText: EditText): Boolean {
-        if (editText.text.isEmpty()) {
-            editText.error = getString(R.string.enter_value)
-            return false
-        }
-        return true
     }
 }

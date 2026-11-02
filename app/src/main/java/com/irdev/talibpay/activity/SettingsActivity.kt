@@ -1,643 +1,247 @@
 package com.irdev.talibpay.activity
 
-import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.util.Patterns
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.credentials.exceptions.NoCredentialException
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.database.FirebaseDatabase
+import com.google.android.material.textfield.TextInputLayout
 import com.irdev.talibpay.R
+import com.irdev.talibpay.data.AccountProvider
+import com.irdev.talibpay.data.Reauthentication
+import com.irdev.talibpay.data.clearGoogleCredentialState
+import com.irdev.talibpay.data.requestGoogleIdToken
+import com.irdev.talibpay.databinding.ActivitySettingsBinding
+import com.irdev.talibpay.databinding.AlertDialogThemeSelectBinding
+import com.irdev.talibpay.databinding.DialogChangePasswordBinding
+import com.irdev.talibpay.databinding.DilaogEmailPasswordBinding
+import com.irdev.talibpay.util.LoadingDialog
 import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
-import de.hdodenhof.circleimageview.CircleImageView
-import kotlin.properties.Delegates
+import com.irdev.talibpay.util.ThemePrefs
+import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.errorMessageRes
+import com.irdev.talibpay.util.isUserCancellation
+import com.irdev.talibpay.util.requireRawText
+import com.irdev.talibpay.util.toast
+import com.irdev.talibpay.viewmodel.SettingsViewModel
+import com.irdev.talibpay.viewmodel.UiEvent
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
-@Suppress("DEPRECATION")
 class SettingsActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivitySettingsBinding
+    private val viewModel: SettingsViewModel by viewModels()
 
-    private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var progressDialog: Dialog
-    private lateinit var builder: Dialog
+    // النافذة المفتوحة حاليًا (تغيير كلمة المرور / تأكيد كلمة المرور) لإغلاقها عند النجاح
+    private var openDialog: Dialog? = null
 
-    private lateinit var avatar: CircleImageView
-    private lateinit var tvName: TextView
-    private lateinit var tvEmail: TextView
-
-
-    private val sharedPrefKey = "appSettings"
-    private val nightModeKey = "NightMode"
-    lateinit var appPref: SharedPreferences
-    lateinit var sharedPrefsEdit: SharedPreferences.Editor
-    var nightModeStatus by Delegates.notNull<Int>()
-
-
-    @SuppressLint("MissingInflatedId", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_settings)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settingsLayout)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        binding = ActivitySettingsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        applySystemBarInsets(binding.settingsLayout)
         title = getString(R.string.settings)
 
-        initProgressDialog()
-        initDialog()
+        binding.btnDeleteAccount.setOnClickListener { confirmDeleteAccount() }
+        binding.btnLogout.setOnClickListener { confirmSignOut() }
+        binding.btnToggleTheme.setOnClickListener { showThemeDialog() }
+        binding.btnChangePassword.setOnClickListener { showChangePasswordDialog() }
 
-        firebaseAuth = FirebaseAuth.getInstance()
-
-
-        appPref = this.getSharedPreferences(sharedPrefKey, 0)!!
-        nightModeStatus = appPref.getInt("NightMode", 3)
-        setThemee(nightModeStatus)
-
-
-        val btnDeleteAccount = findViewById<MaterialButton>(R.id.btnDeleteAccount)
-        val btnLogout = findViewById<MaterialButton>(R.id.btnLogout)
-        val btnChangeTheme = findViewById<MaterialButton>(R.id.btnToggleTheme)
-        val tvVersion = findViewById<TextView>(R.id.tvVersion)
-        val btnChangePassword = findViewById<MaterialButton>(R.id.btnChangePassword)
-        avatar = findViewById(R.id.imgAvatar)
-        tvName = findViewById(R.id.tvUserName)
-        tvEmail = findViewById(R.id.tvUserEmail)
-
-
-
-        btnDeleteAccount.setOnClickListener {
-            deleteAccount()
-        }
-
-        btnLogout.setOnClickListener {
-            signOut()
-        }
-
-        btnChangeTheme.setOnClickListener {
-            setThemeDialog()
-        }
-
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val versionName = packageInfo.versionName
-        tvVersion.text = getString(R.string.app_version_placeholder, versionName)
-
-        btnChangePassword.setOnClickListener { showChangePasswordDialog() }
+        val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+        binding.tvVersion.text = getString(R.string.app_version_placeholder, versionName)
 
         loadProfile()
-    }
 
-
-    private fun setThemee(nightStatus: Int) {
-        when (nightStatus) {
-            1 -> {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                Log.d("AllNoteFrag", "Light theme SetTheme()")
-            }
-
-            2 -> {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                Log.d("AllNoteFrag", "Dark theme SetTheme()")
-            }
-
-            else -> {
-                Log.d("AllNoteFrag", "System theme SetTheme()")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                else
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
-            }
-        }
-
-    }
-
-    @SuppressLint("UseKtx", "CutPasteId")
-    private fun setThemeDialog() {
-        val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.alert_dialog_theme_select, null)
-        val dialog = AlertDialog.Builder(this)
-            .setView(view)
-            .create()
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.show()
-
-        val themeRadioGroup = view.findViewById<RadioGroup>(R.id.theme_button_group)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            view.findViewById<RadioButton>(R.id.deafultRadioButton).text =
-                getString(R.string.system_default)
-        } else {
-            view.findViewById<RadioButton>(R.id.deafultRadioButton).text =
-                getString(R.string.follow_battery_saver)
-        }
-
-        when (nightModeStatus) {
-            1 -> view.findViewById<RadioButton>(R.id.lightRadioButton).isChecked = true
-            2 -> view.findViewById<RadioButton>(R.id.darkRadioButton).isChecked = true
-            3 -> view.findViewById<RadioButton>(R.id.deafultRadioButton).isChecked = true
-        }
-
-        themeRadioGroup.setOnCheckedChangeListener { _, id ->
-            sharedPrefsEdit = appPref.edit()
-            when (id) {
-                R.id.lightRadioButton -> {
-                    sharedPrefsEdit.putInt(nightModeKey, 1)
-                    sharedPrefsEdit.apply()
-                    nightModeStatus = 1
-                    Log.d("AllNoteFrag", "Light theme")
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        val loading = LoadingDialog(this)
+        collectWhileStarted(viewModel.loading) { loading.setVisible(it) }
+        collectWhileStarted(viewModel.events) { event ->
+            when (event) {
+                // Toast لأن الرسالة قد تظهر فوق نافذة حوار مفتوحة
+                is UiEvent.Message -> toast(event.res, long = true)
+                UiEvent.Finished -> {
+                    openDialog?.dismiss()
+                    openDialog = null
                 }
 
-                R.id.darkRadioButton -> {
-                    sharedPrefsEdit.putInt(nightModeKey, 2)
-                    sharedPrefsEdit.apply()
-                    nightModeStatus = 2
-                    Log.d("AllNoteFrag", "Dark theme")
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                }
-
-                R.id.deafultRadioButton -> {
-                    sharedPrefsEdit.putInt(nightModeKey, 3)
-                    sharedPrefsEdit.apply()
-                    nightModeStatus = 3
-                    Log.d("AllNoteFrag", "System theme")
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) AppCompatDelegate.setDefaultNightMode(
-                        AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                    )
-                    else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
-
-                }
-            }
-            dialog.dismiss()
-        }
-
-    }
-
-    @SuppressLint("InflateParams", "UseKtx")
-    private fun initDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dilaog_email_password, null)
-        builder = Dialog(this)
-        builder.setContentView(dialogView)
-        builder.setCancelable(false)
-        builder.setCanceledOnTouchOutside(false)
-        builder.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-    }
-
-    @SuppressLint("InflateParams", "UseKtx")
-    private fun initProgressDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.progress_bar_dialog, null)
-        progressDialog = Dialog(this)
-        progressDialog.setContentView(dialogView)
-        progressDialog.setCancelable(false)
-        progressDialog.setCanceledOnTouchOutside(false)
-        progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-    }
-
-    private fun signOut() {
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.sign_out))
-            .setMessage(getString(R.string.signed_out_message))
-            .setPositiveButton(getString(R.string.ok)) { _, _ ->
-                // تسجيل الخروج من Firebase
-                firebaseAuth.signOut()
-
-                // تسجيل الخروج من Google
-                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
-                val googleSignInClient = GoogleSignIn.getClient(this, gso)
-
-                googleSignInClient.signOut().addOnCompleteListener {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.signed_out_successfully),
-                        Toast.LENGTH_LONG
-                    ).show()
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
-                }
-            }
-            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-                dialog.dismiss()
-            }
-            .create()
-
-        dialog.show()
-    }
-
-    private fun signOutDeleteAccount() {
-        // Firebase sign out
-        FirebaseAuth.getInstance().signOut()
-
-        // Google sign out
-        val googleSignInClient = GoogleSignIn.getClient(
-            this,
-            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
-        )
-        googleSignInClient.signOut().addOnCompleteListener {
-            Toast.makeText(this, getString(R.string.signed_out_successfully), Toast.LENGTH_SHORT)
-                .show()
-
-            // إعادة التوجيه إلى شاشة الدخول
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-    }
-
-    private fun deleteUserData(uid: String, onComplete: (Boolean) -> Unit) {
-        progressDialog.show()
-
-        val databaseRef = FirebaseDatabase.getInstance().reference.child("TalibPay").child(uid)
-
-        databaseRef.removeValue().addOnCompleteListener { task ->
-
-            progressDialog.dismiss()
-
-            if (task.isSuccessful) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.data_deleted_successfully),
-                    Toast.LENGTH_SHORT
-                ).show()
-                onComplete(true)
-            } else {
-                Toast.makeText(
-                    this,
-                    getString(R.string.failed_to_delete_data),
-                    Toast.LENGTH_SHORT
-                ).show()
-                onComplete(false)
-            }
-        }
-    }
-
-    private fun deleteAccount() {
-        val user = FirebaseAuth.getInstance().currentUser ?: return
-
-        val currentProviderId = user.providerData.find { it.providerId != "firebase" }?.providerId
-
-        when (currentProviderId) {
-            "google.com" -> {
-                val account = GoogleSignIn.getLastSignedInAccount(this)
-                if (account != null) {
-                    val idToken = account.idToken
-                    if (idToken != null) {
-                        progressDialog.show()
-
-                        val googleCredential = GoogleAuthProvider.getCredential(idToken, null)
-                        user.reauthenticate(googleCredential).addOnCompleteListener { reauthTask ->
-                            progressDialog.dismiss()
-                            if (reauthTask.isSuccessful) {
-                                val builderAlertDialog = AlertDialog.Builder(this)
-                                    .setTitle(getString(R.string.delete_account))
-                                    .setMessage(getString(R.string.delete_account_message))
-
-                                val confirmDialog =
-                                    builderAlertDialog.setPositiveButton(getString(R.string.ok)) { _, _ ->
-                                        progressDialog.show()
-                                        deleteUserData(user.uid) { dataDeleted ->
-                                            if (dataDeleted) {
-                                                user.delete().addOnCompleteListener { deleteTask ->
-                                                    progressDialog.dismiss()
-                                                    if (deleteTask.isSuccessful) {
-                                                        Toast.makeText(
-                                                            this,
-                                                            getString(R.string.google_user_deleted_successfully),
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                        signOutDeleteAccount()
-                                                    } else {
-                                                        Toast.makeText(
-                                                            this,
-                                                            getString(R.string.error_deleting_google_user),
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                }
-                                            } else {
-                                                progressDialog.dismiss()
-                                                Toast.makeText(
-                                                    this,
-                                                    getString(R.string.failed_to_delete_user_data_account_deletion_cancelled),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        }
-                                    }
-                                        .setNegativeButton(getString(R.string.cancel)) { dialog, _ -> dialog.dismiss() }
-                                        .create()
-
-                                confirmDialog.setCanceledOnTouchOutside(false)
-                                confirmDialog.setCancelable(false)
-                                confirmDialog.show()
-                            } else {
-                                Toast.makeText(
-                                    this,
-                                    getString(R.string.error_authenticating_google_user),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    } else {
-                        Toast.makeText(
-                            this,
-                            getString(R.string.unable_to_get_google_id),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.no_google_account_found),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-
-            "password" -> {
-                val btnOk = builder.findViewById<MaterialButton>(R.id.btn_ok_dialog)
-                val btnCancel = builder.findViewById<MaterialButton>(R.id.btnCancel_dialog)
-                val edtEmail = builder.findViewById<TextInputEditText>(R.id.edt_email_dialog)
-                val edtPassword = builder.findViewById<TextInputEditText>(R.id.edt_password_dialog)
-                builder.show()
-
-                btnOk.setOnClickListener {
-                    val email = edtEmail.text.toString()
-                    val password = edtPassword.text.toString()
-
-                    if (check(edtEmail) && check(edtPassword)) {
-                        if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                            progressDialog.show()
-                            val credential = EmailAuthProvider.getCredential(email, password)
-                            user.reauthenticate(credential).addOnCompleteListener { reauthTask ->
-                                progressDialog.dismiss()
-                                if (reauthTask.isSuccessful) {
-                                    val builderAlertDialog = AlertDialog.Builder(this)
-                                        .setTitle(getString(R.string.delete_account))
-                                        .setMessage(getString(R.string.delete_account_message))
-
-                                    val confirmDialog =
-                                        builderAlertDialog.setPositiveButton(getString(R.string.delete_account)) { _, _ ->
-                                            progressDialog.show()
-                                            deleteUserData(user.uid) { dataDeleted ->
-                                                if (dataDeleted) {
-                                                    user.delete()
-                                                        .addOnCompleteListener { deleteTask ->
-                                                            progressDialog.dismiss()
-                                                            if (deleteTask.isSuccessful) {
-                                                                Toast.makeText(
-                                                                    this,
-                                                                    getString(R.string.email_password_user_deleted_successfully),
-                                                                    Toast.LENGTH_LONG
-                                                                ).show()
-                                                                builder.dismiss()
-                                                                signOutDeleteAccount()
-                                                            } else {
-                                                                Toast.makeText(
-                                                                    this,
-                                                                    getString(R.string.error_deleting_email_password_user),
-                                                                    Toast.LENGTH_LONG
-                                                                ).show()
-                                                            }
-                                                        }
-                                                } else {
-                                                    progressDialog.dismiss()
-                                                    Toast.makeText(
-                                                        this,
-                                                        getString(R.string.failed_to_delete_user_data_account_deletion_cancelled),
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                            }
-                                        }
-                                            .setNegativeButton(getString(R.string.cancel)) { d, _ -> d.dismiss() }
-                                            .create()
-
-                                    confirmDialog.show()
-
-                                } else {
-                                    Toast.makeText(
-                                        this,
-                                        getString(R.string.error_authenticating_email_password_user),
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        } else {
-                            edtEmail.error = getString(R.string.check_email)
-                        }
-                    }
-                }
-
-                btnCancel.setOnClickListener {
-                    builder.dismiss()
-                }
-            }
-
-            else -> {
-                Toast.makeText(
-                    this,
-                    getString(R.string.account_provider_type_unknown),
-                    Toast.LENGTH_SHORT
-                ).show()
+                UiEvent.SignedOut, UiEvent.NotSignedIn -> goToLogin()
+                else -> Unit
             }
         }
     }
 
     private fun loadProfile() {
-        val user = FirebaseAuth.getInstance().currentUser
+        val user = viewModel.user
         if (user == null) {
-            // في حال لم يكن مسجّلًا – يمكنك توجيهه إلى شاشة تسجيل الدخول
-            tvName.text = getString(R.string.user_name)
-            tvEmail.text = getString(R.string.user_email_com)
-            avatar.setImageResource(R.drawable.outline_account_circle_24)
-            startActivity(Intent(this, LoginActivity::class.java))
+            goToLogin()
             return
         }
+        binding.tvUserName.text = user.displayName ?: getString(R.string.user_name)
+        binding.tvUserEmail.text = user.email ?: getString(R.string.user_email_com)
+        Glide.with(this)
+            .load(user.photoUrl)
+            .placeholder(R.drawable.outline_account_circle_24)
+            .error(R.drawable.outline_account_circle_24)
+            .into(binding.imgAvatar)
+    }
 
-        // الاسم
-        tvName.text = user.displayName ?: getString(R.string.user_name)
-
-        // البريد
-        tvEmail.text = user.email ?: getString(R.string.user_email_com)
-
-        // الصورة
-        val photoUrl = user.photoUrl
-        if (photoUrl != null) {
-            Glide.with(this)
-                .load(photoUrl)
-                .placeholder(R.drawable.outline_account_circle_24)
-                .error(R.drawable.outline_account_circle_24)
-                .into(avatar)
-        } else {
-            avatar.setImageResource(R.drawable.outline_account_circle_24)
+    private fun goToLogin() {
+        lifecycleScope.launch {
+            clearGoogleCredentialState(applicationContext)
+            startActivity(Intent(this@SettingsActivity, LoginActivity::class.java))
+            finishAffinity()
         }
     }
 
-    @SuppressLint("MissingInflatedId", "UseKtx", "InflateParams")
-    private fun showChangePasswordDialog() {
+    private fun confirmSignOut() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.sign_out)
+            .setMessage(R.string.signed_out_message)
+            .setPositiveButton(R.string.ok) { _, _ -> viewModel.signOut() }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
 
-        /* 1) نفخ التخطيط وإنشاء الـ Dialog */
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_change_password, null)
-        val dlg = Dialog(this).apply {
-            setContentView(dialogView)
+    private fun showThemeDialog() {
+        val dialogBinding = AlertDialogThemeSelectBinding.inflate(layoutInflater)
+        val dialog = AlertDialog.Builder(this).setView(dialogBinding.root).create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialogBinding.deafultRadioButton.setText(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) R.string.system_default
+            else R.string.follow_battery_saver
+        )
+        when (ThemePrefs.get(this)) {
+            ThemePrefs.LIGHT -> dialogBinding.lightRadioButton.isChecked = true
+            ThemePrefs.DARK -> dialogBinding.darkRadioButton.isChecked = true
+            else -> dialogBinding.deafultRadioButton.isChecked = true
+        }
+        dialogBinding.themeButtonGroup.setOnCheckedChangeListener { _, id ->
+            ThemePrefs.set(
+                this, when (id) {
+                    R.id.lightRadioButton -> ThemePrefs.LIGHT
+                    R.id.darkRadioButton -> ThemePrefs.DARK
+                    else -> ThemePrefs.SYSTEM
+                }
+            )
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+    // ---------------- حذف الحساب ----------------
+
+    private fun confirmDeleteAccount() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.delete_account)
+            .setMessage(R.string.delete_account_message)
+            .setPositiveButton(R.string.delete_account) { _, _ ->
+                when (viewModel.accountProvider()) {
+                    AccountProvider.GOOGLE -> deleteGoogleAccount()
+                    AccountProvider.PASSWORD -> showPasswordReauthDialog()
+                    AccountProvider.UNKNOWN -> toast(R.string.account_provider_type_unknown)
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .setCancelable(false)
+            .show()
+    }
+
+    /** إعادة التحقق بحساب Google برمز جديد (الرمز القديم ينتهي خلال ساعة). */
+    private fun deleteGoogleAccount() {
+        lifecycleScope.launch {
+            try {
+                val token = try {
+                    requestGoogleIdToken(this@SettingsActivity, authorizedOnly = true)
+                } catch (_: NoCredentialException) {
+                    requestGoogleIdToken(this@SettingsActivity, authorizedOnly = false)
+                }
+                viewModel.deleteAccount(Reauthentication.Google(token))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (!e.isUserCancellation()) toast(errorMessageRes(e))
+            }
+        }
+    }
+
+    private fun showPasswordReauthDialog() {
+        val dialogBinding = DilaogEmailPasswordBinding.inflate(layoutInflater)
+        val dialog = Dialog(this).apply {
+            setContentView(dialogBinding.root)
             setCancelable(false)
-            setCanceledOnTouchOutside(false)
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
+        // البريد هو بريد الحساب الحالي دائمًا
+        dialogBinding.edtEmailDialog.setText(viewModel.user?.email)
+        dialogBinding.edtEmailDialog.isEnabled = false
+
+        dialogBinding.btnOkDialog.setOnClickListener {
+            val password = dialogBinding.edtPasswordDialog.requireRawText() ?: return@setOnClickListener
+            viewModel.deleteAccount(Reauthentication.Password(password))
+        }
+        dialogBinding.btnCancelDialog.setOnClickListener { dialog.dismiss() }
+        openDialog = dialog
+        dialog.show()
+    }
+
+    // ---------------- كلمة المرور ----------------
+
+    private fun showChangePasswordDialog() {
+        val dialogBinding = DialogChangePasswordBinding.inflate(layoutInflater)
+        val dialog = Dialog(this).apply {
+            setContentView(dialogBinding.root)
+            setCancelable(false)
             window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
 
-        /* 2) مراجع عناصر الواجهة داخل الـDialog */
-        val edtOld = dialogView.findViewById<TextInputEditText>(R.id.edtOldPassword)
-        val edtNew = dialogView.findViewById<TextInputEditText>(R.id.edtNewPassword)
-        val edtConfirm = dialogView.findViewById<TextInputEditText>(R.id.edtConfirmPassword)
-        val btnSave = dialogView.findViewById<MaterialButton>(R.id.btnSave_ChangePassword)
-        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btnCancel_ChangePassword)
+        // حساب Google بلا كلمة مرور: نربط كلمة مرور جديدة بدون طلب القديمة
+        val hasPassword = viewModel.hasPassword()
+        dialogBinding.edtOldPassword.textInputLayout()?.isVisible = hasPassword
+        dialogBinding.edtOldPassword.isVisible = hasPassword
 
-        /* 3) تحديد نوع الحساب (Has-Password أم Google only) */
-        val user = FirebaseAuth.getInstance().currentUser
-        val hasPassword =
-            user?.providerData?.any { it.providerId == EmailAuthProvider.PROVIDER_ID } == true
+        dialogBinding.btnSaveChangePassword.setOnClickListener {
+            val oldPass = dialogBinding.edtOldPassword.text?.toString().orEmpty()
+            val newPass = dialogBinding.edtNewPassword.text?.toString().orEmpty()
+            val confirm = dialogBinding.edtConfirmPassword.text?.toString().orEmpty()
 
-        // إخفاء حقل كلمة المرور القديمة إذا كان الحساب Google-only
-        edtOld.isVisible = hasPassword
+            when {
+                newPass.isEmpty() || confirm.isEmpty() || (hasPassword && oldPass.isEmpty()) ->
+                    Snackbar.make(dialogBinding.root, R.string.fill_all_fields, Snackbar.LENGTH_LONG).show()
 
-        /* 4) منطق الحفظ */
-        btnSave.setOnClickListener {
+                newPass.length < MIN_PASSWORD_LENGTH ->
+                    dialogBinding.edtNewPassword.error = getString(R.string.password_too_short)
 
-            val oldPass = edtOld.text.toString()
-            val newPass = edtNew.text.toString()
-            val confirm = edtConfirm.text.toString()
+                newPass != confirm ->
+                    dialogBinding.edtConfirmPassword.error = getString(R.string.passwords_not_match)
 
-            // تحققات سريعة
-            if (newPass.isEmpty() || confirm.isEmpty() || (hasPassword && oldPass.isEmpty())) {
-                Snackbar.make(dialogView, getString(R.string.fill_all_fields), Snackbar.LENGTH_LONG)
-                    .show()
-                return@setOnClickListener
-            }
-            if (newPass.length < MIN_PASSWORD_LENGTH) {
-                edtNew.error = getString(R.string.password_too_short); return@setOnClickListener
-            }
-            if (newPass != confirm) {
-                edtConfirm.error =
-                    getString(R.string.passwords_not_match); return@setOnClickListener
-            }
-            if (user == null) {
-                startActivity(
-                    Intent(
-                        this,
-                        LoginActivity::class.java
-                    )
-                ); finish(); return@setOnClickListener
-            }
-
-            btnSave.isEnabled = false   // منع النقر المزدوج
-
-            /* ـــ الحالة ❶: لديه كلمة مرور مسبقًا ـــ */
-            if (hasPassword) {
-                val cred = EmailAuthProvider.getCredential(user.email ?: "", oldPass)
-
-                user.reauthenticate(cred).addOnSuccessListener {
-                    user.updatePassword(newPass).addOnCompleteListener { t ->
-                        btnSave.isEnabled = true
-                        if (t.isSuccessful) {
-                            dlg.dismiss()
-                            Snackbar.make(
-                                findViewById(android.R.id.content),
-                                getString(R.string.password_changed_success),
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        } else {
-                            Snackbar.make(
-                                dialogView, getString(R.string.password_changed_failed),
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-                }.addOnFailureListener {
-                    btnSave.isEnabled = true
-                    edtOld.error = getString(R.string.wrong_old_password)
-                }
-
-                /* ـــ الحالة ❷: حساب Google فقط ⇒ ربط Password لأول مرة ـــ */
-            } else {
-                val cred = EmailAuthProvider.getCredential(
-                    user.email ?: return@setOnClickListener,
-                    newPass
-                )
-
-                user.linkWithCredential(cred).addOnCompleteListener { linkTask ->
-                    btnSave.isEnabled = true
-                    val root = findViewById<View>(android.R.id.content)
-
-                    if (linkTask.isSuccessful) {
-                        user.reload().addOnSuccessListener {
-                            if (!user.isEmailVerified) {
-                                user.sendEmailVerification()
-                                Snackbar.make(
-                                    root,
-                                    getString(R.string.check_your_email_to_verify),
-                                    Snackbar.LENGTH_LONG
-                                ).show()
-                            } else {
-                                Snackbar.make(
-                                    root,
-                                    getString(R.string.password_changed_success),
-                                    Snackbar.LENGTH_LONG
-                                ).show()
-                            }
-                            dlg.dismiss()
-                        }
-                    } else {
-                        Snackbar.make(
-                            root,
-                            getString(R.string.password_changed_failed),
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
-                }
-
+                else -> viewModel.changePassword(oldPass.takeIf { hasPassword }, newPass)
             }
         }
-
-        /* 5) إلغاء */
-        btnCancel.setOnClickListener { dlg.dismiss() }
-
-        dlg.show()
+        dialogBinding.btnCancelChangePassword.setOnClickListener { dialog.dismiss() }
+        openDialog = dialog
+        dialog.show()
     }
 
-    private fun check(edt: EditText): Boolean {
-        if (edt.text.isEmpty()) {
-            edt.error = getString(R.string.enter_value)
-            return false
-        }
-        return true
+    private fun View.textInputLayout(): TextInputLayout? =
+        generateSequence(parent) { it.parent }.filterIsInstance<TextInputLayout>().firstOrNull()
+
+    override fun onDestroy() {
+        openDialog?.dismiss()
+        super.onDestroy()
     }
 }

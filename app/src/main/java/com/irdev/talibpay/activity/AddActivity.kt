@@ -2,142 +2,68 @@ package com.irdev.talibpay.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.EditText
-import android.widget.NumberPicker
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AlertDialog
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.R
-import com.irdev.talibpay.model.Student
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import com.irdev.talibpay.data.StudentInput
+import com.irdev.talibpay.databinding.ActivityAddBinding
+import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.showYearPicker
+import com.irdev.talibpay.viewmodel.StudentFormViewModel
+import com.irdev.talibpay.viewmodel.UiEvent
 
 class AddActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityAddBinding
+    private val viewModel: StudentFormViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_add)
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
+        binding = ActivityAddBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        applySystemBarInsets(binding.main)
         title = getString(R.string.add_student)
 
-        val edtStudentName = findViewById<EditText>(R.id.edtStudentName)
-        val edtBirthYear = findViewById<EditText>(R.id.edtBirthYear)
-        val edtPhoneNumber = findViewById<EditText>(R.id.edtPhoneNumber)
-        val edtNotes = findViewById<EditText>(R.id.edtNotes)
-        val btnAddStudent = findViewById<MaterialButton>(R.id.btnAddStudent)
-
-        edtBirthYear.setOnClickListener {
-            showYearPicker(edtBirthYear)
+        binding.edtBirthYear.setOnClickListener {
+            showYearPicker { binding.edtBirthYear.setText(it.toString()) }
         }
 
-        btnAddStudent.setOnClickListener { view ->
-            if (check(edtStudentName) && check(edtBirthYear) && check(edtPhoneNumber)) {
+        binding.btnAddStudent.setOnClickListener {
+            val name = binding.edtStudentName.requireText() ?: return@setOnClickListener
+            val birthYear = binding.edtBirthYear.requireText() ?: return@setOnClickListener
+            val phone = binding.edtPhoneNumber.requireText() ?: return@setOnClickListener
+            val notes = binding.edtNotes.text?.toString()?.trim().orEmpty()
+            viewModel.save(StudentInput(name, birthYear, phone, notes))
+        }
 
-                val currentUser = FirebaseAuth.getInstance().currentUser
-                if (currentUser == null) {
-                    Toast.makeText(this, getString(R.string.user_not_found), Toast.LENGTH_SHORT)
-                        .show()
+        collectWhileStarted(viewModel.loading) { binding.btnAddStudent.isEnabled = !it }
+        collectWhileStarted(viewModel.events) { event ->
+            when (event) {
+                is UiEvent.Message -> Snackbar.make(binding.root, event.res, Snackbar.LENGTH_LONG)
+                    .setAnchorView(binding.btnAddStudent).show()
+
+                // نبقى في الشاشة لإضافة طالب آخر بسرعة
+                UiEvent.Finished -> clearForm()
+                UiEvent.NotSignedIn -> {
                     startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
-                    return@setOnClickListener
+                    finishAffinity()
                 }
 
-                val userId = currentUser.uid
-                val databaseRef =
-                    FirebaseDatabase.getInstance().getReference("TalibPay").child(userId)
-
-                val studentName = edtStudentName.text.toString().trim()
-                val birthYear = edtBirthYear.text.toString().trim()
-                val phoneNumber = edtPhoneNumber.text.toString().trim()
-                val notes = edtNotes.text.toString().trim()
-                val newStudentId = databaseRef.child("students").push().key
-
-                if (newStudentId != null) {
-                    val student = Student(
-                        id = newStudentId,
-                        name = studentName,
-                        birthYear = birthYear,
-                        phoneNumber = phoneNumber,
-                        notes = notes,
-                        lastModified = getCurrentTime(),
-                        addedIn = getCurrentTime()
-                    )
-
-                    databaseRef.child("students").child(newStudentId).setValue(student)
-
-                        .addOnSuccessListener {
-                            Snackbar.make(
-                                view,
-                                getString(R.string.added_successfully),
-                                Snackbar.LENGTH_LONG
-                            ).setAnchorView(R.id.btnAddStudent).show()
-
-                            edtStudentName.text?.clear()
-                            edtBirthYear.text?.clear()
-                            edtPhoneNumber.text?.clear()
-                            edtNotes.text?.clear()
-                        }
-                        .addOnFailureListener {
-                            Snackbar.make(
-                                view,
-                                getString(R.string.added_failed),
-                                Snackbar.LENGTH_LONG
-                            )
-                                .setAnchorView(R.id.btnAddStudent).show()
-                        }
-                }
+                else -> Unit
             }
         }
     }
 
-    private fun showYearPicker(editText: EditText) {
-        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-
-        val dialogView = layoutInflater.inflate(R.layout.dialog_year_picker, null)
-        val numberPicker = dialogView.findViewById<NumberPicker>(R.id.yearPicker)
-
-        numberPicker.minValue = 1980
-        numberPicker.maxValue = currentYear
-        numberPicker.value = currentYear
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.select_year_of_birth))
-            .setView(dialogView)
-            .setPositiveButton(getString(R.string.ok)) { _, _ ->
-                editText.setText(numberPicker.value.toString())
-            }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .create()
-
-        dialog.show()
-    }
-
-    private fun getCurrentTime(): String {
-        val sdf = SimpleDateFormat("E, MMM dd, yyyy hh:mm:ss a", Locale.getDefault())
-        return sdf.format(Date())
-    }
-
-    private fun check(editText: EditText): Boolean {
-        if (editText.text.isEmpty()) {
-            editText.error = getString(R.string.enter_value)
-            return false
-        }
-        return true
+    private fun clearForm() {
+        binding.edtStudentName.text?.clear()
+        binding.edtBirthYear.text?.clear()
+        binding.edtPhoneNumber.text?.clear()
+        binding.edtNotes.text?.clear()
+        binding.edtStudentName.requestFocus()
     }
 }

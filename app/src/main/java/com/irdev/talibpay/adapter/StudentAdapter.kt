@@ -1,136 +1,66 @@
 package com.irdev.talibpay.adapter
 
-import android.annotation.SuppressLint
-import android.content.Intent
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
-import com.irdev.talibpay.model.Student
-import com.irdev.talibpay.activity.DetailActivity
+import com.irdev.talibpay.data.StudentWithPayments
+import com.irdev.talibpay.databinding.ItemStudentBinding
+import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.PaymentMethod
 
-class StudentAdapter(private var studentList: ArrayList<Student>) :
-    RecyclerView.Adapter<StudentAdapter.StudentViewHolder>() {
+class StudentAdapter(
+    private val onClick: (StudentWithPayments) -> Unit
+) : ListAdapter<StudentWithPayments, StudentAdapter.StudentViewHolder>(Diff) {
 
-    // HashMap لتخزين آخر دفعة لكل طالب
-    val lastPaymentsMap = HashMap<String, Payment>()
+    class StudentViewHolder(val binding: ItemStudentBinding) : RecyclerView.ViewHolder(binding.root)
 
-    class StudentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val nameText: TextView = itemView.findViewById(R.id.nameTextView)
-        val paidCashText: TextView = itemView.findViewById(R.id.paidCashTextView)
-        val paidBankText: TextView = itemView.findViewById(R.id.paidBankTextView)
-        val paymentMethodText: TextView = itemView.findViewById(R.id.paymentMethodTextView)
-        val totalAmountText: TextView = itemView.findViewById(R.id.totalAmountTextView)
-        val remainingText: TextView = itemView.findViewById(R.id.remainingTextView)
-        val paymentDateText: TextView = itemView.findViewById(R.id.paymentDateTextView)
-        val initialTextView: TextView = itemView.findViewById(R.id.initialTextView)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StudentViewHolder =
+        StudentViewHolder(
+            ItemStudentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StudentViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_student, parent, false)
-        return StudentViewHolder(view)
-    }
-
-    @SuppressLint("UseKtx")
     override fun onBindViewHolder(holder: StudentViewHolder, position: Int) {
-        val student = studentList[position]
+        val item = getItem(position)
+        val student = item.student
+        val context = holder.itemView.context
 
-        holder.nameText.text = student.name
-        holder.paidCashText.text = student.paidCash.toString()
-        holder.paidBankText.text = student.paidBank.toString()
-        holder.totalAmountText.text = student.total.toString()
-        holder.remainingText.text = student.remaining.toString()
-        holder.initialTextView.text = student.name.firstOrNull()?.toString() ?: "?"
+        with(holder.binding) {
+            nameTextView.text = student.name
+            paidCashTextView.text = Money.format(student.paidCash)
+            paidBankTextView.text = Money.format(student.paidBank)
+            totalAmountTextView.text = Money.format(student.total)
+            remainingTextView.text = Money.format(student.remaining)
+            initialTextView.text = student.name.firstOrNull()?.toString() ?: "?"
 
-        // الحصول على آخر دفعة للطالب
-        val lastPayment = lastPaymentsMap[student.id]
-
-        // عرض وتلوين حسب طريقة الدفع من آخر دفعة
-        lastPayment?.let { payment ->
-            holder.paymentMethodText.text = payment.paymentMethod
-            holder.paymentDateText.text = payment.paymentDate
-
-            val color = when (payment.paymentMethod.trim()) {
-                "نقدي", "Cash" -> Color.parseColor("#4CAF50")       // أخضر
-                "بنكي", "Bank" -> Color.parseColor("#1976D2")      // أزرق غامق
-                "جزء نقدي وجزء بنكي", "Half Cash Half Bank" -> Color.parseColor("#FF9800") // برتقالي
-                "غير مدفوع", "Not Paid" -> Color.parseColor("#D32F2F") // أحمر
-                else -> Color.GRAY
+            // اللون والنص حسب طريقة الدفع في آخر دفعة
+            val lastPayment = item.lastPayment
+            val method = PaymentMethod.fromStored(lastPayment?.paymentMethod)
+            paymentMethodTextView.text = when {
+                lastPayment == null -> context.getString(R.string.no_payments)
+                method != null -> context.getString(method.label)
+                else -> lastPayment.paymentMethod
             }
+            paymentDateTextView.text = lastPayment?.paymentDate.orEmpty()
 
-            holder.paymentMethodText.setTextColor(color)
+            val color = ContextCompat.getColor(context, method?.color ?: R.color.method_none)
+            paymentMethodTextView.setTextColor(color)
+            // mutate() حتى لا يتشارك كل الصفوف نفس الخلفية فيتغير لونها معًا
+            (initialTextView.background?.mutate() as? GradientDrawable)?.setColor(color)
 
-            // تلوين الدائرة
-            val backgroundDrawable = holder.initialTextView.background
-            if (backgroundDrawable is GradientDrawable) {
-                backgroundDrawable.setColor(color)
-            }
-        } ?: run {
-            holder.paymentMethodText.text = "لا يوجد دفعات"
-            holder.paymentDateText.text = ""
-            holder.paymentMethodText.setTextColor(Color.GRAY)
-            (holder.initialTextView.background as? GradientDrawable)?.setColor(Color.GRAY)
-        }
-
-        holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-            val lastPayment = lastPaymentsMap[student.id]
-
-            val intent = Intent(context, DetailActivity::class.java).apply {
-                putExtra("id", student.id)
-                putExtra("name", student.name)
-                putExtra("birthYear", student.birthYear)
-                putExtra("paidCash", student.paidCash)
-                putExtra("paidBank", student.paidBank)
-                putExtra("paid", student.paid)
-                putExtra("total", student.total)
-                putExtra("remaining", student.remaining)
-                putExtra("phoneNumber", student.phoneNumber)
-                putExtra("notes", student.notes)
-                putExtra("lastModified", student.lastModified)
-                putExtra("addedIn", student.addedIn)
-
-                // ✅ إرسال طريقة الدفع وتاريخ الدفع إن وُجدت دفعة
-                putExtra("paymentMethod", lastPayment?.paymentMethod ?: "لا يوجد")
-                putExtra("paymentDate", lastPayment?.paymentDate ?: "")
-            }
-
-            context.startActivity(intent)
-        }
-
-    }
-
-    override fun getItemCount(): Int = studentList.size
-
-    @SuppressLint("NotifyDataSetChanged")
-    fun getStudentAt(position: Int): Student? {
-        return if (position in 0 until studentList.size) studentList[position] else null
-    }
-
-    fun removeStudent(student: Student) {
-        val index = studentList.indexOf(student)
-        if (index != -1) {
-            studentList.removeAt(index)
-            notifyItemRemoved(index)
+            root.setOnClickListener { onClick(item) }
         }
     }
 
-    fun restoreStudent(position: Int, student: Student) {
-        if (position in 0..studentList.size) {
-            studentList.add(position, student)
-            notifyItemInserted(position)
-        }
-    }
+    private object Diff : DiffUtil.ItemCallback<StudentWithPayments>() {
+        override fun areItemsTheSame(old: StudentWithPayments, new: StudentWithPayments) =
+            old.student.id == new.student.id
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun updateData(newList: List<Student>) {
-        studentList.clear()
-        studentList.addAll(newList)
-        notifyDataSetChanged()
+        override fun areContentsTheSame(old: StudentWithPayments, new: StudentWithPayments) =
+            old == new
     }
 }

@@ -1,6 +1,9 @@
 package com.irdev.talibpay.util
 
-import android.content.Context
+import androidx.annotation.StringRes
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -10,6 +13,8 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.irdev.talibpay.R
+import com.irdev.talibpay.data.GoogleCredentialException
+import com.irdev.talibpay.data.NotSignedInException
 
 const val MIN_PASSWORD_LENGTH = 8
 
@@ -17,16 +22,21 @@ const val MIN_PASSWORD_LENGTH = 8
 fun FirebaseUser.canAccessApp(): Boolean =
     isEmailVerified || providerData.any { it.providerId == GoogleAuthProvider.PROVIDER_ID }
 
-// رسالة آمنة ومترجمة بدل عرض رسالة Firebase الخام للمستخدم
-fun Context.authErrorMessage(e: Exception?): String = getString(
-    when (e) {
-        is FirebaseAuthWeakPasswordException -> R.string.error_weak_password
-        is FirebaseAuthUserCollisionException -> R.string.error_email_in_use
-        // لا نفرّق بين "المستخدم غير موجود" و"كلمة المرور خاطئة" لمنع كشف الحسابات
-        is FirebaseAuthInvalidUserException,
-        is FirebaseAuthInvalidCredentialsException -> R.string.error_invalid_credentials
-        is FirebaseNetworkException -> R.string.error_network
-        is FirebaseTooManyRequestsException -> R.string.error_too_many_requests
-        else -> R.string.error_generic
-    }
-)
+/** المستخدم أغلق نافذة اختيار حساب Google بنفسه: لا نعرض خطأ. */
+fun Throwable.isUserCancellation(): Boolean = this is GetCredentialCancellationException
+
+/** رسالة آمنة ومترجمة بدل عرض رسالة Firebase الخام للمستخدم. */
+@StringRes
+fun errorMessageRes(e: Throwable?): Int = when (e) {
+    is FirebaseAuthWeakPasswordException -> R.string.error_weak_password
+    is FirebaseAuthUserCollisionException -> R.string.error_email_in_use
+    // لا نفرّق بين "المستخدم غير موجود" و"كلمة المرور خاطئة" لمنع كشف الحسابات
+    is FirebaseAuthInvalidUserException,
+    is FirebaseAuthInvalidCredentialsException -> R.string.error_invalid_credentials
+    is FirebaseNetworkException -> R.string.error_network
+    is FirebaseTooManyRequestsException -> R.string.error_too_many_requests
+    is NoCredentialException -> R.string.no_google_account_found
+    is GetCredentialException, is GoogleCredentialException -> R.string.google_sign_in_failed
+    is NotSignedInException -> R.string.user_not_found
+    else -> R.string.error_generic
+}

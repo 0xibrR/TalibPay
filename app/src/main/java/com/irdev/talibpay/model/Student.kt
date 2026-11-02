@@ -7,13 +7,16 @@ data class Student(
     val id: String = "",
     val name: String = "",
     val birthYear: String = "",
-    val paidCash: Double = 0.0, // محموع ما تم دفعه الطالب نقدي
-    val paidBank: Double = 0.0, // مجموع ما تم دفعه الطالب بنكي
-    val paid: Double = 0.0, //كم دافع الطالب
-    val total: Double = 0.0,// كم لازم الطالب يدفع
-    val remaining: Double = 0.0, // محموع ما تبقى على طالب
+    val paidCash: Double = 0.0, // مجموع ما دفعه الطالب نقدًا
+    val paidBank: Double = 0.0, // مجموع ما دفعه الطالب بنكيًا
+    val paid: Double = 0.0, // مجموع ما دفعه الطالب
+    val total: Double = 0.0, // الرسوم المطلوبة من الطالب
+    val remaining: Double = 0.0, // المتبقي على الطالب
     val phoneNumber: String = "",
     val notes: String = "",
+    val addedAt: Long = 0, // وقت الإضافة (epoch millis)
+    val updatedAt: Long = 0, // وقت آخر تعديل (epoch millis)
+    // حقول نصية من النسخ القديمة، تُقرأ فقط عند غياب الطوابع الزمنية
     val lastModified: String = "",
     val addedIn: String = ""
 )

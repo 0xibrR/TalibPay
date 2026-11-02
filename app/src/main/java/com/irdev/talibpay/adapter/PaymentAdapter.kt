@@ -1,45 +1,45 @@
 package com.irdev.talibpay.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.R
+import com.irdev.talibpay.databinding.ItemPaymentBinding
+import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.PaymentMethod
+import com.irdev.talibpay.model.Payment
 
-class PaymentAdapter(private val paymentList: List<Payment>) :
-    RecyclerView.Adapter<PaymentAdapter.PaymentViewHolder>() {
+class PaymentAdapter : ListAdapter<Payment, PaymentAdapter.PaymentViewHolder>(Diff) {
 
-    class PaymentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvPaymentDate: TextView = itemView.findViewById(R.id.tvPaymentDate)
-        val tvPaymentMethod: TextView = itemView.findViewById(R.id.tvPaymentMethod)
-        val tvCash: TextView = itemView.findViewById(R.id.tvCash)
-        val tvBank: TextView = itemView.findViewById(R.id.tvBank)
-        val tvPaidTotal: TextView = itemView.findViewById(R.id.tvPaidTotal)
-        val tvTotalAmount: TextView = itemView.findViewById(R.id.tvTotalAmount)
-        val tvRemainingTotal: TextView = itemView.findViewById(R.id.tvRemainingTotal)
-        val tvNote: TextView = itemView.findViewById(R.id.tvNote)
-    }
+    class PaymentViewHolder(val binding: ItemPaymentBinding) : RecyclerView.ViewHolder(binding.root)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PaymentViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_payment, parent, false)
-        return PaymentViewHolder(view)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PaymentViewHolder =
+        PaymentViewHolder(
+            ItemPaymentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
 
     override fun onBindViewHolder(holder: PaymentViewHolder, position: Int) {
-        val payment = paymentList[position]
+        val payment = getItem(position)
+        val context = holder.itemView.context
 
-        holder.tvPaymentDate.text = payment.paymentDate
-        holder.tvPaymentMethod.text = payment.paymentMethod
-        holder.tvCash.text = "كاش ${payment.cash}"
-        holder.tvBank.text = "بنكي ${payment.bank}"
-        holder.tvPaidTotal.text = payment.paid.toString()
-        holder.tvTotalAmount.text = payment.total.toString()
-        holder.tvRemainingTotal.text = payment.remaining.toString()
-        holder.tvNote.text = payment.note
+        with(holder.binding) {
+            tvPaymentDate.text = payment.paymentDate
+            tvPaymentMethod.text = PaymentMethod.fromStored(payment.paymentMethod)
+                ?.let { context.getString(it.label) }
+                ?: payment.paymentMethod
+            tvCash.text = context.getString(R.string.cash_amount, Money.format(payment.cash))
+            tvBank.text = context.getString(R.string.bank_amount, Money.format(payment.bank))
+            tvPaidTotal.text = Money.format(payment.paid)
+            tvTotalAmount.text = Money.format(payment.total)
+            tvRemainingTotal.text = Money.format(payment.remaining)
+            tvNote.text = payment.note
+        }
     }
 
-    override fun getItemCount(): Int = paymentList.size
+    private object Diff : DiffUtil.ItemCallback<Payment>() {
+        override fun areItemsTheSame(old: Payment, new: Payment) = old.id == new.id
+        override fun areContentsTheSame(old: Payment, new: Payment) = old == new
+    }
 }

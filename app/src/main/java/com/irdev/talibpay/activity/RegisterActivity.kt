@@ -1,145 +1,65 @@
 package com.irdev.talibpay.activity
 
-import android.annotation.SuppressLint
-import android.app.Dialog
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Patterns
-import android.view.LayoutInflater
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.FirebaseAuth
 import com.irdev.talibpay.R
+import com.irdev.talibpay.databinding.ActivityRegisterBinding
+import com.irdev.talibpay.util.LoadingDialog
 import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
-import com.irdev.talibpay.util.authErrorMessage
+import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.requireRawText
+import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.toast
+import com.irdev.talibpay.viewmodel.AuthViewModel
+import com.irdev.talibpay.viewmodel.UiEvent
 
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var binding: ActivityRegisterBinding
+    private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_register)
+        binding = ActivityRegisterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         supportActionBar?.hide()
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        applySystemBarInsets(binding.main)
 
-        firebaseAuth = FirebaseAuth.getInstance()
-
-
-        val btnBake = findViewById<ImageView>(R.id.i_btn_back_register)
-        val btnSignUp = findViewById<Button>(R.id.btn_register)
-
-
-        btnBake.setOnClickListener {
-            finish()
-        }
-
-        btnSignUp.setOnClickListener {
-            signUp()
-        }
-
-    }
-
-    @SuppressLint("InflateParams", "UseKtx")
-    private fun signUp() {
-
-        val edtEmail = findViewById<TextInputEditText>(R.id.edt_email_register)
-        val edtPassword = findViewById<TextInputEditText>(R.id.edt_password_register)
-        val edtConfirmPassword = findViewById<TextInputEditText>(R.id.edt_confirmPassword_register)
-
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.progress_bar_dialog, null)
-        val builder = Dialog(this)
-        builder.setContentView(dialogView)
-        builder.setCancelable(true)
-        builder.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        builder.create()
-        builder.setCancelable(false)
-        builder.setCanceledOnTouchOutside(false)
-
-        firebaseAuth = FirebaseAuth.getInstance()
-        val email = edtEmail.text.toString().trim()
-        val password = edtPassword.text.toString()
-
-        if (check(edtEmail) && check(edtPassword) && check(edtConfirmPassword)) {
-
-            if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                if (password.length < MIN_PASSWORD_LENGTH) {
-                    edtPassword.error = getString(R.string.error_weak_password)
-                } else if (password == edtConfirmPassword.text.toString()) {
-
-                    builder.show()
-
-                    firebaseAuth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener {
-
-                            builder.dismiss()
-
-                            if (it.isSuccessful) {
-
-                                // User registration successful, send verification email
-                                val user = firebaseAuth.currentUser
-                                user?.sendEmailVerification()
-                                    ?.addOnCompleteListener { verificationTask ->
-                                        if (verificationTask.isSuccessful) {
-                                            Toast.makeText(
-                                                this,
-                                                getText(R.string.account_created_successfully),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            Toast.makeText(
-                                                this,
-                                                getString(R.string.verification_email),
-                                                Toast.LENGTH_LONG
-                                            ).show()
-
-                                            // تسجيل خروج المستخدم فور إنشاء الحساب
-                                            firebaseAuth.signOut()
-                                            finish()
-                                        } else {
-                                            Toast.makeText(
-                                                this,
-                                                authErrorMessage(verificationTask.exception),
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    }
-                            } else {
-                                Toast.makeText(
-                                    this,
-                                    authErrorMessage(it.exception),
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                } else {
-                    edtConfirmPassword.error = getString(R.string.Password_does_not_match)
-                }
-            } else {
-                edtEmail.error = getString(R.string.check_email)
+        val loading = LoadingDialog(this)
+        collectWhileStarted(viewModel.loading) { loading.setVisible(it) }
+        collectWhileStarted(viewModel.events) { event ->
+            when (event) {
+                is UiEvent.Message -> toast(event.res, long = true)
+                UiEvent.Finished -> finish()
+                else -> Unit
             }
-
         }
+
+        binding.iBtnBackRegister.setOnClickListener { finish() }
+        binding.btnRegister.setOnClickListener { signUp() }
     }
 
+    private fun signUp() {
+        val email = binding.edtEmailRegister.requireText() ?: return
+        val password = binding.edtPasswordRegister.requireRawText() ?: return
+        val confirm = binding.edtConfirmPasswordRegister.requireRawText() ?: return
 
-    private fun check(edt: EditText): Boolean {
-        if (edt.text.isEmpty()) {
-            edt.error = getString(R.string.enter_value)
-            return false
+        when {
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
+                binding.edtEmailRegister.error = getString(R.string.check_email)
+
+            password.length < MIN_PASSWORD_LENGTH ->
+                binding.edtPasswordRegister.error = getString(R.string.error_weak_password)
+
+            password != confirm ->
+                binding.edtConfirmPasswordRegister.error = getString(R.string.Password_does_not_match)
+
+            else -> viewModel.register(email, password)
         }
-        return true
     }
 }

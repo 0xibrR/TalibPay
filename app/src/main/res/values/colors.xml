@@ -9,4 +9,13 @@
     <color name="redAccent">#FF5252</color>
     <color name="textColor">#212121</color>
 
+    <!-- ألوان طرق الدفع -->
+    <color name="method_cash">#4CAF50</color>
+    <color name="method_bank">#1976D2</color>
+    <color name="method_mixed">#FF9800</color>
+    <color name="method_unpaid">#D32F2F</color>
+    <color name="method_none">#9E9E9E</color>
+    <color name="swipe_edit">#2196F3</color>
+    <color name="swipe_delete">#F44336</color>
+
 </resources>
