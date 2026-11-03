@@ -13,6 +13,10 @@
         android:title="@string/settings"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/report_menu_item"
+        android:title="@string/report_title"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/archive_menu_item"
         android:title="@string/archive_title_screen"
         app:showAsAction="never" />

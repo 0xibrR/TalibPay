@@ -32,6 +32,8 @@ data class YearMonth(val year: Int, val month: Int) : Comparable<YearMonth> {
 
     fun next(): YearMonth = if (month == 12) YearMonth(year + 1, 1) else YearMonth(year, month + 1)
 
+    fun previous(): YearMonth = if (month == 1) YearMonth(year - 1, 12) else YearMonth(year, month - 1)
+
     override fun compareTo(other: YearMonth): Int =
         compareValuesBy(this, other, { it.year }, { it.month })
 

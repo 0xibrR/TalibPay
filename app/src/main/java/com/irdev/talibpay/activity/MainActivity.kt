@@ -261,6 +261,11 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
+            R.id.report_menu_item -> {
+                startActivity(Intent(this, ReportActivity::class.java))
+                return true
+            }
+
             R.id.archive_menu_item -> {
                 startActivity(Intent(this, ArchiveActivity::class.java))
                 return true

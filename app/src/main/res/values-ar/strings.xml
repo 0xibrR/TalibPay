@@ -414,4 +414,23 @@
     <string name="archived_banner">هذا الطالب مؤرشف: مخفي من القائمة ولا تُنشأ له رسوم شهرية جديدة. لإرجاعه اختر «إلغاء الأرشفة» من القائمة.</string>
     <string name="monthly_fee_paused">%1$s · متوقفة أثناء الأرشفة</string>
     <string name="archive_empty">لا يوجد طلاب مؤرشفون.\nأرشف الطالب من صفحته عندما يتوقف عن الحضور.</string>
+    <!-- التقرير الشهري -->
+    <string name="report_title">التقرير الشهري</string>
+    <string name="report_heading">تقرير %1$s</string>
+    <string name="report_prev_month">الشهر السابق</string>
+    <string name="report_next_month">الشهر التالي</string>
+    <string name="report_collected">المحصّل هذا الشهر</string>
+    <string name="report_refunded">مسترد من المحافظ</string>
+    <string name="report_payment_count">الدفعات</string>
+    <string name="report_month_dues">مستحقات الشهر</string>
+    <string name="report_billed">إجمالي المستحقات</string>
+    <string name="report_billed_paid">سُدّد منها</string>
+    <string name="report_billed_remaining">لم يُسدَّد</string>
+    <string name="report_no_dues">لا توجد مستحقات لهذا الشهر</string>
+    <string name="report_unpaid_title">لم يسدّدوا بالكامل (%1$d)</string>
+    <string name="report_all_paid">الجميع سدّدوا مستحقات هذا الشهر</string>
+    <string name="report_archived_name">%1$s (مؤرشف)</string>
+    <string name="report_generated">TalibPay · أُنشئ في %1$s</string>
+    <string name="report_share_image">مشاركة كصورة</string>
+    <string name="report_share_pdf">مشاركة كملف PDF</string>
 </resources>

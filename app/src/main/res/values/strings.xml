@@ -403,4 +403,23 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="archived_banner">This student is archived: hidden from the list and no new monthly fees are added. Use the menu to restore them.</string>
     <string name="monthly_fee_paused">%1$s · paused while archived</string>
     <string name="archive_empty">No archived students.\nArchive a student from their page when they stop attending.</string>
+    <!-- التقرير الشهري -->
+    <string name="report_title">Monthly report</string>
+    <string name="report_heading">Report for %1$s</string>
+    <string name="report_prev_month">Previous month</string>
+    <string name="report_next_month">Next month</string>
+    <string name="report_collected">Collected this month</string>
+    <string name="report_refunded">Refunded from wallets</string>
+    <string name="report_payment_count">Payments</string>
+    <string name="report_month_dues">This month\'s dues</string>
+    <string name="report_billed">Total dues</string>
+    <string name="report_billed_paid">Paid so far</string>
+    <string name="report_billed_remaining">Still unpaid</string>
+    <string name="report_no_dues">No dues for this month</string>
+    <string name="report_unpaid_title">Not fully paid (%1$d)</string>
+    <string name="report_all_paid">Everyone paid this month\'s dues</string>
+    <string name="report_archived_name">%1$s (archived)</string>
+    <string name="report_generated">TalibPay · created %1$s</string>
+    <string name="report_share_image">Share as image</string>
+    <string name="report_share_pdf">Share as PDF</string>
 </resources>
