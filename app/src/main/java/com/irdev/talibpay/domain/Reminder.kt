@@ -41,6 +41,17 @@ object PhoneNumbers {
         return result.takeIf { it.length in MIN_LENGTH..MAX_LENGTH }
     }
 
+    /**
+     * الرقم للعرض مع رمز الدولة، مثل "+970 591234567".
+     * الرقم المكتوب بصيغة دولية (+ أو 00) يُعرض كما هو.
+     */
+    fun display(raw: String, countryCode: String): String {
+        val trimmed = raw.trim()
+        if (trimmed.isEmpty() || trimmed.startsWith("+") || trimmed.startsWith("00")) return trimmed
+        if (!isValidCountryCode(countryCode)) return trimmed
+        return "+$countryCode ${trimmed.removePrefix("0")}"
+    }
+
     /** رمز دولة صالح: من 1 إلى 3 أرقام لا يبدأ بصفر. */
     fun isValidCountryCode(code: String): Boolean =
         code.length in 1..3 && code.all { it.isDigit() } && !code.startsWith("0")

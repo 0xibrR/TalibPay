@@ -56,6 +56,7 @@ data class StudentInput(
     val registrationDate: String,
     val monthlyFee: Double,
     val phoneNumber: String,
+    val phoneCountryCode: String,
     val notes: String,
     /** عند إدخال الرسوم الشهرية لأول مرة: احتساب الأشهر السابقة منذ تاريخ التسجيل. */
     val backdateMonthlyFees: Boolean = false
@@ -142,6 +143,7 @@ class StudentRepository(
             monthlyFee = input.monthlyFee,
             billingStart = billingStartFor(null, input.monthlyFee, input.registrationDate, today()),
             phoneNumber = input.phoneNumber,
+            phoneCountryCode = input.phoneCountryCode,
             notes = input.notes,
             addedAt = now,
             updatedAt = now
@@ -166,6 +168,7 @@ class StudentRepository(
             "monthlyFee" to input.monthlyFee,
             "billingStart" to billingStart,
             "phoneNumber" to input.phoneNumber,
+            "phoneCountryCode" to input.phoneCountryCode,
             "notes" to input.notes,
             "updatedAt" to clock()
         )

@@ -43,6 +43,25 @@ class ReminderTest {
     }
 
     @Test
+    fun `each student's own country code is used for their local number`() {
+        // نفس الرقم المحلي يتحول حسب دولة كل طالب
+        assertEquals("970591234567", PhoneNumbers.toInternational("0591234567", "970"))
+        assertEquals("962791234567", PhoneNumbers.toInternational("0791234567", "962"))
+        assertEquals("201001234567", PhoneNumbers.toInternational("01001234567", "20"))
+    }
+
+    @Test
+    fun `phone is displayed with its country code`() {
+        assertEquals("+970 591234567", PhoneNumbers.display("0591234567", "970"))
+        assertEquals("+962 791234567", PhoneNumbers.display("791234567", "962"))
+        // الرقم الدولي أو بدون رمز صالح يُعرض كما هو
+        assertEquals("+972 54 123 4567", PhoneNumbers.display("+972 54 123 4567", "970"))
+        assertEquals("00972541234567", PhoneNumbers.display("00972541234567", "970"))
+        assertEquals("0591234567", PhoneNumbers.display("0591234567", ""))
+        assertEquals("", PhoneNumbers.display("  ", "970"))
+    }
+
+    @Test
     fun `country code must be 1 to 3 digits without a leading zero`() {
         assertTrue(PhoneNumbers.isValidCountryCode("970"))
         assertTrue(PhoneNumbers.isValidCountryCode("1"))

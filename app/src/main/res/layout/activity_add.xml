@@ -96,20 +96,49 @@
                         android:inputType="numberDecimal" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.TalibPay.TextField"
-                    android:hint="@string/phone_number"
-                    app:startIconDrawable="@drawable/ic_phone">
+                <!-- رمز الدولة ثم الرقم، من اليسار لليمين دائمًا كما يُكتب الرقم الدولي -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layoutDirection="ltr"
+                    android:orientation="horizontal">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edtPhoneNumber"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:imeOptions="actionNext"
-                        android:inputType="phone"
-                        android:maxLength="30"
-                        android:textDirection="ltr" />
-                </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/countryCodeLayout"
+                        style="@style/Widget.TalibPay.TextField.Dropdown"
+                        android:layout_width="132dp"
+                        android:layout_marginEnd="8dp"
+                        android:hint="@string/country_code"
+                        app:prefixText="+">
+
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/edtCountryCode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:completionThreshold="1"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:maxLength="3"
+                            android:textDirection="ltr" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.TalibPay.TextField"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:hint="@string/phone_number"
+                        app:startIconDrawable="@drawable/ic_phone">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtPhoneNumber"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionNext"
+                            android:inputType="phone"
+                            android:maxLength="30"
+                            android:textDirection="ltr" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.TalibPay.TextField"

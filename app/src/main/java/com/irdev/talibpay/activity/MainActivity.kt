@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity() {
             adapter = listAdapter
             setOnItemClickListener { _, _, position, _ ->
                 val item = overdue[position]
-                sendReminder(item.data.student.phoneNumber, reminderMessage(item.data.student, item.dues))
+                sendReminder(item.data.student, reminderMessage(item.data.student, item.dues))
                 remindedIds += item.data.student.id
                 labels[position] = label(item)
                 listAdapter.notifyDataSetChanged()

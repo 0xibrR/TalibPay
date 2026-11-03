@@ -18,6 +18,7 @@ data class Student(
     val remaining: Double = 0.0, // المتبقي على الطالب
     val walletBalance: Double = 0.0, // رصيد المحفظة (نسخة للعرض؛ المصدر حركات المحفظة)
     val phoneNumber: String = "",
+    val phoneCountryCode: String = "", // رمز الدولة لرقم الهاتف (مثل 970)؛ فارغ = الرمز الافتراضي من الإعدادات
     val notes: String = "",
     val addedAt: Long = 0, // وقت الإضافة (epoch millis)
     val updatedAt: Long = 0, // وقت آخر تعديل (epoch millis)

@@ -17,7 +17,11 @@ import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.money
+import com.irdev.talibpay.util.ReminderPrefs
+import com.irdev.talibpay.util.countryCodeFor
 import com.irdev.talibpay.util.optionalAmount
+import com.irdev.talibpay.util.requireCountryCode
+import com.irdev.talibpay.util.setupCountryCodePicker
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.showYearPicker
@@ -50,6 +54,7 @@ class EditActivity : AppCompatActivity() {
         binding.edtRegistrationDateEdit.setOnClickListener {
             showDatePicker { binding.edtRegistrationDateEdit.setText(it) }
         }
+        binding.edtCountryCode.setupCountryCodePicker(ReminderPrefs.countryCode(this))
         binding.btnEditStudent.setOnClickListener { confirmSave() }
 
         collectWhileStarted(viewModel.existing) { student ->
@@ -64,6 +69,8 @@ class EditActivity : AppCompatActivity() {
                 )
             }
             binding.edtPhoneNumberEdit.setText(student.phoneNumber)
+            // الطلاب القدامى بلا رمز خاص: يظهر الرمز الافتراضي، ويُحفظ لهم عند الحفظ
+            binding.edtCountryCode.setText(countryCodeFor(student), false)
             binding.edtNotesEdit.setText(student.notes)
         }
         collectWhileStarted(viewModel.loading) { binding.btnEditStudent.isEnabled = !it }
@@ -94,6 +101,7 @@ class EditActivity : AppCompatActivity() {
             return
         }
         val phone = binding.edtPhoneNumberEdit.requireText() ?: return
+        val countryCode = binding.edtCountryCode.requireCountryCode(binding.countryCodeLayout) ?: return
         val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
 
         // إدخال الرسوم الشهرية لأول مرة: نسأل عن احتساب الأشهر السابقة منذ التسجيل
@@ -112,11 +120,11 @@ class EditActivity : AppCompatActivity() {
                 )
                 .setPositiveButton(R.string.backdate_yes) { _, _ ->
                     viewModel.save(
-                        StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes, backdateMonthlyFees = true)
+                        StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes, backdateMonthlyFees = true)
                     )
                 }
                 .setNegativeButton(R.string.backdate_no) { _, _ ->
-                    viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes))
+                    viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes))
                 }
                 .setNeutralButton(R.string.cancel, null)
                 .show()
@@ -127,7 +135,7 @@ class EditActivity : AppCompatActivity() {
             .setTitle(R.string.confirm_edit_title)
             .setMessage(R.string.confirm_edit_message)
             .setPositiveButton(R.string.ok) { _, _ ->
-                viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes))
+                viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes))
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

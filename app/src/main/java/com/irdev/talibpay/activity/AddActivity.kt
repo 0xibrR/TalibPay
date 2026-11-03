@@ -12,7 +12,10 @@ import com.irdev.talibpay.databinding.ActivityAddBinding
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.ReminderPrefs
 import com.irdev.talibpay.util.optionalAmount
+import com.irdev.talibpay.util.requireCountryCode
+import com.irdev.talibpay.util.setupCountryCodePicker
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.showYearPicker
@@ -39,6 +42,8 @@ class AddActivity : AppCompatActivity() {
         }
         // تاريخ التسجيل: اليوم افتراضيًا، ويمكن تغييره من منتقي التاريخ
         if (savedInstanceState == null) binding.edtRegistrationDate.setText(todayDate())
+        // رمز الدولة: الرمز الافتراضي من الإعدادات، ويمكن اختيار غيره لكل طالب
+        binding.edtCountryCode.setupCountryCodePicker(ReminderPrefs.countryCode(this))
         binding.edtRegistrationDate.setOnClickListener {
             showDatePicker { binding.edtRegistrationDate.setText(it) }
         }
@@ -49,8 +54,10 @@ class AddActivity : AppCompatActivity() {
             val registrationDate = binding.edtRegistrationDate.requireText() ?: return@setOnClickListener
             val monthlyFee = binding.edtMonthlyFee.optionalAmount() ?: return@setOnClickListener
             val phone = binding.edtPhoneNumber.requireText() ?: return@setOnClickListener
+            val countryCode = binding.edtCountryCode.requireCountryCode(binding.countryCodeLayout)
+                ?: return@setOnClickListener
             val notes = binding.edtNotes.text?.toString()?.trim().orEmpty()
-            viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, notes))
+            viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes))
         }
 
         collectWhileStarted(viewModel.loading) { binding.btnAddStudent.isEnabled = !it }

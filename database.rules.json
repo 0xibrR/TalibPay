@@ -14,6 +14,7 @@
             "billingStart": { ".validate": "newData.isString() && newData.val().length <= 10" },
             "lastBilledPeriod": { ".validate": "newData.isString() && newData.val().length <= 7" },
             "phoneNumber": { ".validate": "newData.isString() && newData.val().length <= 30" },
+            "phoneCountryCode": { ".validate": "newData.isString() && newData.val().length <= 3" },
             "notes": { ".validate": "newData.isString() && newData.val().length <= 2000" },
             "paidCash": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "paidBank": { ".validate": "newData.isNumber() && newData.val() >= 0" },

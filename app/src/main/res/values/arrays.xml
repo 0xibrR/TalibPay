@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- رموز الدول لأرقام الهواتف: "الرمز|اسم الدولة" -->
+    <string-array name="country_codes">
+        <item>970|Palestine</item>
+        <item>972|Israel</item>
+        <item>962|Jordan</item>
+        <item>20|Egypt</item>
+        <item>966|Saudi Arabia</item>
+        <item>971|UAE</item>
+        <item>974|Qatar</item>
+        <item>965|Kuwait</item>
+        <item>973|Bahrain</item>
+        <item>968|Oman</item>
+        <item>961|Lebanon</item>
+        <item>963|Syria</item>
+        <item>964|Iraq</item>
+        <item>90|Turkey</item>
+        <item>49|Germany</item>
+        <item>44|United Kingdom</item>
+        <item>1|USA / Canada</item>
+    </string-array>
+</resources>

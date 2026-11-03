@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="country_codes">
+        <item>970|فلسطين</item>
+        <item>972|إسرائيل</item>
+        <item>962|الأردن</item>
+        <item>20|مصر</item>
+        <item>966|السعودية</item>
+        <item>971|الإمارات</item>
+        <item>974|قطر</item>
+        <item>965|الكويت</item>
+        <item>973|البحرين</item>
+        <item>968|عُمان</item>
+        <item>961|لبنان</item>
+        <item>963|سوريا</item>
+        <item>964|العراق</item>
+        <item>90|تركيا</item>
+        <item>49|ألمانيا</item>
+        <item>44|المملكة المتحدة</item>
+        <item>1|أمريكا / كندا</item>
+    </string-array>
+</resources>

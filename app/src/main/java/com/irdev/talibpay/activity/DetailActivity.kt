@@ -44,6 +44,7 @@ import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.displayPhone
 import com.irdev.talibpay.util.dueTitle
 import com.irdev.talibpay.util.formatTimestamp
 import com.irdev.talibpay.util.money
@@ -156,7 +157,7 @@ class DetailActivity : AppCompatActivity() {
             tvNoDues.isVisible = data.dues.isEmpty()
 
             // معلومات الطالب
-            rowPhone.bind(R.drawable.ic_phone, R.string.phone_number, student.phoneNumber)
+            rowPhone.bind(R.drawable.ic_phone, R.string.phone_number, displayPhone(student))
             rowBirthYear.bind(R.drawable.ic_cake, R.string.year_of_birth, student.birthYear)
             rowRegistrationDate.bind(R.drawable.ic_calendar, R.string.registration_date, student.registrationDate)
             // الرسوم الشهرية وموعد الاستحقاق القادم
@@ -385,7 +386,7 @@ class DetailActivity : AppCompatActivity() {
         val data = viewModel.student.value ?: return
         val overdue = data.ledger.overdueDues(todaySimpleDate())
         if (overdue.isEmpty()) return
-        sendReminder(data.student.phoneNumber, reminderMessage(data.student, overdue))
+        sendReminder(data.student, reminderMessage(data.student, overdue))
     }
 
     private fun shareAsText(data: StudentWithPayments) {
@@ -400,7 +401,7 @@ class DetailActivity : AppCompatActivity() {
             getString(R.string.share_name, s.name),
             getString(R.string.share_birth_year, s.birthYear),
             getString(R.string.share_registration_date, s.registrationDate.ifBlank { getString(R.string.none_value) }),
-            getString(R.string.share_phone, s.phoneNumber),
+            getString(R.string.share_phone, displayPhone(s)),
             "",
             getString(R.string.share_paid_cash, s.paidCash),
             getString(R.string.share_paid_bank, s.paidBank),

@@ -365,8 +365,10 @@
     <string name="reminder_overdue_item">%1$s · %2$s</string>
     <string name="reminder_overdue_item_sent">✓ %1$s · %2$s</string>
     <string name="settings_reminders">التذكيرات</string>
-    <string name="whatsapp_country_code">رمز الدولة لواتساب</string>
+    <string name="whatsapp_country_code">رمز الدولة الافتراضي</string>
+    <string name="country_code">الرمز</string>
+    <string name="country_code_item">%1$s · %2$s</string>
     <string name="country_code_value">\u200E+%1$s</string>
-    <string name="country_code_hint">يُضاف للأرقام التي تبدأ بصفر (970 فلسطين، 972 إسرائيل، 962 الأردن).</string>
+    <string name="country_code_hint">يُعبّأ تلقائيًا للطلاب الجدد، ويُستخدم للطلاب الذين ليس لهم رمز دولة خاص.</string>
     <string name="invalid_country_code">أدخل رمز دولة صالحًا (من 1 إلى 3 أرقام)</string>
 </resources>

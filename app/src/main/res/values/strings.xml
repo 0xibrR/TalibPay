@@ -355,8 +355,10 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="reminder_overdue_item">%1$s · %2$s</string>
     <string name="reminder_overdue_item_sent">✓ %1$s · %2$s</string>
     <string name="settings_reminders">Reminders</string>
-    <string name="whatsapp_country_code">WhatsApp country code</string>
+    <string name="whatsapp_country_code">Default country code</string>
+    <string name="country_code">Code</string>
+    <string name="country_code_item">%1$s · %2$s</string>
     <string name="country_code_value">\u200E+%1$s</string>
-    <string name="country_code_hint">Added to phone numbers that start with 0 (970 Palestine, 972 Israel, 962 Jordan).</string>
+    <string name="country_code_hint">Pre-filled for new students, and used for students who have no country code of their own.</string>
     <string name="invalid_country_code">Enter a valid country code (1 to 3 digits)</string>
 </resources>
