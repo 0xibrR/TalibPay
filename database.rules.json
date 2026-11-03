@@ -4,7 +4,13 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid && (auth.token.email_verified === true || auth.token.firebase.sign_in_provider === 'google.com')",
         ".write": "auth != null && auth.uid === $uid && (auth.token.email_verified === true || auth.token.firebase.sign_in_provider === 'google.com')",
+        "meta": {
+          "billingIndexVersion": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "lastFullBillingScan": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "$other": { ".validate": false }
+        },
         "students": {
+          ".indexOn": ["nextBillingDate"],
           "$studentId": {
             ".validate": "newData.hasChildren(['id', 'name']) && newData.child('id').val() === $studentId",
             "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
@@ -14,6 +20,7 @@
             "monthlyFee": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "billingStart": { ".validate": "newData.isString() && newData.val().length <= 10" },
             "lastBilledPeriod": { ".validate": "newData.isString() && newData.val().length <= 7" },
+            "nextBillingDate": { ".validate": "newData.isString() && newData.val().length <= 10" },
             "phoneNumber": { ".validate": "newData.isString() && newData.val().length <= 30" },
             "phoneCountryCode": { ".validate": "newData.isString() && newData.val().length <= 3" },
             "archived": { ".validate": "newData.isBoolean()" },

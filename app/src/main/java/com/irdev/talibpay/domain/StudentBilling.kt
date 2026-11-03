@@ -84,3 +84,14 @@ fun pastDuesSinceRegistration(registrationDate: String, today: SimpleDate): List
  */
 fun billingStartOnUnarchive(student: Student, today: SimpleDate): String =
     if (student.monthlyFee > 0) today.format() else student.billingStart
+
+/**
+ * موعد الرسوم الشهرية القادم الذي لم يُنشأ بعد، كمفتاح yyyy-MM-dd يُخزَّن مع الطالب
+ * ليُستعلم عن المستحقين فقط بدل تحميل كل الطلاب. فارغ = لا رسوم تلقائية (بلا رسوم، أو مؤرشف).
+ */
+fun Student.nextBillingKey(): String {
+    if (archived || monthlyFee <= 0) return ""
+    val registration = SimpleDate.parse(registrationDate) ?: return ""
+    val start = SimpleDate.parse(billingStart) ?: registration
+    return MonthlyBilling.firstUnbilledDue(registration, start, YearMonth.parse(lastBilledPeriod)).sortKey()
+}

@@ -15,6 +15,7 @@ data class Student(
     val discountReason: String = "", // سبب الخصم (مثل: أخ، منحة)
     val billingStart: String = "", // أول تاريخ تُحسب منه الرسوم الشهرية dd/MM/yyyy
     val lastBilledPeriod: String = "", // آخر شهر أُنشئت رسومه yyyy-MM (يمنع التكرار)
+    val nextBillingDate: String = "", // موعد الرسوم القادم yyyy-MM-dd (فهرس لاستعلام المستحقين فقط)؛ فارغ = لا رسوم تلقائية
     val paidCash: Double = 0.0, // مجموع ما دفعه الطالب نقدًا
     val paidBank: Double = 0.0, // مجموع ما دفعه الطالب بنكيًا
     val paid: Double = 0.0, // مجموع ما دفعه الطالب

@@ -18,6 +18,7 @@ import com.irdev.talibpay.domain.AttendanceDays
 import com.irdev.talibpay.domain.Weekday
 import com.irdev.talibpay.domain.isEnablingMonthlyFee
 import com.irdev.talibpay.domain.periodsDue
+import com.irdev.talibpay.domain.nextBillingKey
 import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.StudentLedger
@@ -101,6 +102,12 @@ class StudentRepository(
 
     private fun studentRef(studentId: String) = studentsRef().child(studentId)
 
+    /** بيانات تشغيلية صغيرة للمستخدم (إصدار الفهرس، آخر فحص كامل). */
+    private fun metaRef(): DatabaseReference {
+        val uid = auth.currentUser?.uid ?: throw NotSignedInException()
+        return database.getReference(ROOT).child(uid).child(META)
+    }
+
     fun observeStudents(): Flow<List<StudentWithPayments>> = callbackFlow {
         val ref = studentsRef()
         val listener = object : ValueEventListener {
@@ -160,7 +167,8 @@ class StudentRepository(
             updatedAt = now
         )
         ref.setValue(student).await()
-        if (input.monthlyFee > 0) syncLedger(ref)
+        // دائمًا: يحدّث موعد الرسوم القادم حتى عند إلغاء الرسوم الشهرية
+        syncLedger(ref)
     }
 
     /** يحدّث بيانات الطالب الأساسية فقط، دون المساس بالمستحقات أو الدفعات. */
@@ -191,20 +199,46 @@ class StudentRepository(
         // لأن لكل شهر معرّفًا ثابتًا ويُتخطى إن وُجد (انظر generateDueCharges).
         if (backdate) updates["lastBilledPeriod"] = ""
         ref.updateChildren(updates).await()
-        if (input.monthlyFee > 0) syncLedger(ref)
+        // دائمًا: يحدّث موعد الرسوم القادم حتى عند إلغاء الرسوم الشهرية
+        syncLedger(ref)
     }
 
     /**
-     * ينشئ الرسوم الشهرية التي حان موعدها لكل الطلاب (عند فتح التطبيق وفي المهمة اليومية).
+     * ينشئ الرسوم الشهرية التي حان موعدها (عند فتح التطبيق وفي المهمة اليومية).
      * آمن للتكرار: كل شهر له معرّف ثابت، والإنشاء داخل transaction.
+     *
+     * توفير التحميل: لا نحمّل كل الطلاب، بل نستعلم عمّن موعد رسومه القادم ([NEXT_BILLING]) اليوم أو قبله؛
+     * غالبًا لا أحد. فحص كامل مرة عند أول تشغيل (لتعبئة الفهرس للطلاب الحاليين) ثم كل [FULL_SCAN_INTERVAL_MS]
+     * كشبكة أمان لأي طالب لم يُحدَّث فهرسه (مثل تعديل من نسخة قديمة من التطبيق).
      */
     suspend fun generateMonthlyDues() {
         val today = today()
-        val students = studentsRef().get().await().children
-        for (snapshot in students) {
+        val now = clock()
+        val meta = metaRef().get().await()
+        val indexVersion = meta.child(META_INDEX_VERSION).getValue(Int::class.java) ?: 0
+        val lastFullScan = meta.child(META_LAST_FULL_SCAN).getValue(Long::class.java) ?: 0L
+
+        if (indexVersion < INDEX_VERSION || now - lastFullScan > FULL_SCAN_INTERVAL_MS) {
+            fullBillingScan(today)
+            metaRef().updateChildren(mapOf(META_INDEX_VERSION to INDEX_VERSION, META_LAST_FULL_SCAN to now)).await()
+            return
+        }
+
+        // الطلاب بلا رسوم تلقائية مفتاحهم "" فيُستبعدون بـ startAt (النص الفارغ أصغر من أي تاريخ)
+        val due = studentsRef().orderByChild(NEXT_BILLING).startAt("0").endAt(today.sortKey()).get().await()
+        for (snapshot in due.children) syncLedger(snapshot.ref)
+    }
+
+    /** يمر على كل الطلاب: ينشئ المستحق ويصحح الفهرس إن كان ناقصًا أو قديمًا. */
+    private suspend fun fullBillingScan(today: SimpleDate) {
+        for (snapshot in studentsRef().get().await().children) {
             val student = snapshot.getValue(Student::class.java) ?: continue
-            // فحص سريع قبل الـ transaction لتجنّب الكتابة لطلاب لا شيء مستحق عليهم الآن
-            if (student.periodsDue(today).isNotEmpty()) syncLedger(snapshot.ref)
+            when {
+                // syncLedger يكتب الفهرس أيضًا
+                student.periodsDue(today).isNotEmpty() -> syncLedger(snapshot.ref)
+                student.nextBillingDate != student.nextBillingKey() ->
+                    snapshot.ref.child(NEXT_BILLING).setValue(student.nextBillingKey()).await()
+            }
         }
     }
 
@@ -213,9 +247,12 @@ class StudentRepository(
     /** يخفي الطالب من القائمة ويوقف رسومه الشهرية، مع إبقاء كل سجلاته كما هي. */
     suspend fun archiveStudent(studentId: String) {
         val now = clock()
-        studentRef(studentId).updateChildren(
-            mapOf("archived" to true, "archivedAt" to now, "updatedAt" to now)
-        ).await()
+        // داخل syncLedger حتى يُحدَّث فهرس موعد الرسوم (يصبح فارغًا للمؤرشف)
+        syncLedger(studentRef(studentId)) { data ->
+            data.child("archived").value = true
+            data.child("archivedAt").value = now
+            emptyList()
+        }
     }
 
     /**
@@ -238,9 +275,11 @@ class StudentRepository(
      * دون تغيير بداية الفوترة كما يفعل [unarchiveStudent] (لم تمر أشهر في الأرشيف).
      */
     suspend fun undoArchive(studentId: String) {
-        studentRef(studentId).updateChildren(
-            mapOf("archived" to false, "archivedAt" to 0, "updatedAt" to clock())
-        ).await()
+        syncLedger(studentRef(studentId)) { data ->
+            data.child("archived").value = false
+            data.child("archivedAt").value = 0
+            emptyList()
+        }
     }
 
     suspend fun deleteStudent(studentId: String) {
@@ -430,6 +469,8 @@ class StudentRepository(
             data.child("remaining").value = totals.remaining
             data.child("walletBalance").value = totals.walletBalance
             data.child("updatedAt").value = now
+            // فهرس موعد الرسوم القادم: بعد كل تغيير (إنشاء رسوم، أرشفة، تعديل الرسوم...)
+            data.child(NEXT_BILLING).value = data.getValue(Student::class.java)?.nextBillingKey().orEmpty()
         }
     }
 
@@ -531,6 +572,12 @@ class StudentRepository(
         const val CHARGES = "charges"
         const val PAYMENTS = "payments"
         const val WALLET = "wallet"
+        const val META = "meta"
+        const val NEXT_BILLING = "nextBillingDate"
+        private const val META_INDEX_VERSION = "billingIndexVersion"
+        private const val META_LAST_FULL_SCAN = "lastFullBillingScan"
+        private const val INDEX_VERSION = 1
+        private const val FULL_SCAN_INTERVAL_MS = 30L * 24 * 60 * 60 * 1000
     }
 }
 

@@ -12,6 +12,9 @@ data class SimpleDate(val year: Int, val month: Int, val day: Int) : Comparable<
 
     fun format(): String = String.format(Locale.US, "%02d/%02d/%04d", day, month, year)
 
+    /** مفتاح قابل للترتيب نصيًا (yyyy-MM-dd) لاستعلامات Firebase. */
+    fun sortKey(): String = String.format(Locale.US, "%04d-%02d-%02d", year, month, day)
+
     companion object {
         fun parse(text: String?): SimpleDate? {
             val parts = text?.trim()?.split("/") ?: return null
@@ -110,6 +113,20 @@ object MonthlyBilling {
         repeat(MAX_PERIODS) {
             val due = dueDateFor(month, registration.day)
             if (due > today && due >= registration && due >= billingStart) return due
+            month = month.next()
+        }
+        return dueDateFor(month, registration.day)
+    }
+
+    /**
+     * أول موعد رسوم لم يُنشأ بعد، بغض النظر عن اليوم.
+     * [periodsDue] يكون غير فارغ تمامًا عندما يكون هذا الموعد اليوم أو قبله.
+     */
+    fun firstUnbilledDue(registration: SimpleDate, billingStart: SimpleDate, lastBilled: YearMonth?): SimpleDate {
+        var month = startMonth(registration, billingStart, lastBilled)
+        repeat(MAX_PERIODS) {
+            val due = dueDateFor(month, registration.day)
+            if (due >= registration && due >= billingStart) return due
             month = month.next()
         }
         return dueDateFor(month, registration.day)
