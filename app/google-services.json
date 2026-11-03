@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "913851560456",
+    "firebase_url": "https://talibpay-491dc-default-rtdb.firebaseio.com",
     "project_id": "talibpay-491dc",
     "storage_bucket": "talibpay-491dc.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.irdev.talibpay"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "913851560456-iipp281bkn1osrfoktevtoab996or53f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.irdev.talibpay",
+            "certificate_hash": "a02305704d1958f975db52d85d5472771653342d"
+          }
+        },
+        {
+          "client_id": "913851560456-ld9ksu4la9fk50s40ioe4j5lthbdjqpn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD1iiE3hjavCvhYDvtqUg6hQxkOj595qJs"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "913851560456-ld9ksu4la9fk50s40ioe4j5lthbdjqpn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

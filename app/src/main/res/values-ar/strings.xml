@@ -46,7 +46,11 @@
     <string name="error_deleting_google_user">حدث خطأ أثناء حذف مستخدم جوجل:</string>
     <string name="error_authenticating_google_user">حدث خطأ أثناء التحقق من هوية مستخدم جوجل:</string>
     <string name="failed_to_delete_user_data_account_deletion_cancelled">فشل في حذف بيانات المستخدم. تم إلغاء حذف الحساب.</string>
-    <string name="no_google_account_found">لم يتم العثور على حساب جوجل. الرجاء تسجيل الدخول أولاً.</string>
+    <string name="no_google_account_found">لا يوجد حساب Google على هذا الجهاز.</string>
+    <string name="google_add_account">إضافة حساب</string>
+    <string name="google_add_account_message">أضف حساب Google إلى الجهاز للمتابعة، ثم اختره لتسجيل الدخول.</string>
+    <string name="google_not_configured">تسجيل الدخول عبر Google غير مُعدّ لهذه النسخة من التطبيق. سجّل الدخول بالبريد الإلكتروني حاليًا.</string>
+    <string name="google_account_conflict">هذا البريد مرتبط بطريقة دخول أخرى. سجّل الدخول بالبريد وكلمة المرور.</string>
     <string name="follow_battery_saver">اتباع وضع توفير البطارية</string>
     <string name="settings">الإعدادات</string>
     <string name="delete_all_students">حذف جميع الطلاب</string>
@@ -347,6 +351,5 @@
         <item>@string/method_unpaid</item>
     </string-array>
 
-    <string name="default_web_client_id">913851560456-ld9ksu4la9fk50s40ioe4j5lthbdjqpn.apps.googleusercontent.com</string>
 
 </resources>

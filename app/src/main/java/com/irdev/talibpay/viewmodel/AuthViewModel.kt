@@ -21,7 +21,7 @@ class AuthViewModel : BaseViewModel() {
 
     fun signInWithGoogle(idToken: String) = runAction {
         val user = repository.signInWithGoogle(idToken)
-        send(UiEvent.SignedIn(user?.displayName))
+        send(UiEvent.SignedIn(user.displayName ?: user.email))
     }
 
     fun register(email: String, password: String) = runAction {

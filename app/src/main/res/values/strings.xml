@@ -42,7 +42,11 @@
     <string name="error_deleting_google_user">Error deleting Google user:</string>
     <string name="error_authenticating_google_user">Error authenticating Google user:</string>
     <string name="failed_to_delete_user_data_account_deletion_cancelled">Failed to delete user data. Account deletion cancelled.</string>
-    <string name="no_google_account_found">"No Google account found. Please sign in first.</string>
+    <string name="no_google_account_found">There is no Google account on this device.</string>
+    <string name="google_add_account">Add account</string>
+    <string name="google_add_account_message">Add a Google account to this device to continue, then you can choose it to sign in.</string>
+    <string name="google_not_configured">Google sign-in is not set up for this version of the app. Sign in with email for now.</string>
+    <string name="google_account_conflict">This email is linked to another sign-in method. Sign in with your email and password.</string>
     <string name="follow_battery_saver">Follow Battery saver</string>
     <string name="settings">Settings</string>
     <string name="delete_all_students">Delete all students</string>
@@ -335,7 +339,6 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
         <item>@string/method_unpaid</item>
     </string-array>
 
-    <string name="default_web_client_id">913851560456-ld9ksu4la9fk50s40ioe4j5lthbdjqpn.apps.googleusercontent.com</string>
 
 
 

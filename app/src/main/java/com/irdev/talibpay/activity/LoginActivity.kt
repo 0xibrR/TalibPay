@@ -1,14 +1,19 @@
 package com.irdev.talibpay.activity
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.irdev.talibpay.R
+import com.irdev.talibpay.data.addGoogleAccountIntent
 import com.irdev.talibpay.data.requestGoogleIdToken
 import com.irdev.talibpay.databinding.ActivityLoginBinding
 import com.irdev.talibpay.util.LoadingDialog
@@ -28,6 +33,11 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private val viewModel: AuthViewModel by viewModels()
+    private var googleRequestInProgress = false
+
+    // نتيجة شاشة إضافة الحساب غير موثوقة على كل الأجهزة، لذا نعيد المحاولة دائمًا عند العودة
+    private val addGoogleAccount =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { signInWithGoogle() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,15 +76,38 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun signInWithGoogle() {
+        // نافذة اختيار الحساب مفتوحة بالفعل: نتجاهل النقر المتكرر
+        if (googleRequestInProgress) return
+        googleRequestInProgress = true
         lifecycleScope.launch {
             try {
                 viewModel.signInWithGoogle(requestGoogleIdToken(this@LoginActivity))
             } catch (e: CancellationException) {
                 throw e
+            } catch (_: NoCredentialException) {
+                showAddGoogleAccountDialog()
             } catch (e: Exception) {
-                if (!e.isUserCancellation()) toast(errorMessageRes(e))
+                if (!e.isUserCancellation()) toast(errorMessageRes(e), long = true)
+            } finally {
+                googleRequestInProgress = false
             }
         }
+    }
+
+    /** لا يوجد حساب Google على الجهاز: نفتح شاشة النظام لإضافته ثم نعيد المحاولة. */
+    private fun showAddGoogleAccountDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.no_google_account_found)
+            .setMessage(R.string.google_add_account_message)
+            .setPositiveButton(R.string.google_add_account) { _, _ ->
+                try {
+                    addGoogleAccount.launch(addGoogleAccountIntent())
+                } catch (_: ActivityNotFoundException) {
+                    toast(R.string.google_sign_in_failed)
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     private fun onEvent(event: UiEvent) {

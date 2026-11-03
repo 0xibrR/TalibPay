@@ -2,12 +2,18 @@ package com.irdev.talibpay.data
 
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.util.canAccessApp
 import kotlinx.coroutines.tasks.await
+
+/** البريد مسجّل بطريقة دخول أخرى ولا يمكن ربط Google به تلقائيًا. */
+class GoogleAccountCollisionException(cause: Throwable) :
+    IllegalStateException("Account exists with a different sign-in method", cause)
 
 enum class EmailSignInResult { SUCCESS, NOT_VERIFIED }
 
@@ -57,8 +63,20 @@ class AuthRepository(
         return EmailSignInResult.SUCCESS
     }
 
-    suspend fun signInWithGoogle(idToken: String): FirebaseUser? =
-        auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await().user
+    /**
+     * يحوّل أخطاء Firebase الخاصة بـ Google إلى أخطاء واضحة، حتى لا تظهر رسالة
+     * "البريد أو كلمة المرور غير صحيحة" لمستخدم لم يكتب كلمة مرور أصلًا.
+     */
+    suspend fun signInWithGoogle(idToken: String): FirebaseUser {
+        val user = try {
+            auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await().user
+        } catch (e: FirebaseAuthUserCollisionException) {
+            throw GoogleAccountCollisionException(e)
+        } catch (e: FirebaseAuthInvalidCredentialsException) {
+            throw GoogleCredentialException(e)
+        }
+        return user ?: throw GoogleCredentialException()
+    }
 
     /** ينشئ الحساب ويرسل رسالة التأكيد، ثم يسجّل الخروج حتى يؤكد المستخدم بريده. */
     suspend fun register(email: String, password: String) {
