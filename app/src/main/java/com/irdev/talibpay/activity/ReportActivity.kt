@@ -25,6 +25,7 @@ import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.monthName
 import com.irdev.talibpay.util.paidPercent
 import com.irdev.talibpay.util.setupToolbar
+import com.irdev.talibpay.viewmodel.ReportState
 import com.irdev.talibpay.viewmodel.ReportViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 
@@ -45,11 +46,13 @@ class ReportActivity : AppCompatActivity() {
         binding.btnPrevMonth.setOnClickListener { viewModel.previousMonth() }
         binding.btnNextMonth.setOnClickListener { viewModel.nextMonth() }
 
-        collectWhileStarted(viewModel.report) { report ->
-            if (report == null) return@collectWhileStarted
+        binding.collectionChart.onMonthClick = viewModel::selectMonth
+        collectWhileStarted(viewModel.state) { state ->
+            if (state == null) return@collectWhileStarted
+            val report = state.report
             binding.tvMonth.text = monthName(report.month)
             binding.btnNextMonth.isEnabled = viewModel.canGoNext(report.month)
-            bindReport(binding, report, this)
+            bindReport(binding, state, this)
             invalidateOptionsMenu()
         }
         collectWhileStarted(viewModel.events) { event ->
@@ -66,22 +69,22 @@ class ReportActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        val ready = viewModel.report.value != null
+        val ready = viewModel.state.value != null
         menu.findItem(R.id.menu_share_image)?.isEnabled = ready
         menu.findItem(R.id.menu_share_pdf)?.isEnabled = ready
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val report = viewModel.report.value ?: return super.onOptionsItemSelected(item)
+        val state = viewModel.state.value ?: return super.onOptionsItemSelected(item)
         when (item.itemId) {
             R.id.menu_share_image -> {
-                shareImage(report)
+                shareImage(state)
                 return true
             }
 
             R.id.menu_share_pdf -> {
-                sharePdf(report)
+                sharePdf(state)
                 return true
             }
         }
@@ -89,7 +92,8 @@ class ReportActivity : AppCompatActivity() {
     }
 
     /** يملأ محتوى التقرير؛ [context] هو سياق العرض (فاتح دائمًا عند التصدير). */
-    private fun bindReport(b: ActivityReportBinding, report: MonthlyReport, context: Context) {
+    private fun bindReport(b: ActivityReportBinding, state: ReportState, context: Context) {
+        val report = state.report
         val inflater = LayoutInflater.from(context)
         fun ViewGroup.addRow(label: String, value: String, valueColor: Int? = null) {
             val row = ItemReportRowBinding.inflate(inflater, this, true)
@@ -112,6 +116,9 @@ class ReportActivity : AppCompatActivity() {
             getString(R.string.report_payment_count),
             resources.getQuantityString(R.plurals.payments_count, report.paymentCount, report.paymentCount)
         )
+
+        // التحصيل خلال الأشهر الأخيرة
+        b.collectionChart.setData(state.trend, report.month)
 
         // مستحقات الشهر
         b.duesRows.removeAllViews()
@@ -150,20 +157,20 @@ class ReportActivity : AppCompatActivity() {
     }
 
     /** نسخة من التقرير بالوضع الفاتح خارج الشاشة للتصدير (انظر DocumentExport). */
-    private fun renderForExport(report: MonthlyReport): View {
+    private fun renderForExport(state: ReportState): View {
         val inflater = DocumentExport.inflater(this)
         val export = ActivityReportBinding.inflate(inflater)
-        bindReport(export, report, inflater.context)
+        bindReport(export, state, inflater.context)
         // شريط التقدم لا يُرسم خارج الشاشة، فنخفيه بدل ترك فراغ
         export.duesProgress.visibility = View.GONE
         return DocumentExport.layout(this, export.reportContent)
     }
 
-    private fun shareImage(report: MonthlyReport) =
-        DocumentExport.shareImage(this, renderForExport(report), fileName(report))
+    private fun shareImage(state: ReportState) =
+        DocumentExport.shareImage(this, renderForExport(state), fileName(state.report))
 
-    private fun sharePdf(report: MonthlyReport) =
-        DocumentExport.sharePdf(this, renderForExport(report), fileName(report))
+    private fun sharePdf(state: ReportState) =
+        DocumentExport.sharePdf(this, renderForExport(state), fileName(state.report))
 
     private fun fileName(report: MonthlyReport) = "TalibPay-${report.month.key}"
 }

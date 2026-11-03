@@ -111,6 +111,27 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- التحصيل خلال الأشهر الأخيرة -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/chart_title"
+                android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.TalibPay.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.irdev.talibpay.util.CollectionChartView
+                    android:id="@+id/collectionChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp" />
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- مستحقات الشهر -->
             <TextView
                 android:layout_width="wrap_content"

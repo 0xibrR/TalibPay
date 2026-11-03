@@ -474,4 +474,8 @@
     <string name="excel_col_notes">ملاحظات</string>
     <string name="excel_status_active">نشط</string>
     <string name="excel_status_archived">مؤرشف</string>
+    <string name="chart_title">التحصيل في الأشهر الأخيرة</string>
+    <string name="chart_collected">المحصّل</string>
+    <string name="chart_billed">المستحقات</string>
+    <string name="chart_month_description">%1$s: حُصّل %2$s من مستحقات %3$s</string>
 </resources>

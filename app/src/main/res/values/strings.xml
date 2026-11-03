@@ -457,4 +457,8 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="excel_col_notes">Notes</string>
     <string name="excel_status_active">Active</string>
     <string name="excel_status_archived">Archived</string>
+    <string name="chart_title">Collection in recent months</string>
+    <string name="chart_collected">Collected</string>
+    <string name="chart_billed">Dues</string>
+    <string name="chart_month_description">%1$s: collected %2$s of %3$s dues</string>
 </resources>
