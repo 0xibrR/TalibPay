@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- حقول رمز قفل التطبيق: الحالي و/أو الجديد مع تأكيده؛ يُظهر الكود ما يلزم منها -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="8dp">
+
+    <TextView
+        android:id="@+id/tvPinHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:visibility="gone" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/currentPinLayout"
+        style="@style/Widget.TalibPay.TextField"
+        android:hint="@string/pin_current"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtCurrentPin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no"
+            android:inputType="numberPassword"
+            android:maxLength="6"
+            android:textDirection="ltr" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/newPinLayout"
+        style="@style/Widget.TalibPay.TextField"
+        android:hint="@string/pin_new"
+        app:endIconMode="password_toggle"
+        app:helperText="@string/pin_rules_helper">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtNewPin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no"
+            android:inputType="numberPassword"
+            android:maxLength="6"
+            android:textDirection="ltr" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/confirmPinLayout"
+        style="@style/Widget.TalibPay.TextField"
+        android:hint="@string/pin_confirm"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtConfirmPin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no"
+            android:inputType="numberPassword"
+            android:maxLength="6"
+            android:textDirection="ltr" />
+    </com.google.android.material.textfield.TextInputLayout>
+</LinearLayout>

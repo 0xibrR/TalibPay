@@ -6,4 +6,8 @@
     <!-- أقصى عرض للمحتوى على الأجهزة اللوحية والشاشات العريضة -->
     <dimen name="content_max_width">640dp</dimen>
     <dimen name="form_max_width">480dp</dimen>
+    <!-- شاشة القفل -->
+    <dimen name="pin_dot_size">14dp</dimen>
+    <dimen name="pin_dot_stroke">2dp</dimen>
+    <dimen name="pin_key_size">72dp</dimen>
 </resources>

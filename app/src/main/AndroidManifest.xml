@@ -61,6 +61,11 @@
         <activity
             android:name=".activity.MainActivity"
             android:exported="false" />
+        <!-- شاشة القفل: نسخة واحدة فوق الشاشة الحالية -->
+        <activity
+            android:name=".activity.LockActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
         <activity
             android:name=".activity.ArchiveActivity"
             android:exported="false" />

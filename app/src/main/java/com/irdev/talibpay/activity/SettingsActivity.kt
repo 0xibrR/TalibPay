@@ -63,6 +63,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnChangePassword.setOnClickListener { showChangePasswordDialog() }
         renderCurrency()
         binding.btnCurrency.setOnClickListener { showCurrencyDialog() }
+        AppLockSettings(this, binding.btnAppLock).setup()
 
         val versionName = packageManager.getPackageInfo(packageName, 0).versionName
         binding.tvVersion.text = getString(R.string.app_version_placeholder, versionName)

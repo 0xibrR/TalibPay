@@ -350,4 +350,53 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="fee_with_discount">%1$s − %2$s = %3$s</string>
     <string name="due_discount">Before discount %1$s · discount %2$s</string>
     <string name="report_discounts">Discounts given</string>
+    <!-- قفل التطبيق -->
+    <string name="settings_security">Security</string>
+    <string name="app_lock_off">App lock · Off</string>
+    <string name="app_lock_on">App lock · %1$s</string>
+    <string name="app_lock_mode_biometric">Fingerprint only</string>
+    <string name="app_lock_mode_pin">PIN only</string>
+    <string name="app_lock_mode_both">Fingerprint or PIN</string>
+    <string name="app_lock_method">Unlock method</string>
+    <string name="app_lock_set_pin">Create a PIN</string>
+    <string name="app_lock_pin_explained">This 6-digit PIN unlocks the app, and it is the backup whenever the fingerprint is not available.</string>
+    <string name="app_lock_no_fingerprint_enrolled">No fingerprint is registered on this device, so the app will be locked with a PIN. You can add a fingerprint in the device settings and switch the method later.</string>
+    <string name="app_lock_continue_with_pin">Use a PIN</string>
+    <string name="app_lock_confirm_fingerprint">Confirm your fingerprint</string>
+    <string name="app_lock_enabled">App lock is on</string>
+    <string name="app_lock_fingerprint_skipped">Fingerprint was not confirmed. App lock is on with the PIN.</string>
+    <string name="app_lock_change_pin">Change PIN</string>
+    <string name="app_lock_pin_changed">PIN changed</string>
+    <string name="app_lock_method_changed">Unlock method changed</string>
+    <string name="app_lock_disable">Turn off app lock</string>
+    <string name="app_lock_disable_message">The app will open without a fingerprint or PIN. Your data stays protected by your account sign-in.</string>
+    <string name="app_lock_disabled">App lock is off</string>
+    <string name="app_lock_verify">Confirm it\'s you</string>
+    <string name="pin_current">Current PIN</string>
+    <string name="pin_new">New PIN</string>
+    <string name="pin_confirm">Confirm PIN</string>
+    <string name="pin_rules_helper">6 digits, not repeated or in sequence</string>
+    <string name="pin_wrong_length">The PIN must be exactly 6 digits</string>
+    <string name="pin_too_simple">This PIN is too easy to guess (like 111111 or 123456)</string>
+    <string name="pin_mismatch">The PINs don\'t match</string>
+    <string name="lock_title">TalibPay is locked</string>
+    <string name="lock_message_pin">Enter your PIN</string>
+    <string name="lock_message_biometric">Touch the fingerprint sensor</string>
+    <string name="lock_message_both">Use your fingerprint or enter your PIN</string>
+    <plurals name="lock_wrong_pin">
+        <item quantity="one">Wrong PIN. %1$d attempt left before you have to wait.</item>
+        <item quantity="other">Wrong PIN. %1$d attempts left before you have to wait.</item>
+    </plurals>
+    <string name="lock_wait">Too many wrong attempts. Try again in %1$s</string>
+    <string name="lock_biometric_title">Unlock TalibPay</string>
+    <string name="lock_use_pin">Use PIN</string>
+    <string name="lock_biometric_unavailable">Fingerprint is not available right now. Enter your PIN.</string>
+    <string name="lock_biometric_locked_out">Fingerprint is paused after too many tries. Enter your PIN.</string>
+    <string name="lock_biometric_changed">The fingerprints on this device changed. Enter your PIN, then turn fingerprint back on in Settings.</string>
+    <string name="lock_forgot_pin">Forgot PIN?</string>
+    <string name="lock_forgot_pin_message">You will be signed out and the app lock will be removed. Sign in to your account again, then set a new PIN in Settings.</string>
+    <string name="lock_reset_signed_out">App lock removed. Sign in again.</string>
+    <string name="lock_too_many_attempts">Too many wrong PIN attempts. For your security, the app lock was removed and you were signed out.</string>
+    <string name="lock_tampered">The app lock settings were changed outside the app. For your security, you were signed out.</string>
+    <string name="lock_delete_digit">Delete</string>
 </resources>

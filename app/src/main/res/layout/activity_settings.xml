@@ -182,6 +182,22 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- الأمان: قفل التطبيق بالبصمة و/أو رمز -->
+                <TextView
+                    style="@style/Widget.TalibPay.SettingsHeader"
+                    android:text="@string/settings_security" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAppLock"
+                        style="@style/Widget.TalibPay.SettingsItem"
+                        android:text="@string/app_lock_off"
+                        app:icon="@drawable/ic_fingerprint" />
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- العملة المعروضة مع كل المبالغ في التطبيق -->
                 <TextView
                     style="@style/Widget.TalibPay.SettingsHeader"

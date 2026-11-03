@@ -363,4 +363,57 @@
     <string name="fee_with_discount">%1$s − %2$s = %3$s</string>
     <string name="due_discount">قبل الخصم %1$s · خصم %2$s</string>
     <string name="report_discounts">الخصومات الممنوحة</string>
+    <!-- قفل التطبيق -->
+    <string name="settings_security">الأمان</string>
+    <string name="app_lock_off">قفل التطبيق · معطّل</string>
+    <string name="app_lock_on">قفل التطبيق · %1$s</string>
+    <string name="app_lock_mode_biometric">البصمة فقط</string>
+    <string name="app_lock_mode_pin">الرمز فقط</string>
+    <string name="app_lock_mode_both">البصمة أو الرمز</string>
+    <string name="app_lock_method">طريقة الفتح</string>
+    <string name="app_lock_set_pin">إنشاء رمز الفتح</string>
+    <string name="app_lock_pin_explained">رمز من 6 أرقام لفتح التطبيق، ويُستخدم بديلًا عن البصمة متى لم تكن متاحة.</string>
+    <string name="app_lock_no_fingerprint_enrolled">لا توجد بصمة مسجّلة على هذا الجهاز، لذلك سيُقفل التطبيق برمز. يمكنك إضافة بصمة من إعدادات الجهاز ثم تغيير طريقة الفتح لاحقًا.</string>
+    <string name="app_lock_continue_with_pin">استخدام رمز</string>
+    <string name="app_lock_confirm_fingerprint">تأكيد البصمة</string>
+    <string name="app_lock_enabled">تم تفعيل قفل التطبيق</string>
+    <string name="app_lock_fingerprint_skipped">لم تُؤكَّد البصمة. تم تفعيل القفل بالرمز.</string>
+    <string name="app_lock_change_pin">تغيير الرمز</string>
+    <string name="app_lock_pin_changed">تم تغيير الرمز</string>
+    <string name="app_lock_method_changed">تم تغيير طريقة الفتح</string>
+    <string name="app_lock_disable">تعطيل قفل التطبيق</string>
+    <string name="app_lock_disable_message">سيُفتح التطبيق بدون بصمة أو رمز. تبقى بياناتك محمية بتسجيل الدخول لحسابك.</string>
+    <string name="app_lock_disabled">تم تعطيل قفل التطبيق</string>
+    <string name="app_lock_verify">تأكيد هويتك</string>
+    <string name="pin_current">الرمز الحالي</string>
+    <string name="pin_new">الرمز الجديد</string>
+    <string name="pin_confirm">تأكيد الرمز</string>
+    <string name="pin_rules_helper">6 أرقام، غير مكررة وغير متسلسلة</string>
+    <string name="pin_wrong_length">يجب أن يتكون الرمز من 6 أرقام بالضبط</string>
+    <string name="pin_too_simple">هذا الرمز سهل التخمين (مثل 111111 أو 123456)</string>
+    <string name="pin_mismatch">الرمزان غير متطابقين</string>
+    <string name="lock_title">التطبيق مقفل</string>
+    <string name="lock_message_pin">أدخل رمز الفتح</string>
+    <string name="lock_message_biometric">ضع إصبعك على حساس البصمة</string>
+    <string name="lock_message_both">استخدم البصمة أو أدخل الرمز</string>
+    <plurals name="lock_wrong_pin">
+        <item quantity="zero">رمز خاطئ. لم تتبقَّ محاولات قبل الانتظار.</item>
+        <item quantity="one">رمز خاطئ. تبقّت محاولة واحدة قبل الانتظار.</item>
+        <item quantity="two">رمز خاطئ. تبقّت محاولتان قبل الانتظار.</item>
+        <item quantity="few">رمز خاطئ. تبقّت %1$d محاولات قبل الانتظار.</item>
+        <item quantity="many">رمز خاطئ. تبقّت %1$d محاولة قبل الانتظار.</item>
+        <item quantity="other">رمز خاطئ. تبقّت %1$d محاولة قبل الانتظار.</item>
+    </plurals>
+    <string name="lock_wait">محاولات خاطئة كثيرة. حاول بعد %1$s</string>
+    <string name="lock_biometric_title">فتح TalibPay</string>
+    <string name="lock_use_pin">استخدام الرمز</string>
+    <string name="lock_biometric_unavailable">البصمة غير متاحة الآن. أدخل الرمز.</string>
+    <string name="lock_biometric_locked_out">توقفت البصمة مؤقتًا بعد محاولات كثيرة. أدخل الرمز.</string>
+    <string name="lock_biometric_changed">تغيّرت البصمات المسجلة على الجهاز. أدخل الرمز، ثم أعد تفعيل البصمة من الإعدادات.</string>
+    <string name="lock_forgot_pin">نسيت الرمز؟</string>
+    <string name="lock_forgot_pin_message">سيتم تسجيل خروجك وإلغاء قفل التطبيق. سجّل الدخول لحسابك من جديد، ثم أنشئ رمزًا جديدًا من الإعدادات.</string>
+    <string name="lock_reset_signed_out">تم إلغاء قفل التطبيق. سجّل الدخول من جديد.</string>
+    <string name="lock_too_many_attempts">محاولات رمز خاطئة كثيرة. لحمايتك أُلغي قفل التطبيق وتم تسجيل خروجك.</string>
+    <string name="lock_tampered">تم تعديل إعدادات القفل من خارج التطبيق. لحمايتك تم تسجيل خروجك.</string>
+    <string name="lock_delete_digit">حذف</string>
 </resources>
