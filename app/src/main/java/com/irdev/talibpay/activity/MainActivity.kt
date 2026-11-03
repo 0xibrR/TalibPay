@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -22,6 +23,7 @@ import com.irdev.talibpay.databinding.ActivityMainBinding
 import com.irdev.talibpay.databinding.AlertDialogDeleteAllBinding
 import com.irdev.talibpay.util.CurrencyPrefs
 import com.irdev.talibpay.util.Extras
+import com.irdev.talibpay.util.ListPrefs
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.attachSwipeActions
 import com.irdev.talibpay.util.cardDialog
@@ -34,6 +36,8 @@ import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.viewmodel.MainUiState
 import com.irdev.talibpay.viewmodel.MainViewModel
 import com.irdev.talibpay.viewmodel.OverdueStudent
+import com.irdev.talibpay.viewmodel.StudentFilter
+import com.irdev.talibpay.viewmodel.StudentSort
 import com.irdev.talibpay.viewmodel.UiEvent
 import com.ncorti.slidetoact.SlideToActView
 
@@ -45,6 +49,17 @@ class MainActivity : AppCompatActivity() {
 
     // الطلاب الذين أُرسل لهم تذكير في هذه الجلسة (لتمييزهم في القائمة)
     private val remindedIds = mutableSetOf<String>()
+
+    // الفلتر والترتيب المعروضان حاليًا، لمعرفة متى يتغيّران
+    private var shownListOptions: Pair<StudentFilter, StudentSort>? = null
+
+    // زر التصفية الخاص بكل فلتر
+    private val filterChips = mapOf(
+        StudentFilter.ALL to R.id.chipAll,
+        StudentFilter.OVERDUE to R.id.chipOverdue,
+        StudentFilter.PARTIAL to R.id.chipPartial,
+        StudentFilter.PAID to R.id.chipPaid
+    )
 
     // العملة التي رُسمت بها الشاشة؛ إن تغيّرت من الإعدادات نعيد رسمها عند العودة
     private lateinit var shownCurrency: String
@@ -76,6 +91,13 @@ class MainActivity : AppCompatActivity() {
         }
         binding.summary.btnSummaryInfo.setOnClickListener { showSummaryExplanation() }
 
+        viewModel.setSort(StudentSort.fromName(ListPrefs.sort(this)))
+        binding.btnSort.setOnClickListener { showSortDialog() }
+        binding.filterChips.setOnCheckedStateChangeListener { _, checkedIds ->
+            val filter = filterChips.entries.firstOrNull { it.value == checkedIds.firstOrNull() }?.key
+            if (filter != null) viewModel.setFilter(filter)
+        }
+
         collectWhileStarted(viewModel.uiState, ::render)
         collectWhileStarted(viewModel.events, ::onEvent)
     }
@@ -84,6 +106,16 @@ class MainActivity : AppCompatActivity() {
         binding.progressBarNotes.isVisible = state.loading
         binding.linearLayoutEmpty.isVisible = !state.loading && !state.hasAnyStudent
         binding.recyclerView.isVisible = !state.loading && state.hasAnyStudent
+        binding.tvNoMatches.isVisible = !state.loading && state.hasAnyStudent && state.students.isEmpty()
+        binding.filterScroll.isVisible = state.hasAnyStudent
+        binding.btnSort.isVisible = state.hasAnyStudent
+        for ((filter, chipId) in filterChips) {
+            val chip = binding.filterChips.findViewById<Chip>(chipId)
+            chip.text = getString(R.string.filter_with_count, getString(filter.labelRes), state.filterCounts[filter] ?: 0)
+        }
+        // مزامنة الزر المختار مع الحالة (مثلًا بعد تدوير الشاشة)
+        val checkedId = filterChips.getValue(state.filter)
+        if (binding.filterChips.checkedChipId != checkedId) binding.filterChips.check(checkedId)
         binding.tvStudentsCount.text = resources.getQuantityString(
             R.plurals.students_count, state.studentCount, state.studentCount
         )
@@ -98,7 +130,12 @@ class MainActivity : AppCompatActivity() {
             tvCollectionRate.text = getString(R.string.collection_rate, percent)
         }
 
-        adapter.submitList(state.students)
+        // عند تغيير الفلتر أو الترتيب نعود لأول القائمة بعد تطبيق الترتيب الجديد (لا قبله)
+        val listChanged = shownListOptions != null && shownListOptions != state.filter to state.sort
+        shownListOptions = state.filter to state.sort
+        adapter.submitList(state.students) {
+            if (listChanged) binding.recyclerView.scrollToPosition(0)
+        }
     }
 
     private fun onEvent(event: UiEvent) {
@@ -226,6 +263,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    /** اختيار ترتيب القائمة؛ يُحفظ ويبقى بعد إغلاق التطبيق. */
+    private fun showSortDialog() {
+        val sorts = StudentSort.entries
+        val current = sorts.indexOf(viewModel.uiState.value.sort)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.sort_title)
+            .setSingleChoiceItems(sorts.map { getString(it.labelRes) }.toTypedArray(), current) { dialog, which ->
+                val sort = sorts[which]
+                viewModel.setSort(sort)
+                ListPrefs.setSort(this, sort.name)
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     /**

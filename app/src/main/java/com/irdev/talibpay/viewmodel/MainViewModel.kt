@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 data class DashboardSummary(
     val cash: Double = 0.0,
@@ -34,7 +35,11 @@ data class MainUiState(
     val studentCount: Int = 0,
     val summary: DashboardSummary = DashboardSummary(),
     /** كل الطلاب الذين عليهم مستحقات متأخرة (بغض النظر عن البحث)، الأعلى مبلغًا أولًا. */
-    val overdue: List<OverdueStudent> = emptyList()
+    val overdue: List<OverdueStudent> = emptyList(),
+    val filter: StudentFilter = StudentFilter.ALL,
+    val sort: StudentSort = StudentSort.DEFAULT,
+    /** عدد الطلاب في كل فلتر (ضمن نتيجة البحث)، للعرض على أزرار التصفية. */
+    val filterCounts: Map<StudentFilter, Int> = emptyMap()
 ) {
     val hasAnyStudent: Boolean get() = studentCount > 0
 }
@@ -43,6 +48,8 @@ class MainViewModel : BaseViewModel() {
 
     private val repository = StudentRepository()
     private val query = MutableStateFlow("")
+    private val filter = MutableStateFlow(StudentFilter.ALL)
+    private val sort = MutableStateFlow(StudentSort.DEFAULT)
 
     init {
         // عند فتح التطبيق: إنشاء الرسوم الشهرية التي حان موعدها (ومنها أشهر فاتت دون فتح التطبيق).
@@ -65,11 +72,16 @@ class MainViewModel : BaseViewModel() {
         }
 
     // المستمع على Firebase يعمل فقط أثناء ظهور الشاشة (+5 ثوانٍ لتغيير الاتجاه)
-    val uiState: StateFlow<MainUiState> = combine(allStudents, query) { list, q ->
+    val uiState: StateFlow<MainUiState> = combine(allStudents, query, filter, sort) { list, q, f, s ->
+        val today = todaySimpleDate()
+        val searched = search(list, q)
         MainUiState(
             loading = false,
-            students = filter(list, q),
+            students = s.apply(searched.filter { f.matches(it, today) }, today, Locale.getDefault()),
             studentCount = list.size,
+            filter = f,
+            sort = s,
+            filterCounts = StudentFilter.entries.associateWith { entry -> searched.count { entry.matches(it, today) } },
             summary = DashboardSummary(
                 cash = Money.sum(list.map { it.student.paidCash }),
                 bank = Money.sum(list.map { it.student.paidBank }),
@@ -77,9 +89,17 @@ class MainViewModel : BaseViewModel() {
                 remaining = Money.sum(list.map { it.student.remaining }),
                 total = Money.sum(list.map { it.student.total })
             ),
-            overdue = overdueStudents(list, todaySimpleDate())
+            overdue = overdueStudents(list, today)
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
+
+    fun setFilter(value: StudentFilter) {
+        filter.value = value
+    }
+
+    fun setSort(value: StudentSort) {
+        sort.value = value
+    }
 
     fun setQuery(text: String) {
         query.value = text
@@ -100,7 +120,7 @@ class MainViewModel : BaseViewModel() {
         send(UiEvent.Message(R.string.delete_all_note))
     }
 
-    private fun filter(list: List<StudentWithPayments>, query: String): List<StudentWithPayments> {
+    private fun search(list: List<StudentWithPayments>, query: String): List<StudentWithPayments> {
         val q = query.trim()
         if (q.isEmpty()) return list
         return list.filter { (student) ->

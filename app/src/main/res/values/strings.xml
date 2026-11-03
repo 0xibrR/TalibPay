@@ -375,4 +375,17 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="currency_syp">Syrian pound</string>
     <string name="currency_try">Turkish lira</string>
     <string name="currency_gbp">British pound</string>
+    <!-- تصفية وترتيب الطلاب -->
+    <string name="filter_all">All</string>
+    <string name="filter_overdue">Overdue</string>
+    <string name="filter_partial">Partly paid</string>
+    <string name="filter_paid">Fully paid</string>
+    <string name="filter_with_count">%1$s (%2$d)</string>
+    <string name="sort_title">Sort students</string>
+    <string name="sort_added_oldest">Oldest added</string>
+    <string name="sort_added_newest">Newest added</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_remaining">Highest remaining</string>
+    <string name="sort_overdue">Longest overdue</string>
+    <string name="no_matching_students">No students match this filter or search.</string>
 </resources>

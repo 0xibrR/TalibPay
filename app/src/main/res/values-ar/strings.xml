@@ -386,4 +386,17 @@
     <string name="currency_syp">ليرة سورية</string>
     <string name="currency_try">ليرة تركية</string>
     <string name="currency_gbp">جنيه إسترليني</string>
+    <!-- تصفية وترتيب الطلاب -->
+    <string name="filter_all">الكل</string>
+    <string name="filter_overdue">متأخر</string>
+    <string name="filter_partial">مدفوع جزئيًا</string>
+    <string name="filter_paid">مدفوع بالكامل</string>
+    <string name="filter_with_count">%1$s (%2$d)</string>
+    <string name="sort_title">ترتيب الطلاب</string>
+    <string name="sort_added_oldest">الأقدم إضافة</string>
+    <string name="sort_added_newest">الأحدث إضافة</string>
+    <string name="sort_name">الاسم</string>
+    <string name="sort_remaining">الأعلى متبقيًا</string>
+    <string name="sort_overdue">الأقدم تأخرًا</string>
+    <string name="no_matching_students">لا يوجد طلاب مطابقون لهذا الفلتر أو البحث.</string>
 </resources>

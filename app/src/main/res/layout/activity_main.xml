@@ -58,22 +58,103 @@
             android:layout_marginEnd="4dp"
             android:textAppearance="@style/TextAppearance.TalibPay.Caption"
             app:layout_constraintBaseline_toBaselineOf="@id/tvStudentsTitle"
-            app:layout_constraintEnd_toEndOf="@id/summary"
+            app:layout_constraintEnd_toStartOf="@id/btnSort"
             app:layout_constraintStart_toEndOf="@id/tvStudentsTitle"
             tools:text="12 طالب" />
+
+        <!-- ترتيب القائمة -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSort"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/sort_title"
+            app:icon="@drawable/ic_sort"
+            app:layout_constraintBottom_toBottomOf="@id/tvStudentsTitle"
+            app:layout_constraintEnd_toEndOf="@id/summary"
+            app:layout_constraintTop_toTopOf="@id/tvStudentsTitle" />
+
+        <!-- تصفية حسب حالة الدفع -->
+        <HorizontalScrollView
+            android:id="@+id/filterScroll"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/screen_padding"
+            android:scrollbars="none"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvStudentsTitle"
+            app:layout_constraintWidth_max="@dimen/content_max_width">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/filterChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:checkedChip="@id/chipAll"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipAll"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_all" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipOverdue"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_overdue" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPartial"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_partial" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPaid"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_paid" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <!-- لا يوجد طلاب مطابقون للفلتر أو البحث -->
+        <TextView
+            android:id="@+id/tvNoMatches"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/no_matching_students"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filterScroll" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:clipToPadding="false"
             android:paddingHorizontal="@dimen/screen_padding"
             android:paddingBottom="96dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvStudentsTitle"
+            app:layout_constraintTop_toBottomOf="@id/filterScroll"
             app:layout_constraintWidth_max="@dimen/content_max_width"
             tools:listitem="@layout/item_student" />
 
@@ -85,7 +166,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvStudentsTitle" />
+            app:layout_constraintTop_toBottomOf="@id/filterScroll" />
 
         <!-- لا يوجد طلاب -->
         <LinearLayout
@@ -99,7 +180,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvStudentsTitle"
+            app:layout_constraintTop_toBottomOf="@id/filterScroll"
             tools:visibility="visible">
 
             <com.airbnb.lottie.LottieAnimationView
