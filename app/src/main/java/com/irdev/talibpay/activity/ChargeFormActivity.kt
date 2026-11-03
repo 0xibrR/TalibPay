@@ -71,9 +71,11 @@ class ChargeFormActivity : AppCompatActivity() {
                         getString(R.string.due_paid_so_far, money(due.paid))
                 }
             } else {
-                // اقتراح: رسوم الشهر الحالي بنفس قيمة آخر مستحق
-                val month = monthName(todaySimpleDate().yearMonth)
-                binding.edtChargeTitle.setText(getString(R.string.due_title_month, month))
+                // اقتراح رسوم الشهر الحالي فقط لمن لا تُنشأ رسومه تلقائيًا (انظر ChargeFormPrefill)
+                if (prefill.suggestMonthTitle) {
+                    val month = monthName(todaySimpleDate().yearMonth)
+                    binding.edtChargeTitle.setText(getString(R.string.due_title_month, month))
+                }
                 prefill.suggestedAmount?.let { binding.edtChargeAmount.setText(plainAmount(it)) }
             }
         }

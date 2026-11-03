@@ -147,9 +147,6 @@
     </style>
 
     <!-- رقم في بطاقة إحصائية -->
-    <style name="TextAppearance.TalibPay.StatValue" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:textStyle">bold</item>
-    </style>
 
     <!-- عناصر لوحة الإحصائيات (فوق خلفية primaryContainer) -->
     <style name="Widget.TalibPay.StatLabel" parent="">

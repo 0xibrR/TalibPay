@@ -8,6 +8,8 @@ import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.SimpleDate
+import com.irdev.talibpay.domain.WalletEntryType
+import com.irdev.talibpay.domain.entryType
 import com.irdev.talibpay.domain.overdueDues
 import com.irdev.talibpay.domain.overdueTotal
 import com.irdev.talibpay.domain.todaySimpleDate
@@ -26,8 +28,13 @@ data class DashboardSummary(
     val bank: Double = 0.0,
     val paid: Double = 0.0,
     val remaining: Double = 0.0,
-    val total: Double = 0.0
-)
+    val total: Double = 0.0,
+    /** ما استُرد للطلاب من محافظهم: مال خرج، فيُخصم من المحصّل. */
+    val refunded: Double = 0.0
+) {
+    /** المحصّل فعلًا: نقدي + بنكي ناقص المسترد (مثل التقرير الشهري). */
+    val collected: Double get() = Money.subtract(paid, refunded)
+}
 
 data class MainUiState(
     val loading: Boolean = true,
@@ -91,7 +98,10 @@ class MainViewModel : BaseViewModel() {
                 bank = Money.sum(list.map { it.student.paidBank }),
                 paid = Money.sum(list.map { it.student.paid }),
                 remaining = Money.sum(list.map { it.student.remaining }),
-                total = Money.sum(list.map { it.student.total })
+                total = Money.sum(list.map { it.student.total }),
+                refunded = Money.sum(
+                    list.flatMap { it.walletEntries }.filter { it.entryType == WalletEntryType.REFUND }.map { it.amount }
+                )
             ),
             overdue = overdueStudents(list, today)
         )

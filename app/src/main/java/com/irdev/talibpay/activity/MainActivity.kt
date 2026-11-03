@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         with(binding.summary) {
-            txtPaidValue.text = money(state.summary.paid)
+            txtPaidValue.text = money(state.summary.collected)
             txtCashValue.text = money(state.summary.cash)
             txtBankValue.text = money(state.summary.bank)
             txtRemainingValue.text = money(state.summary.remaining)
@@ -197,13 +197,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSummaryExplanation() {
-        val message = listOf(
+        val refunded = viewModel.uiState.value.summary.refunded
+        val message = (listOf(
             R.string.payment_summary_popup_title2,
             R.string.payment_summary_cash,
             R.string.payment_summary_bank,
             R.string.payment_summary_total,
             R.string.payment_summary_remaining
-        ).joinToString("\n\n") { getString(it) }
+        ).map { getString(it) } + listOfNotNull(
+            if (refunded > 0) getString(R.string.payment_summary_refunds, money(refunded)) else null
+        )).joinToString("\n\n")
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.payment_summary_explained_title)
             .setMessage(message)

@@ -6,7 +6,6 @@
     <string name="confirm_password">Confirm Password</string>
     <string name="register">Register</string>
     <string name="enter_value">Please enter what is required</string>
-    <string name="account_created_successfully">Account successfully created</string>
     <string name="verification_email">A verification link has been sent to your email.</string>
     <string name="Password_does_not_match">Password does not match</string>
     <string name="check_email">Please make sure the email format is correct</string>
@@ -18,87 +17,45 @@
     <string name="login_successfully_email">You have successfully logged in using your email.</string>
     <string name="login_successfully_google_account">You have successfully logged in with your Google account.</string>
     <string name="check_verification_email">Please verify your email address.</string>
-    <string name="firebase_authentication_failed">Firebase Authentication failed:</string>
-    <string name="sign_in_failed_try_again_later">Sign-In Failed, Try again later</string>
-    <string name="submit">Submit</string>
-    <string name="forgot_password_">forgot password</string>
     <string name="dialog_forgot">Enter your email and a link to reset your password will be sent to you. If you don\'t see a message in your primary email, it may be spam.</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="email_sent">The link has been successfully emailed to reset your password.</string>
     <string name="delete_account">Delete account</string>
     <string name="sign_out">Sign out</string>
-    <string name="change_theme">Change theme</string>
-    <string name="choose_theme">Choose theme</string>
-    <string name="system_default">System default</string>
-    <string name="dark">Dark</string>
-    <string name="light">Light</string>
     <string name="signed_out_message">Are you sure to log out of the account?</string>
     <string name="signed_out_successfully">Signed out successfully</string>
     <string name="data_deleted_successfully">Data deleted successfully</string>
-    <string name="failed_to_delete_data">Failed to delete data</string>
     <string name="delete_account_message">Are you sure you want to delete the account?</string>
-    <string name="google_user_deleted_successfully">Google user account deleted successfully.</string>
-    <string name="error_deleting_google_user">Error deleting Google user:</string>
-    <string name="error_authenticating_google_user">Error authenticating Google user:</string>
-    <string name="failed_to_delete_user_data_account_deletion_cancelled">Failed to delete user data. Account deletion cancelled.</string>
     <string name="no_google_account_found">There is no Google account on this device.</string>
     <string name="google_add_account">Add account</string>
     <string name="google_add_account_message">Add a Google account to this device to continue, then you can choose it to sign in.</string>
     <string name="google_not_configured">Google sign-in is not set up for this version of the app. Sign in with email for now.</string>
     <string name="google_account_conflict">This email is linked to another sign-in method. Sign in with your email and password.</string>
-    <string name="follow_battery_saver">Follow Battery saver</string>
     <string name="settings">Settings</string>
     <string name="delete_all_students">Delete all students</string>
-    <string name="email_password_user_deleted_successfully">Email/Password user account deleted successfully.</string>
-    <string name="error_deleting_email_password_user">Error deleting Email/Password user:</string>
-    <string name="error_authenticating_email_password_user">Error authenticating Email/Password user:</string>
     <string name="please_enter_the_email_and_password_you_registered_with">Please enter the email and password you registered with.</string>
-    <string name="unable_to_get_google_id">Unable to get your Google ID code. Please sign in again.</string>
     <string name="account_provider_type_unknown">The account provider type cannot be determined!</string>
     <string name="you_don_t_have_any_students_yet">You dont have any students yet.</string>
     <string name="full_name">Full name</string>
     <string name="year_of_birth">Year of birth</string>
-    <string name="amount_paid_cash">Amount paid cash</string>
-    <string name="amount_paid_bank">Amount paid ban</string>
-    <string name="full_fees">Full fees</string>
-    <string name="payment_method">Payment method</string>
     <string name="payment_date">Payment date</string>
     <string name="phone_number">Phone number</string>
     <string name="notes">Notes</string>
     <string name="additional_notes_optional">Additional notes (optional)</string>
     <string name="add_student">Add student</string>
-    <string name="modification_student">Student modification</string>
     <string name="select_year_of_birth">Select year of birth</string>
-    <string name="select_payment_method">Select payment method</string>
-    <string name="please_choose_payment_method">Please choose a payment method</string>
     <string name="user_not_found">User not found</string>
     <string name="added_successfully">The student has been added successfully</string>
-    <string name="added_failed">Student addition failed</string>
-    <string name="The_amount_paid_may_not_be_greater_than_the_full_fee">The amount paid may not be greater than the full fee</string>
     <string name="payment_summary">Payment Summary</string>
-    <string name="cash_total">Cash NIS:</string>
-    <string name="bank_total">Bank NIS:</string>
-    <string name="paid_total">Fees NIS: </string>
-    <string name="total_payment">Total payment ₪:</string>
-    <string name="remaining_total">Remaining NIS:</string>
-    <string name="_0">0 NIS</string>
-    <string name="full_name_label">Full name:</string>
-    <string name="paid_cash_label">Paid in cash:</string>
-    <string name="paid_bank_label">Paid by bank:</string>
-    <string name="payment_method_label">Payment method:</string>
-    <string name="total_amount_label">Total amount:</string>
     <string name="edit_student">Edit student</string>
     <string name="confirm_edit_title">Confirm Edit</string>
     <string name="confirm_edit_message">Are you sure you want to edit this students data?</string>
     <string name="updated_successfully">Edited successfully</string>
-    <string name="updated_failed">Edit failed</string>
     <string name="delete_title_with_name">Delete student %1$s?</string>
     <string name="delete_message_with_name">Are you sure you want to delete %1$s?</string>
     <string name="deleted_successfully_with_name">%1$s has been successfully deleted</string>
-    <string name="deleted_failed">Delete failed</string>
     <string name="restored_successfully_with_name">%1$s has been successfully restored</string>
-    <string name="restored_failed_with_name">Failed to restore %1$s</string>
     <string name="undo">undo</string>
     <string name="details_student">Student details</string>
     <string name="are_you_sure_you_want_to_delete_all_student">Are you sure you want to delete all students?</string>
@@ -109,11 +66,10 @@
     <string name="payment_summary_popup_title2">The payment summary shows the total amount paid (cash + bank) for all students</string>
     <string name="payment_summary_cash">Paid Cash: Total paid in cash.</string>
     <string name="payment_summary_bank">Paid Bank: Total transferred through bank.</string>
-    <string name="payment_summary_total">Total: Sum of cash and bank payments.</string>
+    <string name="payment_summary_total">Collected: cash and bank payments, minus what was refunded to students from their wallets.</string>
+    <string name="payment_summary_refunds">Refunded from wallets so far: %1$s</string>
     <string name="payment_summary_remaining">Remaining: Total unpaid amount.</string>
-    <string name="student_avatar">Student avatar</string>
     <string name="last_modified">Last modified</string>
-    <string name="information">Information</string>
     <string name="search">Search</string>
     <string name="edit">edit</string>
     <string name="delete">delete</string>
@@ -137,13 +93,11 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="backdate_yes">Yes, bill them</string>
     <string name="backdate_no">No, start from the next cycle</string>
     <string name="share_phone">📞 Phone Number: %1$s</string>
-    <string name="share_payment_date">🗓️ Payment Date: %1$s</string>
     <string name="share_paid_cash">💰 Paid in Cash: %1$s</string>
     <string name="share_paid_bank">🏦 Paid by Bank: %1$s</string>
     <string name="share_paid_total">💸 Total Paid: %1$s</string>
     <string name="share_total_amount">📊 Total Fees: %1$s</string>
     <string name="share_remaining">💼 Remaining: %1$s</string>
-    <string name="share_payment_method">💳 Payment Method: %1$s</string>
     <string name="share_notes">📝 Notes: %1$s</string>
     <string name="share_added_at">🕓 Added On: %1$s</string>
     <string name="share_last_modified">⏱️ Last Modified: %1$s</string>
@@ -159,38 +113,16 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="confirm_new_password">Confirm New Password</string>
     <string name="save">Save</string>
     <string name="password_changed_success">Password changed successfully.</string>
-    <string name="password_changed_failed">Failed to change password. Please try again.</string>
     <string name="wrong_old_password">The old password you entered is incorrect.</string>
     <string name="password_too_short">The new password must be at least 8 characters.</string>
     <string name="passwords_not_match">The new password and its confirmation do not match.</string>
     <string name="fill_all_fields">Please fill in all fields.</string>
     <string name="check_your_email_to_verify">Password linked successfully. Please verify your email address.</string>
     <string name="search_hint">Search by student name or phone number</string>
-    <string name="talibpay_hello">Welcome to TalibPay👋</string>
-    <string name="back">back</string>
     <string name="add_payment">Add Payment</string>
-    <string name="pyment_months">Pyment months</string>
     <string name="edit_pyment">Edit payment</string>
-    <string name="delete_title_payment">Delete payment %1$s</string>
-    <string name="delete_message_payment">Are you sure you want to delete %1$s?</string>
-    <string name="hello">Hello 👋</string>
     <string name="google_sign_in_failed">Google sign-in failed</string>
-    <string name="dark_mode_selection">Dark Mode Selection</string>
-    <string name="no_account_with_this_email">No account is associated with this email.</string>
-    <string name="this_email_signed_in_with_google">This email is signed in with Google. A password reset link cannot be sent.</string>
-    <string name="student_name">Student Name</string>
-    <string name="note_payment_summary">Paid %1$.0f NIS in cash and %2$.0f NIS by bank</string>
-    <string name="notes_label">Notes: None</string>
-    <string name="edit_profile">Edit Profile</string>
-    <string name="passwords_do_not_match">Passwords do not match</string>
-    <string name="password_updated_successfully">Password updated successfully</string>
-    <string name="incorrect_password">Current password is incorrect</string>
-    <string name="error_updating_password">Error updating password</string>
     <string name="payment_added_successfully">Payment added successfully</string>
-    <string name="failed_to_read_student">Failed to read student data</string>
-    <string name="failed_to_update_student">Failed to update student data</string>
-    <string name="failed_to_add_payment">Failed to add payment</string>
-    <string name="failed_to_load_payments">Failed to load payments</string>
     <string name="error_invalid_credentials">Incorrect email or password.</string>
     <string name="error_network">No internet connection. Please try again.</string>
     <string name="error_too_many_requests">Too many attempts. Please try again later.</string>
@@ -204,8 +136,6 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="method_unpaid">Not Paid</string>
     <string name="no_payments">No payments</string>
     <string name="invalid_amount">Enter a valid amount</string>
-    <string name="cash_amount">Cash %1$s</string>
-    <string name="bank_amount">Bank %1$s</string>
 
     <!-- التصميم الجديد -->
     <string name="currency_symbol" translatable="false">₪</string>
@@ -221,13 +151,9 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="label_bank">Bank</string>
     <string name="label_remaining">Remaining</string>
     <string name="label_fees">Fees</string>
-    <string name="label_paid">Paid</string>
     <string name="collection_rate">%1$d%% of fees collected</string>
     <string name="student_info">Student information</string>
-    <string name="payments_title">Payments</string>
-    <string name="no_payments_hint">No payments yet. Tap \"Add payment\" to record one.</string>
     <string name="section_amounts">Amounts</string>
-    <string name="section_details">Payment details</string>
     <string name="status_fully_paid">Fully paid</string>
     <string name="status_remaining">%1$s remaining</string>
     <string name="status_no_fees">No fees recorded yet</string>
@@ -328,18 +254,6 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
         <item quantity="one">%d due</item>
         <item quantity="other">%d dues</item>
     </plurals>
-
-    <!-- الترتيب يطابق PaymentMethod.entries -->
-    <string-array name="payment_methods">
-        <item>@string/select_payment_method</item>
-        <item>@string/method_cash</item>
-        <item>@string/method_mixed</item>
-        <item>@string/method_bank</item>
-        <item>@string/method_unpaid</item>
-    </string-array>
-
-
-
 
     <!-- التذكير عبر واتساب -->
     <string name="reminder_whatsapp">Remind via WhatsApp</string>

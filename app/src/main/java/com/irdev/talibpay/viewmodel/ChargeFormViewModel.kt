@@ -6,6 +6,7 @@ import com.irdev.talibpay.util.formatAmount
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.ChargeInput
 import com.irdev.talibpay.data.StudentRepository
+import com.irdev.talibpay.domain.hasMonthlyBilling
 import com.irdev.talibpay.domain.ChargeValidation
 import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.Money
@@ -16,8 +17,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/** بيانات تعبئة النموذج: المستحق عند التعديل، أو اقتراح قيمة عند الإضافة. */
-data class ChargeFormPrefill(val due: DueSummary?, val suggestedAmount: Double?)
+/**
+ * بيانات تعبئة النموذج: المستحق عند التعديل، أو اقتراح قيمة عند الإضافة.
+ * @param suggestMonthTitle اقتراح "رسوم الشهر" كاسم للمستحق الجديد: فقط لطالب بلا رسوم شهرية تلقائية،
+ *   وإلا لتكرر اسم مستحق الشهر التلقائي نفسه.
+ */
+data class ChargeFormPrefill(val due: DueSummary?, val suggestedAmount: Double?, val suggestMonthTitle: Boolean = false)
 
 /** إضافة مستحق (بدون معرّف) أو تعديل مستحق موجود. */
 class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() {
@@ -39,8 +44,14 @@ class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() 
                 _prefill.value = if (id != null) {
                     ChargeFormPrefill(data.ledger.due(id), null)
                 } else {
-                    // غالبًا الرسوم شهرية بنفس القيمة: نقترح قيمة آخر مستحق
-                    ChargeFormPrefill(null, data.dues.lastOrNull()?.charge?.amount)
+                    // طالب بلا رسوم تلقائية: غالبًا يضيف رسوم كل شهر يدويًا بنفس القيمة، فنقترح الاسم والقيمة.
+                    // من له رسوم تلقائية: المستحق اليدوي شيء آخر (كتب، تسجيل...)، فلا اقتراح.
+                    val manualBilling = !data.student.hasMonthlyBilling
+                    ChargeFormPrefill(
+                        null,
+                        if (manualBilling) data.dues.lastOrNull()?.charge?.amount else null,
+                        suggestMonthTitle = manualBilling
+                    )
                 }
             } catch (e: Exception) {
                 handleError(e)
