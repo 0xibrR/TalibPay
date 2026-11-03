@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- خصم على الرسوم الشهرية (مشترك بين إضافة الطالب وتعديله)؛ يظهر عند إدخال رسوم شهرية -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/field_spacing"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/discount_title"
+        android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/discountTypeToggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:checkedButton="@id/btnDiscountNone"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDiscountNone"
+            style="@style/Widget.TalibPay.SegmentedButton"
+            android:text="@string/discount_none" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDiscountPercent"
+            style="@style/Widget.TalibPay.SegmentedButton"
+            android:text="@string/discount_percent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDiscountAmount"
+            style="@style/Widget.TalibPay.SegmentedButton"
+            android:text="@string/discount_amount" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <LinearLayout
+        android:id="@+id/discountDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/discountValueLayout"
+            style="@style/Widget.TalibPay.TextField"
+            android:hint="@string/discount_value"
+            app:startIconDrawable="@drawable/ic_cash">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDiscountValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.TalibPay.TextField"
+            android:hint="@string/discount_reason"
+            app:counterEnabled="true"
+            app:counterMaxLength="100"
+            app:startIconDrawable="@drawable/ic_notes">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDiscountReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="textCapSentences"
+                android:maxLength="100" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- الرسوم بعد الخصم، تتحدث أثناء الكتابة -->
+        <TextView
+            android:id="@+id/tvDiscountPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_note"
+            android:padding="12dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            tools:text="الرسوم بعد الخصم: 80 ₪ (خصم 20 ₪)" />
+    </LinearLayout>
+</LinearLayout>

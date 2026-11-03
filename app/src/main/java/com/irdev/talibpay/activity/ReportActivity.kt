@@ -128,6 +128,7 @@ class ReportActivity : AppCompatActivity() {
         b.duesProgress.visibility = if (report.billed > 0) View.VISIBLE else View.GONE
         if (report.billed > 0) {
             b.duesRows.addRow(getString(R.string.report_billed), money(report.billed))
+            if (report.discounts > 0) b.duesRows.addRow(getString(R.string.report_discounts), money(report.discounts))
             b.duesRows.addRow(getString(R.string.report_billed_paid), money(report.billedPaid), R.color.status_paid)
             b.duesRows.addRow(
                 getString(R.string.report_billed_remaining),

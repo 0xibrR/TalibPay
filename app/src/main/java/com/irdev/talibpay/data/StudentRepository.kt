@@ -12,6 +12,8 @@ import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.SimpleDate
 import com.irdev.talibpay.domain.billingStartFor
 import com.irdev.talibpay.domain.billingStartOnUnarchive
+import com.irdev.talibpay.domain.discount
+import com.irdev.talibpay.domain.StudentDiscount
 import com.irdev.talibpay.domain.isEnablingMonthlyFee
 import com.irdev.talibpay.domain.periodsDue
 import com.irdev.talibpay.domain.todaySimpleDate
@@ -59,6 +61,7 @@ data class StudentInput(
     val phoneNumber: String,
     val phoneCountryCode: String,
     val notes: String,
+    val discount: StudentDiscount = StudentDiscount.NONE,
     /** عند إدخال الرسوم الشهرية لأول مرة: احتساب الأشهر السابقة منذ تاريخ التسجيل. */
     val backdateMonthlyFees: Boolean = false
 )
@@ -145,6 +148,9 @@ class StudentRepository(
             billingStart = billingStartFor(null, input.monthlyFee, input.registrationDate, today()),
             phoneNumber = input.phoneNumber,
             phoneCountryCode = input.phoneCountryCode,
+            discountType = if (input.discount.isActive) input.discount.type?.name.orEmpty() else "",
+            discountValue = if (input.discount.isActive) input.discount.value else 0.0,
+            discountReason = if (input.discount.isActive) input.discount.reason else "",
             notes = input.notes,
             addedAt = now,
             updatedAt = now
@@ -170,6 +176,9 @@ class StudentRepository(
             "billingStart" to billingStart,
             "phoneNumber" to input.phoneNumber,
             "phoneCountryCode" to input.phoneCountryCode,
+            "discountType" to (if (input.discount.isActive) input.discount.type?.name.orEmpty() else ""),
+            "discountValue" to (if (input.discount.isActive) input.discount.value else 0.0),
+            "discountReason" to (if (input.discount.isActive) input.discount.reason else ""),
             "notes" to input.notes,
             "updatedAt" to clock()
         )
@@ -463,13 +472,15 @@ class StudentRepository(
         val student = getValue(Student::class.java) ?: return emptyList()
         val periods = student.periodsDue(today)
         if (periods.isEmpty()) return emptyList()
+        val discount = student.discount
         val chargesNode = child(CHARGES)
         val created = mutableListOf<String>()
         periods.forEachIndexed { index, period ->
             if (!chargesNode.hasChild(period.chargeId)) {
                 chargesNode.child(period.chargeId).value = Charge(
                     id = period.chargeId,
-                    amount = student.monthlyFee,
+                    amount = discount.netFee(student.monthlyFee),
+                    discount = discount.amountOff(student.monthlyFee),
                     dueDate = period.dueDate.format(),
                     period = period.month.key,
                     createdAt = now + index

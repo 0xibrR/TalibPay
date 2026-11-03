@@ -46,6 +46,7 @@ import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.displayPhone
+import com.irdev.talibpay.util.monthlyFeeText
 import com.irdev.talibpay.util.dueTitle
 import com.irdev.talibpay.util.formatTimestamp
 import com.irdev.talibpay.util.money
@@ -170,9 +171,9 @@ class DetailActivity : AppCompatActivity() {
             rowMonthlyFee.bind(
                 R.drawable.ic_cash, R.string.monthly_fee,
                 when {
-                    nextDue != null -> getString(R.string.monthly_fee_value, money(student.monthlyFee), nextDue.format())
+                    nextDue != null -> getString(R.string.monthly_fee_value, monthlyFeeText(student), nextDue.format())
                     student.archived && student.monthlyFee > 0 ->
-                        getString(R.string.monthly_fee_paused, money(student.monthlyFee))
+                        getString(R.string.monthly_fee_paused, monthlyFeeText(student))
                     else -> getString(R.string.monthly_fee_not_set)
                 }
             )

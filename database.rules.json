@@ -17,6 +17,9 @@
             "phoneCountryCode": { ".validate": "newData.isString() && newData.val().length <= 3" },
             "archived": { ".validate": "newData.isBoolean()" },
             "archivedAt": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "discountType": { ".validate": "newData.isString() && (newData.val() === '' || newData.val() === 'PERCENT' || newData.val() === 'AMOUNT')" },
+            "discountValue": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "discountReason": { ".validate": "newData.isString() && newData.val().length <= 100" },
             "notes": { ".validate": "newData.isString() && newData.val().length <= 2000" },
             "paidCash": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "paidBank": { ".validate": "newData.isNumber() && newData.val() >= 0" },
@@ -38,6 +41,7 @@
                 ".validate": "newData.hasChildren(['id', 'amount']) && newData.child('id').val() === $chargeId",
                 "title": { ".validate": "newData.isString() && newData.val().length <= 100" },
                 "amount": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+                "discount": { ".validate": "newData.isNumber() && newData.val() >= 0" },
                 "dueDate": { ".validate": "newData.isString() && newData.val().length <= 10" },
                 "period": { ".validate": "newData.isString() && newData.val().length <= 7" },
                 "note": { ".validate": "newData.isString() && newData.val().length <= 500" }

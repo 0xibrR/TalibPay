@@ -9,6 +9,9 @@ data class Student(
     val birthYear: String = "",
     val registrationDate: String = "", // تاريخ التسجيل dd/MM/yyyy
     val monthlyFee: Double = 0.0, // الرسوم الشهرية؛ 0 = لا رسوم تلقائية
+    val discountType: String = "", // PERCENT أو AMOUNT؛ فارغ = بدون خصم
+    val discountValue: Double = 0.0, // النسبة (0-100) أو المبلغ المخصوم من كل شهر
+    val discountReason: String = "", // سبب الخصم (مثل: أخ، منحة)
     val billingStart: String = "", // أول تاريخ تُحسب منه الرسوم الشهرية dd/MM/yyyy
     val lastBilledPeriod: String = "", // آخر شهر أُنشئت رسومه yyyy-MM (يمنع التكرار)
     val paidCash: Double = 0.0, // مجموع ما دفعه الطالب نقدًا

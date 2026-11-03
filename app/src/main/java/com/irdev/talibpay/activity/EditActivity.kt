@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentInput
 import com.irdev.talibpay.databinding.ActivityEditBinding
+import com.irdev.talibpay.domain.StudentDiscount
+import com.irdev.talibpay.domain.discount
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.pastDuesSinceRegistration
 import com.irdev.talibpay.domain.shouldAskToBackdate
@@ -21,6 +23,8 @@ import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.ReminderPrefs
 import com.irdev.talibpay.util.countryCodeFor
 import com.irdev.talibpay.util.optionalAmount
+import com.irdev.talibpay.util.readDiscount
+import com.irdev.talibpay.util.setup
 import com.irdev.talibpay.util.requireCountryCode
 import com.irdev.talibpay.util.setupCountryCodePicker
 import com.irdev.talibpay.util.requireText
@@ -50,6 +54,8 @@ class EditActivity : AppCompatActivity() {
         prefilled = savedInstanceState != null
 
         binding.monthlyFeeLayoutEdit.showCurrency()
+        // بعد تدوير الشاشة تبقى القيم المكتوبة، فنكتفي بتفعيل الحقول؛ وإلا تُعبّأ من بيانات الطالب عند تحميلها
+        if (savedInstanceState != null) binding.discount.setup(binding.edtMonthlyFeeEdit, StudentDiscount.NONE)
         binding.edtBirthYearEdit.setOnClickListener {
             showYearPicker { binding.edtBirthYearEdit.setText(it.toString()) }
         }
@@ -74,6 +80,7 @@ class EditActivity : AppCompatActivity() {
             // الطلاب القدامى بلا رمز خاص: يظهر الرمز الافتراضي، ويُحفظ لهم عند الحفظ
             binding.edtCountryCode.setText(countryCodeFor(student), false)
             binding.edtNotesEdit.setText(student.notes)
+            binding.discount.setup(binding.edtMonthlyFeeEdit, student.discount)
         }
         collectWhileStarted(viewModel.loading) { binding.btnEditStudent.isEnabled = !it }
         collectWhileStarted(viewModel.events) { event ->
@@ -104,6 +111,7 @@ class EditActivity : AppCompatActivity() {
         }
         val phone = binding.edtPhoneNumberEdit.requireText() ?: return
         val countryCode = binding.edtCountryCode.requireCountryCode(binding.countryCodeLayout) ?: return
+        val discount = binding.discount.readDiscount(monthlyFee) ?: return
         val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
 
         // إدخال الرسوم الشهرية لأول مرة: نسأل عن احتساب الأشهر السابقة منذ التسجيل
@@ -117,16 +125,16 @@ class EditActivity : AppCompatActivity() {
                         R.string.backdate_message,
                         registrationDate,
                         resources.getQuantityString(R.plurals.months_count, months, months),
-                        money(Money.sum(List(months) { monthlyFee }))
+                        money(Money.sum(List(months) { discount.netFee(monthlyFee) }))
                     )
                 )
                 .setPositiveButton(R.string.backdate_yes) { _, _ ->
                     viewModel.save(
-                        StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes, backdateMonthlyFees = true)
+                        StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes, discount = discount, backdateMonthlyFees = true)
                     )
                 }
                 .setNegativeButton(R.string.backdate_no) { _, _ ->
-                    viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes))
+                    viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes, discount = discount))
                 }
                 .setNeutralButton(R.string.cancel, null)
                 .show()
@@ -137,7 +145,7 @@ class EditActivity : AppCompatActivity() {
             .setTitle(R.string.confirm_edit_title)
             .setMessage(R.string.confirm_edit_message)
             .setPositiveButton(R.string.ok) { _, _ ->
-                viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes))
+                viewModel.save(StudentInput(name, birthYear, registrationDate, monthlyFee, phone, countryCode, notes, discount = discount))
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

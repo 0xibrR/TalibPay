@@ -433,4 +433,18 @@
     <string name="report_generated">TalibPay · أُنشئ في %1$s</string>
     <string name="report_share_image">مشاركة كصورة</string>
     <string name="report_share_pdf">مشاركة كملف PDF</string>
+    <!-- الخصم على الرسوم الشهرية -->
+    <string name="discount_title">خصم على الرسوم الشهرية</string>
+    <string name="discount_none">بدون</string>
+    <string name="discount_percent">نسبة %</string>
+    <string name="discount_amount">مبلغ ثابت</string>
+    <string name="discount_value">الخصم</string>
+    <string name="discount_reason">السبب (اختياري)، مثل: أخ، منحة</string>
+    <string name="discount_preview">الرسوم الشهرية بعد الخصم: %1$s (خصم %2$s)</string>
+    <string name="discount_percent_over_100">لا يمكن أن تزيد النسبة عن 100</string>
+    <string name="discount_exceeds_fee">لا يمكن أن يزيد الخصم عن الرسوم الشهرية</string>
+    <string name="discount_with_reason">%1$s (%2$s)</string>
+    <string name="fee_with_discount">%1$s − %2$s = %3$s</string>
+    <string name="due_discount">قبل الخصم %1$s · خصم %2$s</string>
+    <string name="report_discounts">الخصومات الممنوحة</string>
 </resources>

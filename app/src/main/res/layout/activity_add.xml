@@ -96,6 +96,11 @@
                         android:inputType="numberDecimal" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- خصم على الرسوم الشهرية -->
+                <include
+                    android:id="@+id/discount"
+                    layout="@layout/view_discount_fields" />
+
                 <!-- رمز الدولة ثم الرقم، من اليسار لليمين دائمًا كما يُكتب الرقم الدولي -->
                 <LinearLayout
                     android:layout_width="match_parent"

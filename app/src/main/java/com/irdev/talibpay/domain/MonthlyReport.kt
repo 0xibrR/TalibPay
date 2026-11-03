@@ -25,6 +25,8 @@ data class MonthlyReport(
     val paymentCount: Int,
     val billed: Double,
     val billedRemaining: Double,
+    /** ما خُصم من رسوم هذا الشهر (خصومات ومنح الطلاب). */
+    val discounts: Double,
     val unpaid: List<UnpaidStudent>
 ) {
     val collected: Double get() = Money.subtract(Money.sum(listOf(collectedCash, collectedBank)), refunded)
@@ -56,6 +58,7 @@ data class MonthlyReport(
                 paymentCount = payments.size,
                 billed = Money.sum(allDues.map { it.charge.amount }),
                 billedRemaining = Money.sum(allDues.map { it.remaining }),
+                discounts = Money.sum(allDues.map { it.charge.discount }),
                 unpaid = unpaid
             )
         }

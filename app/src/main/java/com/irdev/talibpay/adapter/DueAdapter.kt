@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.irdev.talibpay.R
+import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.databinding.ItemDueBinding
 import com.irdev.talibpay.databinding.ItemDuePaymentBinding
 import com.irdev.talibpay.domain.DueStatus
@@ -59,7 +60,11 @@ class DueAdapter(
             tvDueSummary.text = listOfNotNull(
                 context.getString(R.string.due_summary, context.money(due.paid), context.money(due.remaining)),
                 // ما سُدِّد من المحفظة (ليس دفعة، فلا يظهر في قائمة الدفعات)
-                if (due.walletUsed > 0) context.getString(R.string.due_wallet_used, context.money(due.walletUsed)) else null
+                if (due.walletUsed > 0) context.getString(R.string.due_wallet_used, context.money(due.walletUsed)) else null,
+                // الرسوم الشهرية المنشأة بخصم: نوضح قيمتها قبل الخصم
+                if (due.charge.discount > 0) context.getString(
+                    R.string.due_discount, context.money(Money.sum(listOf(due.charge.amount, due.charge.discount))), context.money(due.charge.discount)
+                ) else null
             ).joinToString("\n")
 
             // الدفعات: الأحدث أولًا، مع المتبقي من المستحق بعد كل دفعة
