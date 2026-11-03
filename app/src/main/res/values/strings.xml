@@ -342,4 +342,21 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
 
 
 
+    <!-- التذكير عبر واتساب -->
+    <string name="reminder_whatsapp">Remind via WhatsApp</string>
+    <string name="reminder_send">Send reminder</string>
+    <string name="reminder_message">Hello,\nThis is a reminder that %1$s has unpaid fees:\n%2$s\nTotal due: %3$s\nThank you.</string>
+    <string name="reminder_due_line">• %1$s: %2$s</string>
+    <string name="reminder_no_app">No app found to send the reminder</string>
+    <string name="reminder_overdue_menu">Remind overdue students</string>
+    <string name="reminder_overdue_title">Overdue students</string>
+    <string name="reminder_overdue_hint">Tap a student to send a reminder. Students you have already reminded are marked ✓.</string>
+    <string name="reminder_none_overdue">No students have overdue fees.</string>
+    <string name="reminder_overdue_item">%1$s · %2$s</string>
+    <string name="reminder_overdue_item_sent">✓ %1$s · %2$s</string>
+    <string name="settings_reminders">Reminders</string>
+    <string name="whatsapp_country_code">WhatsApp country code</string>
+    <string name="country_code_value">\u200E+%1$s</string>
+    <string name="country_code_hint">Added to phone numbers that start with 0 (970 Palestine, 972 Israel, 962 Jordan).</string>
+    <string name="invalid_country_code">Enter a valid country code (1 to 3 digits)</string>
 </resources>

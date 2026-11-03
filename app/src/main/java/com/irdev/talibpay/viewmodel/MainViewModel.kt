@@ -5,7 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentRepository
 import com.irdev.talibpay.data.StudentWithPayments
+import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.domain.SimpleDate
+import com.irdev.talibpay.domain.overdueDues
+import com.irdev.talibpay.domain.overdueTotal
+import com.irdev.talibpay.domain.todaySimpleDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +32,9 @@ data class MainUiState(
     val loading: Boolean = true,
     val students: List<StudentWithPayments> = emptyList(),
     val studentCount: Int = 0,
-    val summary: DashboardSummary = DashboardSummary()
+    val summary: DashboardSummary = DashboardSummary(),
+    /** كل الطلاب الذين عليهم مستحقات متأخرة (بغض النظر عن البحث)، الأعلى مبلغًا أولًا. */
+    val overdue: List<OverdueStudent> = emptyList()
 ) {
     val hasAnyStudent: Boolean get() = studentCount > 0
 }
@@ -69,7 +76,8 @@ class MainViewModel : BaseViewModel() {
                 paid = Money.sum(list.map { it.student.paid }),
                 remaining = Money.sum(list.map { it.student.remaining }),
                 total = Money.sum(list.map { it.student.total })
-            )
+            ),
+            overdue = overdueStudents(list, todaySimpleDate())
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
 
@@ -103,3 +111,17 @@ class MainViewModel : BaseViewModel() {
         }
     }
 }
+
+/** طالب عليه مستحقات متأخرة، مع هذه المستحقات ومجموعها (لقائمة التذكير). */
+data class OverdueStudent(
+    val data: StudentWithPayments,
+    val dues: List<DueSummary>,
+    val total: Double
+)
+
+/** الطلاب المتأخرون مرتبين من الأعلى مبلغًا متأخرًا. */
+fun overdueStudents(list: List<StudentWithPayments>, today: SimpleDate): List<OverdueStudent> =
+    list.mapNotNull { item ->
+        val dues = item.ledger.overdueDues(today)
+        if (dues.isEmpty()) null else OverdueStudent(item, dues, dues.overdueTotal())
+    }.sortedByDescending { it.total }

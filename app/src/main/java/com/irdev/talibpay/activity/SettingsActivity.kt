@@ -3,9 +3,15 @@ package com.irdev.talibpay.activity
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputFilter
+import android.text.InputType
+import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.credentials.exceptions.NoCredentialException
@@ -23,6 +29,8 @@ import com.irdev.talibpay.databinding.DilaogEmailPasswordBinding
 import com.irdev.talibpay.util.LoadingDialog
 import com.irdev.talibpay.util.LanguagePrefs
 import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
+import com.irdev.talibpay.util.ReminderPrefs
+import com.irdev.talibpay.domain.PhoneNumbers
 import com.irdev.talibpay.util.ThemePrefs
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
@@ -59,6 +67,8 @@ class SettingsActivity : AppCompatActivity() {
         setupThemeToggle()
         setupLanguageToggle()
         binding.btnChangePassword.setOnClickListener { showChangePasswordDialog() }
+        showCountryCode()
+        binding.btnCountryCode.setOnClickListener { showCountryCodeDialog() }
 
         val versionName = packageManager.getPackageInfo(packageName, 0).versionName
         binding.tvVersion.text = getString(R.string.app_version_placeholder, versionName)
@@ -138,6 +148,46 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /** اختيار لغة التطبيق: النظام / العربية / English. */
+    private fun showCountryCode() {
+        binding.btnCountryCode.text = getString(R.string.whatsapp_country_code) + " · " +
+                getString(R.string.country_code_value, ReminderPrefs.countryCode(this))
+    }
+
+    /** رمز الدولة الذي يُضاف لأرقام الهواتف المحلية عند إرسال التذكير عبر واتساب. */
+    private fun showCountryCodeDialog() {
+        val input = TextInputEditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            filters = arrayOf(InputFilter.LengthFilter(3))
+            setText(ReminderPrefs.countryCode(this@SettingsActivity))
+        }
+        val layout = TextInputLayout(this).apply {
+            prefixText = "+"
+            helperText = getString(R.string.country_code_hint)
+            addView(input)
+        }
+        val container = FrameLayout(this).apply {
+            val padding = resources.getDimensionPixelSize(R.dimen.card_padding)
+            setPadding(padding, padding / 2, padding, 0)
+            addView(layout)
+        }
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.whatsapp_country_code)
+            .setView(container)
+            .setPositiveButton(R.string.save, null)
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val code = input.text?.toString()?.trim().orEmpty()
+            if (!PhoneNumbers.isValidCountryCode(code)) {
+                layout.error = getString(R.string.invalid_country_code)
+                return@setOnClickListener
+            }
+            ReminderPrefs.setCountryCode(this, code)
+            showCountryCode()
+            dialog.dismiss()
+        }
+    }
+
     private fun setupLanguageToggle() {
         binding.languageToggle.check(
             when (LanguagePrefs.get()) {

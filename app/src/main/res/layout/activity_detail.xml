@@ -192,6 +192,18 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- تذكير ولي الأمر بالمستحقات المتأخرة (خارج البطاقة حتى لا يظهر في صورة الإشعار) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRemind"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/reminder_whatsapp"
+                android:visibility="gone"
+                app:icon="@drawable/ic_chat"
+                tools:visibility="visible" />
+
             <!-- المحفظة: الرصيد الدائن وسجل الحركات -->
             <TextView
                 android:layout_width="wrap_content"

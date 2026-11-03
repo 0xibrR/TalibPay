@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -25,9 +27,12 @@ import com.irdev.talibpay.util.cardDialog
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.paidPercent
+import com.irdev.talibpay.util.reminderMessage
+import com.irdev.talibpay.util.sendReminder
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.viewmodel.MainUiState
 import com.irdev.talibpay.viewmodel.MainViewModel
+import com.irdev.talibpay.viewmodel.OverdueStudent
 import com.irdev.talibpay.viewmodel.UiEvent
 import com.ncorti.slidetoact.SlideToActView
 
@@ -36,6 +41,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
     private val adapter = StudentAdapter { openDetail(it) }
+
+    // الطلاب الذين أُرسل لهم تذكير في هذه الجلسة (لتمييزهم في القائمة)
+    private val remindedIds = mutableSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -197,12 +205,58 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
+            R.id.remindOverdue_menu_item -> {
+                showOverdueReminders()
+                return true
+            }
+
             R.id.deleteAll_menu_item -> {
                 showDeleteAllDialog()
                 return true
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    /**
+     * قائمة المتأخرين: الضغط على طالب يفتح واتساب برسالة جاهزة له،
+     * وتبقى القائمة مفتوحة ليُرسل للتالي بعد العودة، مع علامة ✓ لمن أُرسل له.
+     */
+    private fun showOverdueReminders() {
+        val overdue = viewModel.uiState.value.overdue
+        if (overdue.isEmpty()) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.reminder_overdue_title)
+                .setMessage(R.string.reminder_none_overdue)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+            return
+        }
+        fun label(item: OverdueStudent): String = getString(
+            if (item.data.student.id in remindedIds) R.string.reminder_overdue_item_sent
+            else R.string.reminder_overdue_item,
+            item.data.student.name,
+            money(item.total)
+        )
+
+        val labels = overdue.map(::label).toMutableList()
+        val listAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, labels)
+        val list = ListView(this).apply {
+            adapter = listAdapter
+            setOnItemClickListener { _, _, position, _ ->
+                val item = overdue[position]
+                sendReminder(item.data.student.phoneNumber, reminderMessage(item.data.student, item.dues))
+                remindedIds += item.data.student.id
+                labels[position] = label(item)
+                listAdapter.notifyDataSetChanged()
+            }
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.reminder_overdue_title)
+            .setMessage(R.string.reminder_overdue_hint)
+            .setView(list)
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     private fun showDeleteAllDialog() {

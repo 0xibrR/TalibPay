@@ -352,4 +352,21 @@
     </string-array>
 
 
+    <!-- التذكير عبر واتساب -->
+    <string name="reminder_whatsapp">تذكير عبر واتساب</string>
+    <string name="reminder_send">إرسال تذكير</string>
+    <string name="reminder_message">السلام عليكم،\nنذكّركم بوجود رسوم غير مدفوعة على الطالب %1$s:\n%2$s\nالمجموع المستحق: %3$s\nشكرًا لتعاونكم.</string>
+    <string name="reminder_due_line">• %1$s: %2$s</string>
+    <string name="reminder_no_app">لا يوجد تطبيق لإرسال التذكير</string>
+    <string name="reminder_overdue_menu">تذكير المتأخرين</string>
+    <string name="reminder_overdue_title">الطلاب المتأخرون</string>
+    <string name="reminder_overdue_hint">اضغط على طالب لإرسال تذكير له. الطلاب الذين ذكّرتهم تظهر بجانبهم ✓.</string>
+    <string name="reminder_none_overdue">لا يوجد طلاب عليهم رسوم متأخرة.</string>
+    <string name="reminder_overdue_item">%1$s · %2$s</string>
+    <string name="reminder_overdue_item_sent">✓ %1$s · %2$s</string>
+    <string name="settings_reminders">التذكيرات</string>
+    <string name="whatsapp_country_code">رمز الدولة لواتساب</string>
+    <string name="country_code_value">\u200E+%1$s</string>
+    <string name="country_code_hint">يُضاف للأرقام التي تبدأ بصفر (970 فلسطين، 972 إسرائيل، 962 الأردن).</string>
+    <string name="invalid_country_code">أدخل رمز دولة صالحًا (من 1 إلى 3 أرقام)</string>
 </resources>

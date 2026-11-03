@@ -37,6 +37,7 @@ import com.irdev.talibpay.domain.RefundValidation
 import com.irdev.talibpay.domain.WalletEntryType
 import com.irdev.talibpay.domain.entryType
 import com.irdev.talibpay.domain.nextMonthlyDue
+import com.irdev.talibpay.domain.overdueDues
 import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.domain.validateRefund
 import com.irdev.talibpay.model.Payment
@@ -47,6 +48,8 @@ import com.irdev.talibpay.util.dueTitle
 import com.irdev.talibpay.util.formatTimestamp
 import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.paidPercent
+import com.irdev.talibpay.util.reminderMessage
+import com.irdev.talibpay.util.sendReminder
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.viewmodel.DetailViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
@@ -83,6 +86,7 @@ class DetailActivity : AppCompatActivity() {
 
         binding.btnAddDue.setOnClickListener { openChargeForm(null) }
         binding.btnWalletRefund.setOnClickListener { showRefundDialog() }
+        binding.btnRemind.setOnClickListener { sendOverdueReminder() }
         binding.fabAddPayment.setOnClickListener {
             // لا دفعة بلا مستحق مفتوح: نوجّه المستخدم لإضافة مستحق أولًا
             val data = viewModel.student.value
@@ -140,6 +144,7 @@ class DetailActivity : AppCompatActivity() {
             tvStatBank.text = money(student.paidBank)
             tvStatTotal.text = money(student.total)
             tvStatRemaining.text = money(student.remaining)
+            btnRemind.isVisible = data.ledger.overdueDues(todaySimpleDate()).isNotEmpty()
 
             // المستحقات
             val dueCount = data.dues.size
@@ -373,6 +378,14 @@ class DetailActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    /** يفتح واتساب على رقم الطالب برسالة جاهزة فيها المستحقات المتأخرة ومجموعها. */
+    private fun sendOverdueReminder() {
+        val data = viewModel.student.value ?: return
+        val overdue = data.ledger.overdueDues(todaySimpleDate())
+        if (overdue.isEmpty()) return
+        sendReminder(data.student.phoneNumber, reminderMessage(data.student, overdue))
     }
 
     private fun shareAsText(data: StudentWithPayments) {
