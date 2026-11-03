@@ -74,7 +74,6 @@
     <string name="edit">edit</string>
     <string name="delete">delete</string>
     <string name="share">share</string>
-    <string name="download_notification">Download the notification</string>
     <string name="added">Added on</string>
     <string name="share_name">👤 Name: %1$s</string>
     <string name="share_birth_year">🎂 Year of Birth: %1$s</string>
@@ -413,4 +412,28 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="day_wednesday">Wednesday</string>
     <string name="day_thursday">Thursday</string>
     <string name="day_friday">Friday</string>
+    <!-- إيصال الدفع وكشف الحساب -->
+    <string name="share_as_image">Share as image</string>
+    <string name="share_as_pdf">Share as PDF</string>
+    <string name="document_footer">TalibPay · created %1$s</string>
+    <string name="receipt_send">Send receipt</string>
+    <string name="receipt_title">Payment receipt</string>
+    <string name="receipt_meta">Receipt %1$s · %2$s</string>
+    <string name="receipt_for_due">For: %1$s</string>
+    <string name="receipt_amount_paid">Amount paid</string>
+    <string name="receipt_details">Details</string>
+    <string name="receipt_due_amount">Due amount</string>
+    <string name="receipt_remaining_after">Remaining after this payment</string>
+    <string name="receipt_to_wallet">Added to the wallet</string>
+    <string name="receipt_method">Payment method</string>
+    <string name="receipt_caption">Payment receipt for %1$s: %2$s</string>
+    <string name="receipt_not_ready">The payment is still saving. Try again in a moment.</string>
+    <string name="statement_title">Account statement</string>
+    <string name="statement_meta">As of %1$s</string>
+    <string name="statement_remaining">Remaining balance</string>
+    <string name="statement_total_fees">Total fees</string>
+    <string name="statement_paid">Total paid</string>
+    <string name="statement_no_dues">No dues yet</string>
+    <string name="statement_due_line">%1$s · paid %2$s · %3$s</string>
+    <string name="statement_caption">Account statement for %1$s</string>
 </resources>

@@ -76,7 +76,6 @@
     <string name="edit">تعديل</string>
     <string name="delete">حذف</string>
     <string name="share">مشاركة</string>
-    <string name="download_notification">تنزيل الإشعار</string>
     <string name="added">أضيف في</string>
     <string name="share_name">👤 الاسم: %1$s</string>
     <string name="share_birth_year">🎂 سنة الميلاد: %1$s</string>
@@ -430,4 +429,28 @@
     <string name="day_wednesday">الأربعاء</string>
     <string name="day_thursday">الخميس</string>
     <string name="day_friday">الجمعة</string>
+    <!-- إيصال الدفع وكشف الحساب -->
+    <string name="share_as_image">مشاركة كصورة</string>
+    <string name="share_as_pdf">مشاركة كملف PDF</string>
+    <string name="document_footer">TalibPay · أُنشئ في %1$s</string>
+    <string name="receipt_send">إرسال إيصال</string>
+    <string name="receipt_title">إيصال دفع</string>
+    <string name="receipt_meta">رقم الإيصال %1$s · %2$s</string>
+    <string name="receipt_for_due">عن: %1$s</string>
+    <string name="receipt_amount_paid">المبلغ المدفوع</string>
+    <string name="receipt_details">التفاصيل</string>
+    <string name="receipt_due_amount">قيمة المستحق</string>
+    <string name="receipt_remaining_after">المتبقي بعد هذه الدفعة</string>
+    <string name="receipt_to_wallet">أُضيف للمحفظة</string>
+    <string name="receipt_method">طريقة الدفع</string>
+    <string name="receipt_caption">إيصال دفع للطالب %1$s: %2$s</string>
+    <string name="receipt_not_ready">ما زالت الدفعة تُحفظ. حاول بعد لحظة.</string>
+    <string name="statement_title">كشف حساب</string>
+    <string name="statement_meta">حتى تاريخ %1$s</string>
+    <string name="statement_remaining">المتبقي على الطالب</string>
+    <string name="statement_total_fees">إجمالي الرسوم</string>
+    <string name="statement_paid">إجمالي المدفوع</string>
+    <string name="statement_no_dues">لا توجد مستحقات بعد</string>
+    <string name="statement_due_line">%1$s · دُفع %2$s · %3$s</string>
+    <string name="statement_caption">كشف حساب الطالب %1$s</string>
 </resources>

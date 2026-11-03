@@ -109,13 +109,13 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
             val input = PaymentInput(dueId, amounts.cash, amounts.bank, paymentDate, note)
             val id = paymentId
             if (id == null) {
-                repository.addPayment(studentId, input)
-                send(UiEvent.Message(R.string.payment_added_successfully))
+                // صفحة الطالب تعرض رسالة الحفظ مع زر إرسال الإيصال
+                send(UiEvent.PaymentSaved(repository.addPayment(studentId, input)))
             } else {
                 repository.updatePayment(studentId, id, input)
                 send(UiEvent.Message(R.string.updated_successfully))
+                send(UiEvent.Finished)
             }
-            send(UiEvent.Finished)
         }
     }
 }

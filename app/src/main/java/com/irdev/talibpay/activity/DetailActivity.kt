@@ -2,13 +2,12 @@ package com.irdev.talibpay.activity
 
 import android.content.res.ColorStateList
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -17,8 +16,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import androidx.core.graphics.createBitmap
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.color.MaterialColors
@@ -54,18 +51,24 @@ import com.irdev.talibpay.util.formatTimestamp
 import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.paidPercent
 import com.irdev.talibpay.util.reminderMessage
+import com.irdev.talibpay.util.shareReceipt
+import com.irdev.talibpay.util.shareStatement
+import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.util.sendReminder
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.viewmodel.DetailViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
-import java.io.File
-import java.io.FileOutputStream
 import java.util.Locale
 
 class DetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailBinding
     private val viewModel: DetailViewModel by viewModels()
+
+    // نموذج الدفعة يعيد معرّف الدفعة الجديدة لعرض إرسال إيصالها
+    private val paymentForm = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        result.data?.getStringExtra(Extras.PAYMENT_ID)?.let(::offerReceipt)
+    }
     private val adapter = DueAdapter(
         onPay = { due -> openPaymentForm(dueId = due.charge.id) },
         onDueMenu = ::showDueMenu,
@@ -284,7 +287,7 @@ class DetailActivity : AppCompatActivity() {
     }
 
     private fun openPaymentForm(dueId: String? = null, paymentId: String? = null) {
-        startActivity(
+        paymentForm.launch(
             Intent(this, PaymentFormActivity::class.java)
                 .putExtra(Extras.STUDENT_ID, viewModel.studentId)
                 .apply {
@@ -326,21 +329,47 @@ class DetailActivity : AppCompatActivity() {
 
     private fun showPaymentOptions(due: DueSummary, payment: Payment) {
         val title = getString(R.string.payment_of_due, money(payment.paid), dueTitle(due.charge))
-        // دفعة أضافت رصيدًا للمحفظة مقفلة: تعديلها أو حذفها قد يجعل الرصيد سالبًا
+        val student = viewModel.student.value?.student ?: return
+        // دفعة أضافت رصيدًا للمحفظة مقفلة: تعديلها أو حذفها قد يجعل الرصيد سالبًا، لكن إيصالها متاح
         if (payment.credited > 0) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(title)
                 .setMessage(R.string.payment_locked_by_wallet)
-                .setPositiveButton(R.string.ok, null)
+                .setPositiveButton(R.string.receipt_send) { _, _ -> shareReceipt(student, due, payment) }
+                .setNegativeButton(R.string.ok, null)
                 .show()
             return
         }
+        val options = listOf(R.string.receipt_send, R.string.edit_pyment, R.string.delete_payment)
         MaterialAlertDialogBuilder(this)
             .setTitle(title)
-            .setItems(arrayOf(getString(R.string.edit_pyment), getString(R.string.delete_payment))) { _, which ->
-                if (which == 0) openPaymentForm(paymentId = payment.id) else confirmDeletePayment(payment)
+            .setItems(options.map { getString(it) }.toTypedArray()) { _, which ->
+                when (options[which]) {
+                    R.string.receipt_send -> shareReceipt(student, due, payment)
+                    R.string.edit_pyment -> openPaymentForm(paymentId = payment.id)
+                    R.string.delete_payment -> confirmDeletePayment(payment)
+                }
             }
             .show()
+    }
+
+    /** بعد تسجيل دفعة جديدة: رسالة الحفظ مع زر إرسال إيصالها مباشرة. */
+    private fun offerReceipt(paymentId: String) {
+        Snackbar.make(binding.root, R.string.payment_added_successfully, Snackbar.LENGTH_LONG)
+            .setAction(R.string.receipt_send) { sendReceipt(paymentId) }
+            .setAnchorView(binding.fabAddPayment)
+            .show()
+    }
+
+    private fun sendReceipt(paymentId: String) {
+        val data = viewModel.student.value ?: return
+        val due = data.dues.firstOrNull { due -> due.payments.any { it.id == paymentId } }
+        val payment = due?.payments?.firstOrNull { it.id == paymentId }
+        if (due == null || payment == null) {
+            toast(R.string.receipt_not_ready)
+            return
+        }
+        shareReceipt(data.student, due, payment)
     }
 
     private fun confirmDeletePayment(payment: Payment) {
@@ -404,8 +433,8 @@ class DetailActivity : AppCompatActivity() {
                 return true
             }
 
-            R.id.menu_downloadNotification -> {
-                shareCardImage()
+            R.id.menu_statement -> {
+                data?.let(::shareStatement)
                 return true
             }
         }
@@ -483,26 +512,6 @@ class DetailActivity : AppCompatActivity() {
             type = "text/plain"
             putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_subject, s.name))
             putExtra(Intent.EXTRA_TEXT, shareText)
-        }
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_chooser_title)))
-    }
-
-    private fun shareCardImage() {
-        val card = binding.studentCardLayout
-        if (card.width == 0 || card.height == 0) return
-
-        val bitmap = createBitmap(card.width, card.height)
-        card.draw(Canvas(bitmap))
-
-        // الصورة في cache الخاص بالتطبيق، وتُشارك عبر FileProvider بصلاحية قراءة مؤقتة
-        val file = File(cacheDir, "student_card.png")
-        FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-
-        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "image/png"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(shareIntent, getString(R.string.share_chooser_title)))
     }

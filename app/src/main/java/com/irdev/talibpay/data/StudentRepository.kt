@@ -304,7 +304,8 @@ class StudentRepository(
      * الدفعة وحركة الإيداع تُكتبان معًا في transaction واحدة، والمتبقي يُحسب من أحدث البيانات،
      * فلا يتكرر الإيداع ولا يُحسب خطأً حتى لو سُجلت دفعتان لنفس المستحق من جهازين.
      */
-    suspend fun addPayment(studentId: String, input: PaymentInput) {
+    /** @return معرّف الدفعة الجديدة (لإرسال إيصالها). */
+    suspend fun addPayment(studentId: String, input: PaymentInput): String {
         val ref = studentRef(studentId)
         val id = ref.child(PAYMENTS).push().key ?: error("push() returned no key")
         val now = clock()
@@ -329,6 +330,7 @@ class StudentRepository(
             }
             emptyList()
         }
+        return id
     }
 
     /** تعديل دفعة لم تُضف للمحفظة (المبلغ لا يتجاوز المتبقي، يتحقق منه الـ ViewModel). */

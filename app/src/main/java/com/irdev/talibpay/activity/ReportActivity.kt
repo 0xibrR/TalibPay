@@ -2,10 +2,6 @@ package com.irdev.talibpay.activity
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.pdf.PdfDocument
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -15,15 +11,13 @@ import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import androidx.core.graphics.createBitmap
 import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityReportBinding
 import com.irdev.talibpay.databinding.ItemReportRowBinding
 import com.irdev.talibpay.domain.MonthlyReport
 import com.irdev.talibpay.domain.todaySimpleDate
+import com.irdev.talibpay.util.DocumentExport
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.dueTitle
@@ -33,9 +27,6 @@ import com.irdev.talibpay.util.paidPercent
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.viewmodel.ReportViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
-import java.io.File
-import java.io.FileOutputStream
-import kotlin.math.ceil
 
 /** التقرير الشهري: المحصّل، ومستحقات الشهر، ومن لم يسدّد؛ مع مشاركته كصورة أو PDF. */
 class ReportActivity : AppCompatActivity() {
@@ -158,80 +149,21 @@ class ReportActivity : AppCompatActivity() {
         b.tvGeneratedAt.text = getString(R.string.report_generated, todaySimpleDate().format())
     }
 
-    /**
-     * نسخة من التقرير بالوضع الفاتح خارج الشاشة، بعرض ثابت،
-     * حتى تكون الصورة وملف PDF مقروءة ومناسبة للطباعة مهما كان مظهر التطبيق.
-     */
+    /** نسخة من التقرير بالوضع الفاتح خارج الشاشة للتصدير (انظر DocumentExport). */
     private fun renderForExport(report: MonthlyReport): View {
-        val config = Configuration(resources.configuration).apply {
-            uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or Configuration.UI_MODE_NIGHT_NO
-        }
-        val context = ContextThemeWrapper(createConfigurationContext(config), R.style.Theme_TalibPay)
-        val export = ActivityReportBinding.inflate(LayoutInflater.from(context))
-        bindReport(export, report, context)
+        val inflater = DocumentExport.inflater(this)
+        val export = ActivityReportBinding.inflate(inflater)
+        bindReport(export, report, inflater.context)
         // شريط التقدم لا يُرسم خارج الشاشة، فنخفيه بدل ترك فراغ
         export.duesProgress.visibility = View.GONE
-        val content = export.reportContent
-        (content.parent as ViewGroup).removeView(content)
-        // عرض بلا أب لا يرث اتجاه اللغة، فنحدده صراحة (يمين لليسار للعربية)
-        content.layoutDirection = resources.configuration.layoutDirection
-        content.measure(
-            View.MeasureSpec.makeMeasureSpec(EXPORT_WIDTH_PX, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        )
-        content.layout(0, 0, content.measuredWidth, content.measuredHeight)
-        return content
+        return DocumentExport.layout(this, export.reportContent)
     }
 
-    private fun shareImage(report: MonthlyReport) {
-        val content = renderForExport(report)
-        val bitmap = createBitmap(content.width, content.height)
-        content.draw(Canvas(bitmap))
-        val file = File(cacheDir, fileName(report, "png"))
-        FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        shareFile(file, "image/png")
-    }
+    private fun shareImage(report: MonthlyReport) =
+        DocumentExport.shareImage(this, renderForExport(report), fileName(report))
 
-    /** صفحات A4؛ التقرير الطويل يُقسَّم على عدة صفحات. */
-    private fun sharePdf(report: MonthlyReport) {
-        val content = renderForExport(report)
-        val scale = A4_WIDTH_PT.toFloat() / content.width
-        val pageHeightPx = A4_HEIGHT_PT / scale
-        val pages = ceil(content.height / pageHeightPx).toInt().coerceAtLeast(1)
+    private fun sharePdf(report: MonthlyReport) =
+        DocumentExport.sharePdf(this, renderForExport(report), fileName(report))
 
-        val pdf = PdfDocument()
-        try {
-            for (index in 0 until pages) {
-                val page = pdf.startPage(PdfDocument.PageInfo.Builder(A4_WIDTH_PT, A4_HEIGHT_PT, index + 1).create())
-                page.canvas.scale(scale, scale)
-                page.canvas.translate(0f, -index * pageHeightPx)
-                content.draw(page.canvas)
-                pdf.finishPage(page)
-            }
-            val file = File(cacheDir, fileName(report, "pdf"))
-            FileOutputStream(file).use { pdf.writeTo(it) }
-            shareFile(file, "application/pdf")
-        } finally {
-            pdf.close()
-        }
-    }
-
-    private fun fileName(report: MonthlyReport, extension: String) = "TalibPay-${report.month.key}.$extension"
-
-    private fun shareFile(file: File, mimeType: String) {
-        // الملف في cache الخاص بالتطبيق، ويُشارك عبر FileProvider بصلاحية قراءة مؤقتة
-        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = mimeType
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(intent, getString(R.string.share_chooser_title)))
-    }
-
-    private companion object {
-        const val EXPORT_WIDTH_PX = 1080
-        const val A4_WIDTH_PT = 595
-        const val A4_HEIGHT_PT = 842
-    }
+    private fun fileName(report: MonthlyReport) = "TalibPay-${report.month.key}"
 }

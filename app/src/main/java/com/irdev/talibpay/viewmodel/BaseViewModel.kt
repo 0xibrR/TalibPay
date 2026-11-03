@@ -25,6 +25,9 @@ sealed interface UiEvent {
     data object SignedOut : UiEvent
     data class StudentArchived(val student: StudentWithPayments) : UiEvent
     data class StudentRestored(val student: StudentWithPayments) : UiEvent
+
+    /** دفعة جديدة حُفظت؛ الشاشة السابقة تعرض إرسال إيصالها. */
+    data class PaymentSaved(val paymentId: String) : UiEvent
 }
 
 abstract class BaseViewModel : ViewModel() {

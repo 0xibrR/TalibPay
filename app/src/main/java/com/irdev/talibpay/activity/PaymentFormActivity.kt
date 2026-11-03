@@ -10,6 +10,7 @@ import androidx.core.widget.doAfterTextChanged
 import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityPaymentBinding
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.showCurrency
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
@@ -82,6 +83,10 @@ class PaymentFormActivity : AppCompatActivity() {
             when (event) {
                 is UiEvent.Message -> toast(event)
                 UiEvent.Finished -> finish()
+                is UiEvent.PaymentSaved -> {
+                    setResult(RESULT_OK, Intent().putExtra(Extras.PAYMENT_ID, event.paymentId))
+                    finish()
+                }
                 UiEvent.NotSignedIn -> {
                     startActivity(Intent(this, LoginActivity::class.java))
                     finishAffinity()
