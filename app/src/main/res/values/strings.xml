@@ -436,4 +436,25 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="statement_no_dues">No dues yet</string>
     <string name="statement_due_line">%1$s · paid %2$s · %3$s</string>
     <string name="statement_caption">Account statement for %1$s</string>
+    <string name="excel_export_menu">Export to Excel</string>
+    <string name="excel_caption">TalibPay data: students, dues and payments</string>
+    <string name="excel_nothing">No students to export yet</string>
+    <string name="excel_sheet_students">Students</string>
+    <string name="excel_sheet_dues">Dues</string>
+    <string name="excel_sheet_payments">Payments</string>
+    <string name="excel_col_name">Name</string>
+    <string name="excel_col_student">Student</string>
+    <string name="excel_col_due">Due</string>
+    <string name="excel_col_amount">Amount</string>
+    <string name="excel_col_discount">Discount</string>
+    <string name="excel_col_due_date">Due date</string>
+    <string name="excel_col_paid">Paid</string>
+    <string name="excel_col_from_wallet">From wallet</string>
+    <string name="excel_col_date">Date</string>
+    <string name="excel_col_total">Total</string>
+    <string name="excel_col_receipt">Receipt no.</string>
+    <string name="excel_col_status">Status</string>
+    <string name="excel_col_notes">Notes</string>
+    <string name="excel_status_active">Active</string>
+    <string name="excel_status_archived">Archived</string>
 </resources>

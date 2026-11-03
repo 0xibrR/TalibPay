@@ -93,7 +93,7 @@ object DocumentExport {
     }
 
     /** الملف في cache الخاص بالتطبيق، ويُشارك عبر FileProvider بصلاحية قراءة مؤقتة. */
-    private fun share(activity: Activity, file: File, mimeType: String, caption: String?) {
+    fun share(activity: Activity, file: File, mimeType: String, caption: String? = null) {
         val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = mimeType

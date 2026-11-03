@@ -2,6 +2,7 @@ package com.irdev.talibpay.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
@@ -13,6 +14,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -22,6 +24,7 @@ import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityMainBinding
 import com.irdev.talibpay.databinding.AlertDialogDeleteAllBinding
 import com.irdev.talibpay.util.CurrencyPrefs
+import com.irdev.talibpay.util.ExcelExport
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.ListPrefs
 import com.irdev.talibpay.util.applySystemBarInsets
@@ -41,6 +44,10 @@ import com.irdev.talibpay.viewmodel.StudentFilter
 import com.irdev.talibpay.viewmodel.StudentSort
 import com.irdev.talibpay.viewmodel.UiEvent
 import com.ncorti.slidetoact.SlideToActView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
@@ -183,6 +190,24 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /** كل الطلاب ومنهم المؤرشفون في ملف Excel واحد؛ الكتابة خارج الخيط الرئيسي. */
+    private fun exportExcel() {
+        val students = viewModel.uiState.value.everyone
+        if (students.isEmpty()) {
+            snackbar(getString(R.string.excel_nothing))
+            return
+        }
+        lifecycleScope.launch {
+            try {
+                val file = withContext(Dispatchers.IO) { ExcelExport.write(this@MainActivity, students) }
+                ExcelExport.share(this@MainActivity, file)
+            } catch (e: IOException) {
+                Log.w("MainActivity", "Excel export failed", e)
+                snackbar(getString(R.string.error_generic))
+            }
+        }
+    }
+
     private fun snackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
             .setAnchorView(binding.newStudentFAB)
@@ -259,6 +284,11 @@ class MainActivity : AppCompatActivity() {
 
             R.id.report_menu_item -> {
                 startActivity(Intent(this, ReportActivity::class.java))
+                return true
+            }
+
+            R.id.excel_menu_item -> {
+                exportExcel()
                 return true
             }
 

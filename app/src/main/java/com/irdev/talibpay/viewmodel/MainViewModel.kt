@@ -47,7 +47,9 @@ data class MainUiState(
     val sort: StudentSort = StudentSort.DEFAULT,
     /** عدد الطلاب في كل فلتر (ضمن نتيجة البحث)، للعرض على أزرار التصفية. */
     val filterCounts: Map<StudentFilter, Int> = emptyMap(),
-    val archivedCount: Int = 0
+    val archivedCount: Int = 0,
+    /** كل الطلاب ومنهم المؤرشفون (للتصدير). */
+    val everyone: List<StudentWithPayments> = emptyList()
 ) {
     val hasAnyStudent: Boolean get() = studentCount > 0
 }
@@ -90,6 +92,7 @@ class MainViewModel : BaseViewModel() {
             students = s.apply(searched.filter { f.matches(it, today) }, today, Locale.getDefault()),
             studentCount = list.size,
             archivedCount = all.size - list.size,
+            everyone = all,
             filter = f,
             sort = s,
             filterCounts = StudentFilter.entries.associateWith { entry -> searched.count { entry.matches(it, today) } },

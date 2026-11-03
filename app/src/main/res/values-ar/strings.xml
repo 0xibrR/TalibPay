@@ -453,4 +453,25 @@
     <string name="statement_no_dues">لا توجد مستحقات بعد</string>
     <string name="statement_due_line">%1$s · دُفع %2$s · %3$s</string>
     <string name="statement_caption">كشف حساب الطالب %1$s</string>
+    <string name="excel_export_menu">تصدير إلى Excel</string>
+    <string name="excel_caption">بيانات TalibPay: الطلاب والمستحقات والدفعات</string>
+    <string name="excel_nothing">لا يوجد طلاب للتصدير بعد</string>
+    <string name="excel_sheet_students">الطلاب</string>
+    <string name="excel_sheet_dues">المستحقات</string>
+    <string name="excel_sheet_payments">الدفعات</string>
+    <string name="excel_col_name">الاسم</string>
+    <string name="excel_col_student">الطالب</string>
+    <string name="excel_col_due">المستحق</string>
+    <string name="excel_col_amount">المبلغ</string>
+    <string name="excel_col_discount">الخصم</string>
+    <string name="excel_col_due_date">تاريخ الاستحقاق</string>
+    <string name="excel_col_paid">المدفوع</string>
+    <string name="excel_col_from_wallet">من المحفظة</string>
+    <string name="excel_col_date">التاريخ</string>
+    <string name="excel_col_total">المجموع</string>
+    <string name="excel_col_receipt">رقم الإيصال</string>
+    <string name="excel_col_status">الحالة</string>
+    <string name="excel_col_notes">ملاحظات</string>
+    <string name="excel_status_active">نشط</string>
+    <string name="excel_status_archived">مؤرشف</string>
 </resources>
