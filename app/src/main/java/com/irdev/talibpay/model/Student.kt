@@ -8,6 +8,7 @@ data class Student(
     val name: String = "",
     val birthYear: String = "",
     val registrationDate: String = "", // تاريخ التسجيل dd/MM/yyyy
+    val attendanceDays: String = "", // أيام الدوام مثل "SAT,TUE,THU" (انظر AttendanceDays)؛ فارغ = غير محددة
     val monthlyFee: Double = 0.0, // الرسوم الشهرية؛ 0 = لا رسوم تلقائية
     val discountType: String = "", // PERCENT أو AMOUNT؛ فارغ = بدون خصم
     val discountValue: Double = 0.0, // النسبة (0-100) أو المبلغ المخصوم من كل شهر

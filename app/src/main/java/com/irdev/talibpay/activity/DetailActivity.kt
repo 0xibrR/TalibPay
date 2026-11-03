@@ -36,6 +36,7 @@ import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.RefundValidation
 import com.irdev.talibpay.domain.WalletEntryType
 import com.irdev.talibpay.domain.entryType
+import com.irdev.talibpay.domain.attendanceDaySet
 import com.irdev.talibpay.domain.nextMonthlyDue
 import com.irdev.talibpay.domain.overdueDues
 import com.irdev.talibpay.domain.todaySimpleDate
@@ -45,6 +46,7 @@ import com.irdev.talibpay.util.showCurrency
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
+import com.irdev.talibpay.util.attendanceDaysText
 import com.irdev.talibpay.util.displayPhone
 import com.irdev.talibpay.util.monthlyFeeText
 import com.irdev.talibpay.util.dueTitle
@@ -166,6 +168,7 @@ class DetailActivity : AppCompatActivity() {
             rowPhone.bind(R.drawable.ic_phone, R.string.phone_number, displayPhone(student))
             rowBirthYear.bind(R.drawable.ic_cake, R.string.year_of_birth, student.birthYear)
             rowRegistrationDate.bind(R.drawable.ic_calendar, R.string.registration_date, student.registrationDate)
+            rowAttendanceDays.bind(R.drawable.ic_date_range, R.string.attendance_days, attendanceDaysText(student.attendanceDaySet))
             // الرسوم الشهرية وموعد الاستحقاق القادم
             val nextDue = student.nextMonthlyDue(todaySimpleDate())
             rowMonthlyFee.bind(

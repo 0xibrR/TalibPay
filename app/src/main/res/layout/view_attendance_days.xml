@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- أيام دوام الطالب (مشترك بين إضافة الطالب وتعديله)؛ اختياري -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/field_spacing"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/attendance_days_optional"
+        android:textAppearance="@style/TextAppearance.TalibPay.SectionTitle" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="@string/attendance_days_helper"
+        android:textAppearance="@style/TextAppearance.TalibPay.Caption" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/dayChips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <!-- "يوميًا" يحدد كل الأيام أو يلغيها -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipDaily"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/attendance_daily" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipSaturday"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/day_saturday" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipSunday"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/day_sunday" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipMonday"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/day_monday" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipTuesday"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/day_tuesday" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipWednesday"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/day_wednesday" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipThursday"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/day_thursday" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipFriday"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/day_friday" />
+    </com.google.android.material.chip.ChipGroup>
+</LinearLayout>

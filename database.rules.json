@@ -10,6 +10,7 @@
             "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
             "birthYear": { ".validate": "newData.isString() && newData.val().length <= 4" },
             "registrationDate": { ".validate": "newData.isString() && newData.val().length <= 10" },
+            "attendanceDays": { ".validate": "newData.isString() && newData.val().length <= 27 && newData.val().matches(/^((SAT|SUN|MON|TUE|WED|THU|FRI)(,(SAT|SUN|MON|TUE|WED|THU|FRI))*)?$/)" },
             "monthlyFee": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "billingStart": { ".validate": "newData.isString() && newData.val().length <= 10" },
             "lastBilledPeriod": { ".validate": "newData.isString() && newData.val().length <= 7" },

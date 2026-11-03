@@ -387,6 +387,10 @@
                         layout="@layout/item_row_info" />
 
                     <include
+                        android:id="@+id/rowAttendanceDays"
+                        layout="@layout/item_row_info" />
+
+                    <include
                         android:id="@+id/rowMonthlyFee"
                         layout="@layout/item_row_info" />
 

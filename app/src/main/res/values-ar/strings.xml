@@ -416,4 +416,18 @@
     <string name="lock_too_many_attempts">محاولات رمز خاطئة كثيرة. لحمايتك أُلغي قفل التطبيق وتم تسجيل خروجك.</string>
     <string name="lock_tampered">تم تعديل إعدادات القفل من خارج التطبيق. لحمايتك تم تسجيل خروجك.</string>
     <string name="lock_delete_digit">حذف</string>
+    <!-- أيام الدوام -->
+    <string name="attendance_days">أيام الدوام</string>
+    <string name="attendance_days_optional">أيام الدوام (اختياري)</string>
+    <string name="attendance_days_helper">الأيام التي يحضر فيها الطالب، لتسجيل الحضور لاحقًا</string>
+    <string name="attendance_daily">يوميًا</string>
+    <string name="attendance_days_not_set">غير محددة</string>
+    <string name="list_separator">"، "</string>
+    <string name="day_saturday">السبت</string>
+    <string name="day_sunday">الأحد</string>
+    <string name="day_monday">الاثنين</string>
+    <string name="day_tuesday">الثلاثاء</string>
+    <string name="day_wednesday">الأربعاء</string>
+    <string name="day_thursday">الخميس</string>
+    <string name="day_friday">الجمعة</string>
 </resources>

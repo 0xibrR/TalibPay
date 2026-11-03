@@ -14,6 +14,8 @@ import com.irdev.talibpay.domain.billingStartFor
 import com.irdev.talibpay.domain.billingStartOnUnarchive
 import com.irdev.talibpay.domain.discount
 import com.irdev.talibpay.domain.StudentDiscount
+import com.irdev.talibpay.domain.AttendanceDays
+import com.irdev.talibpay.domain.Weekday
 import com.irdev.talibpay.domain.isEnablingMonthlyFee
 import com.irdev.talibpay.domain.periodsDue
 import com.irdev.talibpay.domain.todaySimpleDate
@@ -62,6 +64,7 @@ data class StudentInput(
     val phoneCountryCode: String,
     val notes: String,
     val discount: StudentDiscount = StudentDiscount.NONE,
+    val attendanceDays: Set<Weekday> = emptySet(),
     /** عند إدخال الرسوم الشهرية لأول مرة: احتساب الأشهر السابقة منذ تاريخ التسجيل. */
     val backdateMonthlyFees: Boolean = false
 )
@@ -144,6 +147,7 @@ class StudentRepository(
             name = input.name,
             birthYear = input.birthYear,
             registrationDate = input.registrationDate,
+            attendanceDays = AttendanceDays.encode(input.attendanceDays),
             monthlyFee = input.monthlyFee,
             billingStart = billingStartFor(null, input.monthlyFee, input.registrationDate, today()),
             phoneNumber = input.phoneNumber,
@@ -172,6 +176,7 @@ class StudentRepository(
             "name" to input.name,
             "birthYear" to input.birthYear,
             "registrationDate" to input.registrationDate,
+            "attendanceDays" to AttendanceDays.encode(input.attendanceDays),
             "monthlyFee" to input.monthlyFee,
             "billingStart" to billingStart,
             "phoneNumber" to input.phoneNumber,

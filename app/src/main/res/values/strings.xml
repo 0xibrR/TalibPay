@@ -399,4 +399,18 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="lock_too_many_attempts">Too many wrong PIN attempts. For your security, the app lock was removed and you were signed out.</string>
     <string name="lock_tampered">The app lock settings were changed outside the app. For your security, you were signed out.</string>
     <string name="lock_delete_digit">Delete</string>
+    <!-- أيام الدوام -->
+    <string name="attendance_days">Attendance days</string>
+    <string name="attendance_days_optional">Attendance days (optional)</string>
+    <string name="attendance_days_helper">The days this student comes, for attendance later</string>
+    <string name="attendance_daily">Every day</string>
+    <string name="attendance_days_not_set">Not set</string>
+    <string name="list_separator">", "</string>
+    <string name="day_saturday">Saturday</string>
+    <string name="day_sunday">Sunday</string>
+    <string name="day_monday">Monday</string>
+    <string name="day_tuesday">Tuesday</string>
+    <string name="day_wednesday">Wednesday</string>
+    <string name="day_thursday">Thursday</string>
+    <string name="day_friday">Friday</string>
 </resources>

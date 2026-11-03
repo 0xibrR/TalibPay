@@ -79,6 +79,11 @@
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- أيام الدوام (اختياري) -->
+                <include
+                    android:id="@+id/attendanceDays"
+                    layout="@layout/view_attendance_days" />
+
                 <!-- الرسوم الشهرية: تُنشأ تلقائيًا في يوم التسجيل من كل شهر (اختياري) -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/monthlyFeeLayoutEdit"
