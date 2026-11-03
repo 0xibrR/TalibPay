@@ -2,6 +2,7 @@ package com.irdev.talibpay.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.irdev.talibpay.util.formatAmount
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.ChargeInput
 import com.irdev.talibpay.data.StudentRepository
@@ -67,7 +68,7 @@ class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() 
                 ChargeValidation.MissingTitle -> return@runAction send(UiEvent.Message(R.string.due_title_required))
                 ChargeValidation.InvalidAmount -> return@runAction send(UiEvent.Message(R.string.due_amount_required))
                 is ChargeValidation.BelowPaid -> return@runAction send(
-                    UiEvent.Message(R.string.due_below_paid, Money.format(result.alreadyPaid))
+                    UiEvent.Message(R.string.due_below_paid, formatAmount(result.alreadyPaid))
                 )
             }
             val input = ChargeInput(if (keepGeneratedTitle) "" else valid.title, valid.amount, dueDate, note)

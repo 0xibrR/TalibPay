@@ -9,6 +9,8 @@ import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityChargeBinding
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.todaySimpleDate
+import com.irdev.talibpay.util.money
+import com.irdev.talibpay.util.showCurrency
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.dueTitle
@@ -33,6 +35,7 @@ class ChargeFormActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityChargeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.amountLayout.showCurrency()
         applySystemBarInsets(binding.main, applyTop = false)
         setupToolbar(binding.toolbar)
         title = getString(if (viewModel.isEditing) R.string.edit_due else R.string.add_due)
@@ -65,7 +68,7 @@ class ChargeFormActivity : AppCompatActivity() {
                 binding.edtChargeNote.setText(due.charge.note)
                 if (due.paid > 0) {
                     binding.amountLayout.helperText =
-                        getString(R.string.due_paid_so_far, Money.format(due.paid))
+                        getString(R.string.due_paid_so_far, money(due.paid))
                 }
             } else {
                 // اقتراح: رسوم الشهر الحالي بنفس قيمة آخر مستحق

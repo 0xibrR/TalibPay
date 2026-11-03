@@ -9,6 +9,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentInput
 import com.irdev.talibpay.databinding.ActivityAddBinding
+import com.irdev.talibpay.util.showCurrency
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
@@ -37,6 +38,7 @@ class AddActivity : AppCompatActivity() {
         setupToolbar(binding.toolbar)
         title = getString(R.string.add_student)
 
+        binding.monthlyFeeLayout.showCurrency()
         binding.edtBirthYear.setOnClickListener {
             showYearPicker { binding.edtBirthYear.setText(it.toString()) }
         }

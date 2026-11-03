@@ -2,6 +2,7 @@ package com.irdev.talibpay.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.irdev.talibpay.util.formatAmount
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.PaymentInput
 import com.irdev.talibpay.data.StudentRepository
@@ -101,7 +102,7 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
                 PaymentValidation.InvalidAmount -> return@runAction send(UiEvent.Message(R.string.invalid_amount))
                 PaymentValidation.EmptyPayment -> return@runAction send(UiEvent.Message(R.string.payment_amount_required))
                 is PaymentValidation.ExceedsDue -> return@runAction send(
-                    UiEvent.Message(R.string.payment_exceeds_due, Money.format(result.maxAllowed))
+                    UiEvent.Message(R.string.payment_exceeds_due, formatAmount(result.maxAllowed))
                 )
             }
 

@@ -13,6 +13,7 @@ import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.pastDuesSinceRegistration
 import com.irdev.talibpay.domain.shouldAskToBackdate
 import com.irdev.talibpay.domain.todaySimpleDate
+import com.irdev.talibpay.util.showCurrency
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.collectWhileStarted
@@ -48,6 +49,7 @@ class EditActivity : AppCompatActivity() {
         // بعد تدوير الشاشة يحتفظ النظام بما كتبه المستخدم، فلا نعيد التعبئة
         prefilled = savedInstanceState != null
 
+        binding.monthlyFeeLayoutEdit.showCurrency()
         binding.edtBirthYearEdit.setOnClickListener {
             showYearPicker { binding.edtBirthYearEdit.setText(it.toString()) }
         }

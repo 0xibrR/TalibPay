@@ -138,11 +138,11 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="backdate_no">No, start from the next cycle</string>
     <string name="share_phone">📞 Phone Number: %1$s</string>
     <string name="share_payment_date">🗓️ Payment Date: %1$s</string>
-    <string name="share_paid_cash">💰 Paid in Cash: %1$.2f NIS</string>
-    <string name="share_paid_bank">🏦 Paid by Bank: %1$.2f NIS</string>
-    <string name="share_paid_total">💸 Total Paid: %1$.2f NIS</string>
-    <string name="share_total_amount">📊 Total Fees: %1$.2f NIS</string>
-    <string name="share_remaining">💼 Remaining: %1$.2f NIS</string>
+    <string name="share_paid_cash">💰 Paid in Cash: %1$s</string>
+    <string name="share_paid_bank">🏦 Paid by Bank: %1$s</string>
+    <string name="share_paid_total">💸 Total Paid: %1$s</string>
+    <string name="share_total_amount">📊 Total Fees: %1$s</string>
+    <string name="share_remaining">💼 Remaining: %1$s</string>
     <string name="share_payment_method">💳 Payment Method: %1$s</string>
     <string name="share_notes">📝 Notes: %1$s</string>
     <string name="share_added_at">🕓 Added On: %1$s</string>
@@ -209,7 +209,6 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
 
     <!-- التصميم الجديد -->
     <string name="currency_symbol" translatable="false">₪</string>
-    <string name="amount_currency" translatable="false">%1$s ₪</string>
     <string name="app_tagline">Student tuition payments, organized</string>
     <string name="register_subtitle">Create an account to start managing your students.</string>
     <string name="password_requirements">At least 8 characters</string>
@@ -261,7 +260,7 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="wallet_available">Available: %1$s</string>
     <string name="refund_title">Refund from wallet</string>
     <string name="refund_amount">Refund amount</string>
-    <string name="refund_exceeds_balance">The amount is more than the wallet balance (%1$s ₪)</string>
+    <string name="refund_exceeds_balance">The amount is more than the wallet balance (%1$s)</string>
     <string name="refund_done">Refund recorded</string>
     <string name="refund_balance_changed">The wallet balance has changed. Check it and try again.</string>
     <string name="payment_locked_by_wallet">This payment added credit to the wallet, so it can\'t be edited or deleted.</string>
@@ -292,10 +291,10 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="due_title_month">Fees – %1$s</string>
     <string name="due_amount">Amount</string>
     <string name="due_date_optional">Due date (optional)</string>
-    <string name="due_paid_so_far">Already paid: %1$s ₪. The amount can\'t be lower.</string>
+    <string name="due_paid_so_far">Already paid: %1$s. The amount can\'t be lower.</string>
     <string name="due_title_required">Enter a name for the due</string>
     <string name="due_amount_required">Enter an amount greater than 0</string>
-    <string name="due_below_paid">The amount can\'t be less than what\'s already paid (%1$s ₪)</string>
+    <string name="due_below_paid">The amount can\'t be less than what\'s already paid (%1$s)</string>
     <string name="due_added">Due added</string>
     <string name="due_deleted">Due deleted</string>
     <string name="due_has_payments">This due has payments or a wallet deduction, so it can\'t be deleted. Edit it instead.</string>
@@ -322,7 +321,7 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="payment_preview">This payment: %1$s · left on the due after it: %2$s</string>
     <string name="payment_preview_exceeds">This payment (%1$s) is more than what\'s left on the due (%2$s)</string>
     <string name="payment_amount_required">Enter a cash or bank amount</string>
-    <string name="payment_exceeds_due">The payment is more than what\'s left on this due. The most you can pay is %1$s ₪.</string>
+    <string name="payment_exceeds_due">The payment is more than what\'s left on this due. The most you can pay is %1$s.</string>
     <string name="share_due_line">• %1$s: paid %2$s of %3$s (left %4$s)</string>
 
     <plurals name="dues_count">
@@ -354,11 +353,26 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="reminder_none_overdue">No students have overdue fees.</string>
     <string name="reminder_overdue_item">%1$s · %2$s</string>
     <string name="reminder_overdue_item_sent">✓ %1$s · %2$s</string>
-    <string name="settings_reminders">Reminders</string>
-    <string name="whatsapp_country_code">Default country code</string>
     <string name="country_code">Code</string>
     <string name="country_code_item">%1$s · %2$s</string>
-    <string name="country_code_value">\u200E+%1$s</string>
-    <string name="country_code_hint">Pre-filled for new students, and used for students who have no country code of their own.</string>
     <string name="invalid_country_code">Enter a valid country code (1 to 3 digits)</string>
+    <!-- العملة -->
+    <string name="settings_currency">Currency</string>
+    <string name="currency_item">%1$s · %2$s</string>
+    <string name="currency_ils">Israeli shekel</string>
+    <string name="currency_usd">US dollar</string>
+    <string name="currency_eur">Euro</string>
+    <string name="currency_jod">Jordanian dinar</string>
+    <string name="currency_egp">Egyptian pound</string>
+    <string name="currency_sar">Saudi riyal</string>
+    <string name="currency_aed">UAE dirham</string>
+    <string name="currency_qar">Qatari riyal</string>
+    <string name="currency_kwd">Kuwaiti dinar</string>
+    <string name="currency_bhd">Bahraini dinar</string>
+    <string name="currency_omr">Omani rial</string>
+    <string name="currency_iqd">Iraqi dinar</string>
+    <string name="currency_lbp">Lebanese pound</string>
+    <string name="currency_syp">Syrian pound</string>
+    <string name="currency_try">Turkish lira</string>
+    <string name="currency_gbp">British pound</string>
 </resources>

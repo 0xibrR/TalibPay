@@ -20,6 +20,7 @@ import com.irdev.talibpay.adapter.StudentAdapter
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityMainBinding
 import com.irdev.talibpay.databinding.AlertDialogDeleteAllBinding
+import com.irdev.talibpay.util.CurrencyPrefs
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.attachSwipeActions
@@ -45,8 +46,12 @@ class MainActivity : AppCompatActivity() {
     // الطلاب الذين أُرسل لهم تذكير في هذه الجلسة (لتمييزهم في القائمة)
     private val remindedIds = mutableSetOf<String>()
 
+    // العملة التي رُسمت بها الشاشة؛ إن تغيّرت من الإعدادات نعيد رسمها عند العودة
+    private lateinit var shownCurrency: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        shownCurrency = CurrencyPrefs.current(this).symbol
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -167,6 +172,11 @@ class MainActivity : AppCompatActivity() {
             .setMessage(message)
             .setPositiveButton(R.string.ok, null)
             .show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (CurrencyPrefs.current(this).symbol != shownCurrency) recreate()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -2,6 +2,7 @@ package com.irdev.talibpay.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.irdev.talibpay.util.formatAmount
 import com.irdev.talibpay.data.StudentRepository
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.domain.DueSummary
@@ -47,7 +48,7 @@ class DetailViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() {
             is RefundValidation.Valid -> result.amount
             RefundValidation.InvalidAmount -> return send(UiEvent.Message(R.string.invalid_amount))
             is RefundValidation.ExceedsBalance -> return send(
-                UiEvent.Message(R.string.refund_exceeds_balance, Money.format(result.balance))
+                UiEvent.Message(R.string.refund_exceeds_balance, formatAmount(result.balance))
             )
         }
         runAction {

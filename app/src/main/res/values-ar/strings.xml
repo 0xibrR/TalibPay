@@ -147,11 +147,11 @@
     <string name="backdate_no">لا، من الدورة القادمة</string>
     <string name="share_phone">📞 رقم الهاتف: %1$s</string>
     <string name="share_payment_date">🗓️ تاريخ الدفع: %1$s</string>
-    <string name="share_paid_cash">💰 مدفوع كاش: %1$.2f شيكل</string>
-    <string name="share_paid_bank">🏦 مدفوع بنكي: %1$.2f شيكل</string>
-    <string name="share_paid_total">💸 إجمالي المدفوع: %1$.2f شيكل</string>
-    <string name="share_total_amount">📊 المبلغ الإجمالي: %1$.2f شيكل</string>
-    <string name="share_remaining">💼 المتبقي: %1$.2f شيكل</string>
+    <string name="share_paid_cash">💰 مدفوع كاش: %1$s</string>
+    <string name="share_paid_bank">🏦 مدفوع بنكي: %1$s</string>
+    <string name="share_paid_total">💸 إجمالي المدفوع: %1$s</string>
+    <string name="share_total_amount">📊 المبلغ الإجمالي: %1$s</string>
+    <string name="share_remaining">💼 المتبقي: %1$s</string>
     <string name="share_payment_method">💳 طريقة الدفع: %1$s</string>
     <string name="share_notes">📝 ملاحظات: %1$s</string>
     <string name="share_added_at">🕓 تاريخ الإضافة: %1$s</string>
@@ -261,7 +261,7 @@
     <string name="wallet_available">المتاح: %1$s</string>
     <string name="refund_title">استرداد من المحفظة</string>
     <string name="refund_amount">مبلغ الاسترداد</string>
-    <string name="refund_exceeds_balance">المبلغ أكبر من رصيد المحفظة (%1$s ₪)</string>
+    <string name="refund_exceeds_balance">المبلغ أكبر من رصيد المحفظة (%1$s)</string>
     <string name="refund_done">تم تسجيل الاسترداد</string>
     <string name="refund_balance_changed">تغيّر رصيد المحفظة. تحقق منه وحاول مرة أخرى.</string>
     <string name="payment_locked_by_wallet">أضافت هذه الدفعة رصيدًا للمحفظة، لذا لا يمكن تعديلها أو حذفها.</string>
@@ -300,10 +300,10 @@
     <string name="due_title_month">رسوم %1$s</string>
     <string name="due_amount">القيمة</string>
     <string name="due_date_optional">تاريخ الاستحقاق (اختياري)</string>
-    <string name="due_paid_so_far">دُفع منه حتى الآن %1$s ₪، ولا يمكن أن تقل القيمة عنه.</string>
+    <string name="due_paid_so_far">دُفع منه حتى الآن %1$s، ولا يمكن أن تقل القيمة عنه.</string>
     <string name="due_title_required">أدخل اسمًا للمستحق</string>
     <string name="due_amount_required">أدخل قيمة أكبر من 0</string>
-    <string name="due_below_paid">لا يمكن أن تقل القيمة عمّا دُفع منها (%1$s ₪)</string>
+    <string name="due_below_paid">لا يمكن أن تقل القيمة عمّا دُفع منها (%1$s)</string>
     <string name="due_added">تمت إضافة المستحق</string>
     <string name="due_deleted">تم حذف المستحق</string>
     <string name="due_has_payments">لهذا المستحق دفعات أو خصم من المحفظة، لذا لا يمكن حذفه. عدّله بدلًا من ذلك.</string>
@@ -330,7 +330,7 @@
     <string name="payment_preview">هذه الدفعة: %1$s · المتبقي من المستحق بعدها: %2$s</string>
     <string name="payment_preview_exceeds">هذه الدفعة (%1$s) أكبر من المتبقي على المستحق (%2$s)</string>
     <string name="payment_amount_required">أدخل مبلغًا نقديًا أو بنكيًا</string>
-    <string name="payment_exceeds_due">الدفعة أكبر من المتبقي على هذا المستحق. أقصى مبلغ يمكن دفعه هو %1$s ₪.</string>
+    <string name="payment_exceeds_due">الدفعة أكبر من المتبقي على هذا المستحق. أقصى مبلغ يمكن دفعه هو %1$s.</string>
     <string name="share_due_line">• %1$s: دُفع %2$s من %3$s (متبقٍ %4$s)</string>
 
     <plurals name="dues_count">
@@ -364,11 +364,26 @@
     <string name="reminder_none_overdue">لا يوجد طلاب عليهم رسوم متأخرة.</string>
     <string name="reminder_overdue_item">%1$s · %2$s</string>
     <string name="reminder_overdue_item_sent">✓ %1$s · %2$s</string>
-    <string name="settings_reminders">التذكيرات</string>
-    <string name="whatsapp_country_code">رمز الدولة الافتراضي</string>
     <string name="country_code">الرمز</string>
     <string name="country_code_item">%1$s · %2$s</string>
-    <string name="country_code_value">\u200E+%1$s</string>
-    <string name="country_code_hint">يُعبّأ تلقائيًا للطلاب الجدد، ويُستخدم للطلاب الذين ليس لهم رمز دولة خاص.</string>
     <string name="invalid_country_code">أدخل رمز دولة صالحًا (من 1 إلى 3 أرقام)</string>
+    <!-- العملة -->
+    <string name="settings_currency">العملة</string>
+    <string name="currency_item">%1$s · %2$s</string>
+    <string name="currency_ils">شيكل</string>
+    <string name="currency_usd">دولار أمريكي</string>
+    <string name="currency_eur">يورو</string>
+    <string name="currency_jod">دينار أردني</string>
+    <string name="currency_egp">جنيه مصري</string>
+    <string name="currency_sar">ريال سعودي</string>
+    <string name="currency_aed">درهم إماراتي</string>
+    <string name="currency_qar">ريال قطري</string>
+    <string name="currency_kwd">دينار كويتي</string>
+    <string name="currency_bhd">دينار بحريني</string>
+    <string name="currency_omr">ريال عُماني</string>
+    <string name="currency_iqd">دينار عراقي</string>
+    <string name="currency_lbp">ليرة لبنانية</string>
+    <string name="currency_syp">ليرة سورية</string>
+    <string name="currency_try">ليرة تركية</string>
+    <string name="currency_gbp">جنيه إسترليني</string>
 </resources>

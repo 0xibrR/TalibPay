@@ -28,6 +28,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.textfield.TextInputLayout
 import com.irdev.talibpay.R
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.YearMonth
@@ -65,9 +66,16 @@ fun AppCompatActivity.setupToolbar(toolbar: MaterialToolbar, showUp: Boolean = t
     }
 }
 
-/** المبلغ مع رمز العملة بتنسيق لغة الجهاز. */
-fun Context.money(value: Double): String =
-    getString(R.string.amount_currency, Money.format(value))
+/** المبلغ مع رمز العملة المختارة في الإعدادات، بتنسيق لغة الجهاز. */
+fun Context.money(value: Double): String {
+    CurrencyPrefs.current(this) // يحمّل العملة إن لم تكن محمّلة
+    return formatAmount(value)
+}
+
+/** يعرض رمز العملة المختارة داخل حقل المبلغ. */
+fun TextInputLayout.showCurrency() {
+    suffixText = CurrencyPrefs.current(context).symbol
+}
 
 /** اسم المستحق، أو "الرسوم" لمستحق البيانات القديمة الذي لا اسم له. */
 fun Context.dueTitle(charge: Charge): String {

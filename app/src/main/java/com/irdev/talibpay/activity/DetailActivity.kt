@@ -41,6 +41,7 @@ import com.irdev.talibpay.domain.overdueDues
 import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.domain.validateRefund
 import com.irdev.talibpay.model.Payment
+import com.irdev.talibpay.util.showCurrency
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
@@ -220,6 +221,7 @@ class DetailActivity : AppCompatActivity() {
         val balance = viewModel.student.value?.ledger?.walletBalance ?: return
         val dialogBinding = DialogRefundBinding.inflate(layoutInflater)
         dialogBinding.edtRefundAmount.setText(Money.format(balance, Locale.US).replace(",", ""))
+        dialogBinding.refundAmountLayout.showCurrency()
         dialogBinding.refundAmountLayout.helperText = getString(R.string.wallet_available, money(balance))
         val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.refund_title)
@@ -234,7 +236,7 @@ class DetailActivity : AppCompatActivity() {
                 is RefundValidation.Valid -> null
                 RefundValidation.InvalidAmount -> getString(R.string.invalid_amount)
                 is RefundValidation.ExceedsBalance ->
-                    getString(R.string.refund_exceeds_balance, Money.format(result.balance))
+                    getString(R.string.refund_exceeds_balance, money(result.balance))
             }
             dialogBinding.refundAmountLayout.error = error
             if (error == null) {
@@ -403,11 +405,11 @@ class DetailActivity : AppCompatActivity() {
             getString(R.string.share_registration_date, s.registrationDate.ifBlank { getString(R.string.none_value) }),
             getString(R.string.share_phone, displayPhone(s)),
             "",
-            getString(R.string.share_paid_cash, s.paidCash),
-            getString(R.string.share_paid_bank, s.paidBank),
-            getString(R.string.share_paid_total, s.paid),
-            getString(R.string.share_total_amount, s.total),
-            getString(R.string.share_remaining, s.remaining),
+            getString(R.string.share_paid_cash, money(s.paidCash)),
+            getString(R.string.share_paid_bank, money(s.paidBank)),
+            getString(R.string.share_paid_total, money(s.paid)),
+            getString(R.string.share_total_amount, money(s.total)),
+            getString(R.string.share_remaining, money(s.remaining)),
             "",
             getString(R.string.dues_title)
         ) + dueLines + listOf(

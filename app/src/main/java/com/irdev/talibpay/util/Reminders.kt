@@ -14,7 +14,10 @@ import com.irdev.talibpay.domain.PhoneNumbers
 import com.irdev.talibpay.domain.overdueTotal
 import com.irdev.talibpay.model.Student
 
-/** رمز الدولة المستخدم لتحويل الأرقام المحلية إلى صيغة واتساب الدولية. */
+/**
+ * آخر رمز دولة اختاره المستخدم لطالب: يُعبّأ تلقائيًا للطالب التالي،
+ * ويُستخدم للطلاب القدامى الذين ليس لهم رمز خاص.
+ */
 object ReminderPrefs {
     private const val PREFS = "appSettings"
     private const val KEY_COUNTRY_CODE = "WhatsAppCountryCode"
@@ -94,7 +97,10 @@ fun Context.sendReminder(student: Student, message: String) {
     }
 }
 
-/** يقرأ رمز الدولة من الحقل ويتحقق منه؛ يعرض الخطأ ويعيد null إن لم يكن صالحًا. */
+/**
+ * يقرأ رمز الدولة من الحقل ويتحقق منه؛ يعرض الخطأ ويعيد null إن لم يكن صالحًا.
+ * الرمز الصالح يُحفظ ليكون الافتراضي للطالب التالي.
+ */
 fun MaterialAutoCompleteTextView.requireCountryCode(layout: TextInputLayout): String? {
     val code = text?.toString()?.trim().orEmpty()
     if (!PhoneNumbers.isValidCountryCode(code)) {
@@ -103,5 +109,6 @@ fun MaterialAutoCompleteTextView.requireCountryCode(layout: TextInputLayout): St
         return null
     }
     layout.error = null
+    ReminderPrefs.setCountryCode(context, code)
     return code
 }

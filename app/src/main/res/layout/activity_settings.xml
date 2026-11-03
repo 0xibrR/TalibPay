@@ -182,20 +182,20 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- التذكيرات: رمز الدولة لتحويل الأرقام المحلية إلى صيغة واتساب -->
+                <!-- العملة المعروضة مع كل المبالغ في التطبيق -->
                 <TextView
                     style="@style/Widget.TalibPay.SettingsHeader"
-                    android:text="@string/settings_reminders" />
+                    android:text="@string/settings_currency" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnCountryCode"
+                        android:id="@+id/btnCurrency"
                         style="@style/Widget.TalibPay.SettingsItem"
-                        android:text="@string/whatsapp_country_code"
-                        app:icon="@drawable/ic_chat" />
+                        android:text="@string/settings_currency"
+                        app:icon="@drawable/ic_cash" />
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- الحساب -->

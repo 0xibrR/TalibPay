@@ -10,6 +10,7 @@ import androidx.core.widget.doAfterTextChanged
 import com.irdev.talibpay.R
 import com.irdev.talibpay.databinding.ActivityPaymentBinding
 import com.irdev.talibpay.domain.Money
+import com.irdev.talibpay.util.showCurrency
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.dueTitle
@@ -39,6 +40,8 @@ class PaymentFormActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityPaymentBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.cashLayout.showCurrency()
+        binding.bankLayout.showCurrency()
         applySystemBarInsets(binding.main, applyTop = false)
         setupToolbar(binding.toolbar)
         title = getString(if (viewModel.isEditing) R.string.edit_pyment else R.string.add_payment)
