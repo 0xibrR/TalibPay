@@ -69,6 +69,16 @@ class DetailViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() {
         }
     }
 
+    fun archive() = runAction {
+        repository.archiveStudent(studentId)
+        send(UiEvent.Message(R.string.student_archived))
+    }
+
+    fun unarchive() = runAction {
+        repository.unarchiveStudent(studentId)
+        send(UiEvent.Message(R.string.student_unarchived))
+    }
+
     fun deleteStudent() = runAction {
         repository.deleteStudent(studentId)
     }

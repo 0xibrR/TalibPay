@@ -20,6 +20,8 @@ data class Student(
     val phoneNumber: String = "",
     val phoneCountryCode: String = "", // رمز الدولة لرقم الهاتف (مثل 970)؛ فارغ = الرمز الافتراضي من الإعدادات
     val notes: String = "",
+    val archived: Boolean = false, // مؤرشف: مخفي من القائمة الرئيسية ولا تُنشأ له رسوم شهرية جديدة
+    val archivedAt: Long = 0, // وقت الأرشفة (epoch millis)
     val addedAt: Long = 0, // وقت الإضافة (epoch millis)
     val updatedAt: Long = 0, // وقت آخر تعديل (epoch millis)
     // حقول نصية من النسخ القديمة، تُقرأ فقط عند غياب الطوابع الزمنية

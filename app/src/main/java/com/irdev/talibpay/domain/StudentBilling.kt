@@ -19,6 +19,7 @@ val Student.hasMonthlyBilling: Boolean
 
 /** الأشهر التي حان موعد رسومها ولم تُنشأ بعد. */
 fun Student.periodsDue(today: SimpleDate): List<BillingPeriod> {
+    if (archived) return emptyList()
     if (monthlyFee <= 0) return emptyList()
     val registration = SimpleDate.parse(registrationDate) ?: return emptyList()
     val start = SimpleDate.parse(billingStart) ?: registration
@@ -27,6 +28,7 @@ fun Student.periodsDue(today: SimpleDate): List<BillingPeriod> {
 
 /** موعد الاستحقاق القادم، أو null إن لم تكن للطالب رسوم شهرية. */
 fun Student.nextMonthlyDue(today: SimpleDate): SimpleDate? {
+    if (archived) return null
     if (monthlyFee <= 0) return null
     val registration = SimpleDate.parse(registrationDate) ?: return null
     val start = SimpleDate.parse(billingStart) ?: registration
@@ -75,3 +77,10 @@ fun pastDuesSinceRegistration(registrationDate: String, today: SimpleDate): List
     val registration = SimpleDate.parse(registrationDate) ?: return emptyList()
     return MonthlyBilling.periodsDue(registration, registration, null, today).filter { it.dueDate < today }
 }
+
+/**
+ * بداية الفوترة عند إلغاء أرشفة الطالب: تُستأنف الرسوم الشهرية من اليوم،
+ * فلا تُحتسب الأشهر التي قضاها في الأرشيف.
+ */
+fun billingStartOnUnarchive(student: Student, today: SimpleDate): String =
+    if (student.monthlyFee > 0) today.format() else student.billingStart

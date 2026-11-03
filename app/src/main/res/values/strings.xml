@@ -388,4 +388,19 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="sort_remaining">Highest remaining</string>
     <string name="sort_overdue">Longest overdue</string>
     <string name="no_matching_students">No students match this filter or search.</string>
+    <!-- الأرشفة -->
+    <string name="archive_title_screen">Archive</string>
+    <string name="archive_student">Archive student</string>
+    <string name="unarchive_student">Restore from archive</string>
+    <string name="archive_title">Archive %1$s?</string>
+    <string name="archive_message">The student will be hidden from the list and the totals, and no new monthly fees will be added. All payments, dues and wallet history stay saved, and you can restore the student at any time from Archive.</string>
+    <string name="archive_remaining_warning">Note: %1$s is still unpaid. It stays recorded on the student.</string>
+    <string name="unarchive_title">Restore %1$s?</string>
+    <string name="unarchive_message">The student will appear in the list again.</string>
+    <string name="unarchive_message_with_fee">The student will appear in the list again, and the monthly fee of %1$s will start again from today. Months spent in the archive are not charged.</string>
+    <string name="student_archived">Student archived</string>
+    <string name="student_unarchived">Student restored to the list</string>
+    <string name="archived_banner">This student is archived: hidden from the list and no new monthly fees are added. Use the menu to restore them.</string>
+    <string name="monthly_fee_paused">%1$s · paused while archived</string>
+    <string name="archive_empty">No archived students.\nArchive a student from their page when they stop attending.</string>
 </resources>

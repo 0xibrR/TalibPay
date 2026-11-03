@@ -32,6 +32,20 @@
             android:orientation="vertical"
             android:padding="@dimen/screen_padding">
 
+            <!-- الطالب مؤرشف: مخفي من القائمة ولا تُنشأ له رسوم شهرية جديدة -->
+            <TextView
+                android:id="@+id/tvArchivedBanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_note"
+                android:padding="16dp"
+                android:text="@string/archived_banner"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
             <!-- بطاقة الطالب (تُشارك كصورة) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/student_card_layout"

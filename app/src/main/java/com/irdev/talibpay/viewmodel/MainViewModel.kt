@@ -39,7 +39,8 @@ data class MainUiState(
     val filter: StudentFilter = StudentFilter.ALL,
     val sort: StudentSort = StudentSort.DEFAULT,
     /** عدد الطلاب في كل فلتر (ضمن نتيجة البحث)، للعرض على أزرار التصفية. */
-    val filterCounts: Map<StudentFilter, Int> = emptyMap()
+    val filterCounts: Map<StudentFilter, Int> = emptyMap(),
+    val archivedCount: Int = 0
 ) {
     val hasAnyStudent: Boolean get() = studentCount > 0
 }
@@ -72,13 +73,16 @@ class MainViewModel : BaseViewModel() {
         }
 
     // المستمع على Firebase يعمل فقط أثناء ظهور الشاشة (+5 ثوانٍ لتغيير الاتجاه)
-    val uiState: StateFlow<MainUiState> = combine(allStudents, query, filter, sort) { list, q, f, s ->
+    val uiState: StateFlow<MainUiState> = combine(allStudents, query, filter, sort) { all, q, f, s ->
+        // المؤرشفون في شاشة الأرشيف فقط: لا يظهرون في القائمة ولا في الملخص ولا في التذكير
+        val list = all.filterNot { it.student.archived }
         val today = todaySimpleDate()
         val searched = search(list, q)
         MainUiState(
             loading = false,
             students = s.apply(searched.filter { f.matches(it, today) }, today, Locale.getDefault()),
             studentCount = list.size,
+            archivedCount = all.size - list.size,
             filter = f,
             sort = s,
             filterCounts = StudentFilter.entries.associateWith { entry -> searched.count { entry.matches(it, today) } },

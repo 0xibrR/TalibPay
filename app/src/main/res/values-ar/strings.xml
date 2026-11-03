@@ -399,4 +399,19 @@
     <string name="sort_remaining">الأعلى متبقيًا</string>
     <string name="sort_overdue">الأقدم تأخرًا</string>
     <string name="no_matching_students">لا يوجد طلاب مطابقون لهذا الفلتر أو البحث.</string>
+    <!-- الأرشفة -->
+    <string name="archive_title_screen">الأرشيف</string>
+    <string name="archive_student">أرشفة الطالب</string>
+    <string name="unarchive_student">إلغاء الأرشفة</string>
+    <string name="archive_title">أرشفة %1$s؟</string>
+    <string name="archive_message">سيختفي الطالب من القائمة ومن الملخص، ولن تُنشأ له رسوم شهرية جديدة. كل دفعاته ومستحقاته وحركات محفظته تبقى محفوظة، ويمكنك إرجاعه في أي وقت من الأرشيف.</string>
+    <string name="archive_remaining_warning">ملاحظة: ما زال عليه %1$s غير مدفوع، ويبقى مسجّلًا عليه.</string>
+    <string name="unarchive_title">إرجاع %1$s من الأرشيف؟</string>
+    <string name="unarchive_message">سيظهر الطالب في القائمة من جديد.</string>
+    <string name="unarchive_message_with_fee">سيظهر الطالب في القائمة من جديد، وتُستأنف رسومه الشهرية (%1$s) من اليوم. الأشهر التي قضاها في الأرشيف لا تُحتسب.</string>
+    <string name="student_archived">تمت أرشفة الطالب</string>
+    <string name="student_unarchived">أُعيد الطالب إلى القائمة</string>
+    <string name="archived_banner">هذا الطالب مؤرشف: مخفي من القائمة ولا تُنشأ له رسوم شهرية جديدة. لإرجاعه اختر «إلغاء الأرشفة» من القائمة.</string>
+    <string name="monthly_fee_paused">%1$s · متوقفة أثناء الأرشفة</string>
+    <string name="archive_empty">لا يوجد طلاب مؤرشفون.\nأرشف الطالب من صفحته عندما يتوقف عن الحضور.</string>
 </resources>

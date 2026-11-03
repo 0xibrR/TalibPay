@@ -147,6 +147,10 @@ class DetailActivity : AppCompatActivity() {
             tvStatTotal.text = money(student.total)
             tvStatRemaining.text = money(student.remaining)
             btnRemind.isVisible = data.ledger.overdueDues(todaySimpleDate()).isNotEmpty()
+            if (tvArchivedBanner.isVisible != student.archived) {
+                tvArchivedBanner.isVisible = student.archived
+                invalidateOptionsMenu() // أرشفة أو إلغاء أرشفة: تبديل خيار القائمة
+            }
 
             // المستحقات
             val dueCount = data.dues.size
@@ -165,8 +169,12 @@ class DetailActivity : AppCompatActivity() {
             val nextDue = student.nextMonthlyDue(todaySimpleDate())
             rowMonthlyFee.bind(
                 R.drawable.ic_cash, R.string.monthly_fee,
-                if (nextDue != null) getString(R.string.monthly_fee_value, money(student.monthlyFee), nextDue.format())
-                else getString(R.string.monthly_fee_not_set)
+                when {
+                    nextDue != null -> getString(R.string.monthly_fee_value, money(student.monthlyFee), nextDue.format())
+                    student.archived && student.monthlyFee > 0 ->
+                        getString(R.string.monthly_fee_paused, money(student.monthlyFee))
+                    else -> getString(R.string.monthly_fee_not_set)
+                }
             )
             rowAdded.bind(
                 R.drawable.ic_schedule, R.string.added,
@@ -347,9 +355,26 @@ class DetailActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        val archived = viewModel.student.value?.student?.archived == true
+        menu.findItem(R.id.menu_archive)?.isVisible = !archived
+        menu.findItem(R.id.menu_unarchive)?.isVisible = archived
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val data = viewModel.student.value
         when (item.itemId) {
+            R.id.menu_archive -> {
+                data?.let(::confirmArchive)
+                return true
+            }
+
+            R.id.menu_unarchive -> {
+                data?.let(::confirmUnarchive)
+                return true
+            }
+
             R.id.menu_edit -> {
                 startActivity(
                     Intent(this, EditActivity::class.java)
@@ -381,6 +406,37 @@ class DetailActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    /** الأرشفة لا تحذف شيئًا؛ ننبّه فقط إن بقي على الطالب مبلغ حتى لا يُنسى. */
+    private fun confirmArchive(data: StudentWithPayments) {
+        val student = data.student
+        val message = buildString {
+            append(getString(R.string.archive_message))
+            if (student.remaining > 0) {
+                append("\n\n")
+                append(getString(R.string.archive_remaining_warning, money(student.remaining)))
+            }
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.archive_title, student.name))
+            .setMessage(message)
+            .setPositiveButton(R.string.archive_student) { _, _ -> viewModel.archive() }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun confirmUnarchive(data: StudentWithPayments) {
+        val message = if (data.student.monthlyFee > 0)
+            getString(R.string.unarchive_message_with_fee, money(data.student.monthlyFee))
+        else
+            getString(R.string.unarchive_message)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.unarchive_title, data.student.name))
+            .setMessage(message)
+            .setPositiveButton(R.string.unarchive_student) { _, _ -> viewModel.unarchive() }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     /** يفتح واتساب على رقم الطالب برسالة جاهزة فيها المستحقات المتأخرة ومجموعها. */

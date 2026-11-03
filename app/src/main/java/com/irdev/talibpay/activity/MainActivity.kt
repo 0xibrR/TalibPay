@@ -216,6 +216,15 @@ class MainActivity : AppCompatActivity() {
         if (CurrencyPrefs.current(this).symbol != shownCurrency) recreate()
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        // عدد المؤرشفين بجانب "الأرشيف"
+        val count = viewModel.uiState.value.archivedCount
+        menu.findItem(R.id.archive_menu_item)?.title =
+            if (count > 0) getString(R.string.filter_with_count, getString(R.string.archive_title_screen), count)
+            else getString(R.string.archive_title_screen)
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
 
@@ -249,6 +258,11 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.settings_menu_item -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+                return true
+            }
+
+            R.id.archive_menu_item -> {
+                startActivity(Intent(this, ArchiveActivity::class.java))
                 return true
             }
 

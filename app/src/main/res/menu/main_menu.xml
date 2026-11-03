@@ -13,6 +13,10 @@
         android:title="@string/settings"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/archive_menu_item"
+        android:title="@string/archive_title_screen"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/remindOverdue_menu_item"
         android:title="@string/reminder_overdue_menu"
         app:showAsAction="never" />

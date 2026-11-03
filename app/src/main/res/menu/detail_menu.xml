@@ -15,6 +15,16 @@
         android:id="@+id/menu_downloadNotification"
         android:title="@string/download_notification"
         app:showAsAction="never" />
+    <!-- يظهر أحدهما حسب حالة الطالب -->
+    <item
+        android:id="@+id/menu_archive"
+        android:title="@string/archive_student"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_unarchive"
+        android:title="@string/unarchive_student"
+        android:visible="false"
+        app:showAsAction="never" />
     <item
         android:id="@+id/menu_delete"
         android:title="@string/delete"

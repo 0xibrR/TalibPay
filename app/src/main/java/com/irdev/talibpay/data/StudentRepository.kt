@@ -11,6 +11,7 @@ import com.google.firebase.database.ValueEventListener
 import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.SimpleDate
 import com.irdev.talibpay.domain.billingStartFor
+import com.irdev.talibpay.domain.billingStartOnUnarchive
 import com.irdev.talibpay.domain.isEnablingMonthlyFee
 import com.irdev.talibpay.domain.periodsDue
 import com.irdev.talibpay.domain.todaySimpleDate
@@ -194,6 +195,29 @@ class StudentRepository(
     }
 
     private fun today(): SimpleDate = todaySimpleDate(clock())
+
+    /** يخفي الطالب من القائمة ويوقف رسومه الشهرية، مع إبقاء كل سجلاته كما هي. */
+    suspend fun archiveStudent(studentId: String) {
+        val now = clock()
+        studentRef(studentId).updateChildren(
+            mapOf("archived" to true, "archivedAt" to now, "updatedAt" to now)
+        ).await()
+    }
+
+    /**
+     * يعيد الطالب للقائمة، وتُستأنف رسومه الشهرية من اليوم (لا تُحتسب أشهر الأرشيف).
+     * كله في transaction واحدة: إلغاء الأرشفة ثم إنشاء رسوم اليوم إن كان موعدها اليوم.
+     */
+    suspend fun unarchiveStudent(studentId: String) {
+        val today = today()
+        syncLedger(studentRef(studentId)) { data ->
+            val student = data.getValue(Student::class.java) ?: return@syncLedger emptyList()
+            data.child("archived").value = false
+            data.child("archivedAt").value = 0
+            data.child("billingStart").value = billingStartOnUnarchive(student, today)
+            emptyList()
+        }
+    }
 
     suspend fun deleteStudent(studentId: String) {
         studentRef(studentId).removeValue().await()
