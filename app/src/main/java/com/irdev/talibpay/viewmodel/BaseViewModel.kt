@@ -23,7 +23,8 @@ sealed interface UiEvent {
     data object Finished : UiEvent
     data class SignedIn(val displayName: String?) : UiEvent
     data object SignedOut : UiEvent
-    data class StudentDeleted(val student: StudentWithPayments) : UiEvent
+    data class StudentArchived(val student: StudentWithPayments) : UiEvent
+    data class StudentRestored(val student: StudentWithPayments) : UiEvent
 }
 
 abstract class BaseViewModel : ViewModel() {

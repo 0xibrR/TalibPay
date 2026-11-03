@@ -21,6 +21,16 @@ class ArchiveViewModel : BaseViewModel() {
             emit(emptyList())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** إلغاء الأرشفة بالسحب: تُستأنف رسومه الشهرية من اليوم. */
+    fun restore(item: StudentWithPayments) = runAction {
+        repository.unarchiveStudent(item.student.id)
+        send(UiEvent.StudentRestored(item))
+    }
+
+    fun undoRestore(item: StudentWithPayments) = runAction {
+        repository.archiveStudent(item.student.id)
+    }
 }
 
 fun archivedStudents(list: List<StudentWithPayments>): List<StudentWithPayments> =

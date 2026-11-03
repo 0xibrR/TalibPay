@@ -14,6 +14,8 @@ import android.view.View
 import android.widget.EditText
 import android.widget.NumberPicker
 import android.widget.Toast
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -221,16 +223,18 @@ fun Context.formatTimestamp(millis: Long, legacy: String = ""): String {
             DateFormat.getTimeFormat(this).format(date)
 }
 
-/** سحب العناصر: يمين = تعديل، يسار = حذف. */
-fun RecyclerView.attachSwipeActions(
-    onEdit: (position: Int) -> Unit,
-    onDelete: (position: Int) -> Unit
-) {
-    val editColor = ContextCompat.getColor(context, R.color.swipe_edit)
-    val deleteColor = ContextCompat.getColor(context, R.color.swipe_delete)
+/** إجراء سحب في اتجاه واحد: أيقونته ولون خلفيته وما يحدث عند إتمام السحب. */
+data class SwipeAction(
+    @param:DrawableRes val icon: Int,
+    @param:ColorRes val color: Int,
+    val onSwiped: (position: Int) -> Unit
+)
 
-    ItemTouchHelper(object :
-        ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+/** سحب العناصر يمينًا أو يسارًا؛ الاتجاه بلا إجراء (null) معطّل. */
+fun RecyclerView.attachSwipeActions(right: SwipeAction?, left: SwipeAction?) {
+    val directions = (if (right != null) ItemTouchHelper.RIGHT else 0) or (if (left != null) ItemTouchHelper.LEFT else 0)
+
+    ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, directions) {
 
         override fun onMove(
             recyclerView: RecyclerView,
@@ -241,9 +245,9 @@ fun RecyclerView.attachSwipeActions(
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             val position = viewHolder.bindingAdapterPosition
             if (position == RecyclerView.NO_POSITION) return
-            // نعيد الصف لمكانه دائمًا؛ الحذف الفعلي يحدّث القائمة من البيانات
+            // نعيد الصف لمكانه دائمًا؛ التغيير الفعلي يحدّث القائمة من البيانات
             adapter?.notifyItemChanged(position)
-            if (direction == ItemTouchHelper.RIGHT) onEdit(position) else onDelete(position)
+            (if (direction == ItemTouchHelper.RIGHT) right else left)?.onSwiped?.invoke(position)
         }
 
         override fun onChildDraw(
@@ -255,13 +259,13 @@ fun RecyclerView.attachSwipeActions(
             actionState: Int,
             isCurrentlyActive: Boolean
         ) {
-            if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                val editing = dX > 0
+            val action = if (dX > 0) right else left
+            if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && action != null) {
                 RecyclerViewSwipeDecorator.Builder(
                     c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive
                 )
-                    .addBackgroundColor(if (editing) editColor else deleteColor)
-                    .addActionIcon(if (editing) R.drawable.ic_edit else R.drawable.ic_delete)
+                    .addBackgroundColor(ContextCompat.getColor(context, action.color))
+                    .addActionIcon(action.icon)
                     .setActionIconTint(Color.WHITE)
                     .create()
                     .decorate()

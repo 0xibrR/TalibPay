@@ -56,8 +56,8 @@
     <string name="confirm_edit_message">هل أنت متأكد أنك تريد تعديل بيانات هذا الطالب؟</string>
     <string name="updated_successfully">تم التعديل بنجاح</string>
     <string name="delete_title_with_name">حذف الطالب %1$s؟</string>
-    <string name="deleted_successfully_with_name">%1$s تم حذفه بنجاح</string>
-    <string name="restored_successfully_with_name">تم استرجاع %1$s بنجاح</string>
+    <string name="student_archived_with_name">تمت أرشفة %1$s</string>
+    <string name="restored_successfully_with_name">أُعيد %1$s إلى القائمة</string>
     <string name="undo">تراجع</string>
     <string name="details_student">تفاصيل الطالب</string>
     <string name="are_you_sure_you_want_to_delete_all_student">هل أنت متأكد أنك تريد حذف جميع الطلاب؟</string>
@@ -329,7 +329,7 @@
     <string name="student_unarchived">أُعيد الطالب إلى القائمة</string>
     <string name="archived_banner">هذا الطالب مؤرشف: مخفي من القائمة ولا تُنشأ له رسوم شهرية جديدة. لإرجاعه اختر «إلغاء الأرشفة» من القائمة.</string>
     <string name="monthly_fee_paused">%1$s · متوقفة أثناء الأرشفة</string>
-    <string name="archive_empty">لا يوجد طلاب مؤرشفون.\nأرشف الطالب من صفحته عندما يتوقف عن الحضور.</string>
+    <string name="archive_empty">لا يوجد طلاب مؤرشفون.\nاسحب الطالب لليسار في الشاشة الرئيسية لأرشفته، واسحبه لليسار هنا لإعادته.</string>
     <!-- التقرير الشهري -->
     <string name="report_title">التقرير الشهري</string>
     <string name="report_heading">تقرير %1$s</string>

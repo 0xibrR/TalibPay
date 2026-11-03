@@ -25,6 +25,7 @@ import com.irdev.talibpay.util.CurrencyPrefs
 import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.ListPrefs
 import com.irdev.talibpay.util.applySystemBarInsets
+import com.irdev.talibpay.util.SwipeAction
 import com.irdev.talibpay.util.attachSwipeActions
 import com.irdev.talibpay.util.cardDialog
 import com.irdev.talibpay.util.collectWhileStarted
@@ -75,9 +76,12 @@ class MainActivity : AppCompatActivity() {
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
+        // يمين = تعديل، يسار = أرشفة (الحذف من ملف الطالب فقط حتى لا يحدث بسحب عابر)
         binding.recyclerView.attachSwipeActions(
-            onEdit = { position -> openEdit(adapter.currentList[position]) },
-            onDelete = { position -> confirmDelete(adapter.currentList[position]) }
+            right = SwipeAction(R.drawable.ic_edit, R.color.swipe_edit) { position -> openEdit(adapter.currentList[position]) },
+            left = SwipeAction(R.drawable.ic_archive, R.color.swipe_archive) { position ->
+                viewModel.archive(adapter.currentList[position])
+            }
         )
         // تصغير زر الإضافة أثناء التمرير للأسفل حتى لا يغطي البطاقات
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -140,7 +144,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onEvent(event: UiEvent) {
         when (event) {
-            is UiEvent.StudentDeleted -> showUndoSnackbar(event.student)
+            is UiEvent.StudentArchived -> showArchivedSnackbar(event.student)
             is UiEvent.Message -> snackbar(
                 if (event.arg != null) getString(event.res, event.arg) else getString(event.res)
             )
@@ -168,24 +172,13 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun confirmDelete(item: StudentWithPayments) {
-        val name = item.student.name
-        MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.delete_title_with_name, name))
-            .setMessage(getString(R.string.delete_message_with_name, name))
-            .setPositiveButton(R.string.ok) { _, _ -> viewModel.deleteStudent(item) }
-            .setNegativeButton(R.string.cancel, null)
-            .setCancelable(false)
-            .show()
-    }
-
-    private fun showUndoSnackbar(item: StudentWithPayments) {
+    private fun showArchivedSnackbar(item: StudentWithPayments) {
         Snackbar.make(
             binding.root,
-            getString(R.string.deleted_successfully_with_name, item.student.name),
+            getString(R.string.student_archived_with_name, item.student.name),
             Snackbar.LENGTH_LONG
         )
-            .setAction(R.string.undo) { viewModel.undoDelete(item) }
+            .setAction(R.string.undo) { viewModel.undoArchive(item) }
             .setAnchorView(binding.newStudentFAB)
             .show()
     }

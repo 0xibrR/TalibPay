@@ -54,8 +54,8 @@
     <string name="updated_successfully">Edited successfully</string>
     <string name="delete_title_with_name">Delete student %1$s?</string>
     <string name="delete_message_with_name">Are you sure you want to delete %1$s?</string>
-    <string name="deleted_successfully_with_name">%1$s has been successfully deleted</string>
-    <string name="restored_successfully_with_name">%1$s has been successfully restored</string>
+    <string name="student_archived_with_name">%1$s was archived</string>
+    <string name="restored_successfully_with_name">%1$s is back in the list</string>
     <string name="undo">undo</string>
     <string name="details_student">Student details</string>
     <string name="are_you_sure_you_want_to_delete_all_student">Are you sure you want to delete all students?</string>
@@ -316,7 +316,7 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="student_unarchived">Student restored to the list</string>
     <string name="archived_banner">This student is archived: hidden from the list and no new monthly fees are added. Use the menu to restore them.</string>
     <string name="monthly_fee_paused">%1$s · paused while archived</string>
-    <string name="archive_empty">No archived students.\nArchive a student from their page when they stop attending.</string>
+    <string name="archive_empty">No archived students.\nSwipe a student left on the main screen to archive them, and swipe left here to bring them back.</string>
     <!-- التقرير الشهري -->
     <string name="report_title">Monthly report</string>
     <string name="report_heading">Report for %1$s</string>

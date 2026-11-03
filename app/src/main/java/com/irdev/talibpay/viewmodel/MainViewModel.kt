@@ -119,14 +119,14 @@ class MainViewModel : BaseViewModel() {
         query.value = text
     }
 
-    fun deleteStudent(item: StudentWithPayments) = runAction {
-        repository.deleteStudent(item.student.id)
-        send(UiEvent.StudentDeleted(item))
+    /** الأرشفة بالسحب: فورية لأنها قابلة للتراجع (الحذف من ملف الطالب فقط). */
+    fun archive(item: StudentWithPayments) = runAction {
+        repository.archiveStudent(item.student.id)
+        send(UiEvent.StudentArchived(item))
     }
 
-    fun undoDelete(item: StudentWithPayments) = runAction {
-        repository.restoreStudent(item)
-        send(UiEvent.Message(R.string.restored_successfully_with_name, item.student.name))
+    fun undoArchive(item: StudentWithPayments) = runAction {
+        repository.undoArchive(item.student.id)
     }
 
     fun deleteAll() = runAction {

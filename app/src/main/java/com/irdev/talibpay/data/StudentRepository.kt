@@ -233,24 +233,18 @@ class StudentRepository(
         }
     }
 
-    suspend fun deleteStudent(studentId: String) {
-        studentRef(studentId).removeValue().await()
+    /**
+     * تراجع فوري عن أرشفة حدثت للتو: يعيد الحالة كما كانت تمامًا،
+     * دون تغيير بداية الفوترة كما يفعل [unarchiveStudent] (لم تمر أشهر في الأرشيف).
+     */
+    suspend fun undoArchive(studentId: String) {
+        studentRef(studentId).updateChildren(
+            mapOf("archived" to false, "archivedAt" to 0, "updatedAt" to clock())
+        ).await()
     }
 
-    /** يستعيد الطالب كما كان، مع مستحقاته ودفعاته (للتراجع عن الحذف). */
-    suspend fun restoreStudent(data: StudentWithPayments) {
-        val ref = studentRef(data.student.id)
-        ref.setValue(data.student).await()
-        val charges = data.dues.map { it.charge }
-        if (charges.isNotEmpty()) {
-            ref.child(CHARGES).setValue(charges.associateBy { it.id }).await()
-        }
-        if (data.payments.isNotEmpty()) {
-            ref.child(PAYMENTS).setValue(data.payments.associateBy { it.id }).await()
-        }
-        if (data.walletEntries.isNotEmpty()) {
-            ref.child(WALLET).setValue(data.walletEntries.associateBy { it.id }).await()
-        }
+    suspend fun deleteStudent(studentId: String) {
+        studentRef(studentId).removeValue().await()
     }
 
     suspend fun deleteAllStudents() {

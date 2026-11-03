@@ -43,7 +43,8 @@
     <color name="method_unpaid">#FFB4AB</color>
     <color name="method_none">#8E9099</color>
     <color name="swipe_edit">#00468C</color>
-    <color name="swipe_delete">#93000A</color>
+    <color name="swipe_archive">#6A3C00</color>
+    <color name="swipe_restore">#00531F</color>
 
     <color name="splash_background">#111318</color>
 </resources>
