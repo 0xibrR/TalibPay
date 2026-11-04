@@ -23,6 +23,8 @@ import com.irdev.talibpay.adapter.StudentAdapter
 import com.irdev.talibpay.data.StudentWithPayments
 import com.irdev.talibpay.databinding.ActivityMainBinding
 import com.irdev.talibpay.databinding.AlertDialogDeleteAllBinding
+import com.irdev.talibpay.notification.Announcements
+import com.irdev.talibpay.notification.NotificationPermission
 import com.irdev.talibpay.util.CurrencyPrefs
 import com.irdev.talibpay.util.ExcelExport
 import com.irdev.talibpay.util.Extras
@@ -56,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
     private val adapter = StudentAdapter { openDetail(it) }
+    private val notificationPermission = NotificationPermission(this)
 
     // الطلاب الذين أُرسل لهم تذكير في هذه الجلسة (لتمييزهم في القائمة)
     private val remindedIds = mutableSetOf<String>()
@@ -82,6 +85,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         applySystemBarInsets(binding.main, applyTop = false)
         setupToolbar(binding.toolbar, showUp = false)
+        // إعلانات FCM: topic حسب لغة التطبيق، وطلب إذن الإشعارات مرة واحدة
+        Announcements.sync(this, resources.configuration.locales[0]?.language)
+        if (savedInstanceState == null) notificationPermission.askOnce()
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter

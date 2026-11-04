@@ -461,4 +461,12 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="chart_collected">Collected</string>
     <string name="chart_billed">Dues</string>
     <string name="chart_month_description">%1$s: collected %2$s, dues %3$s</string>
+    <!-- إعلانات التطبيق (FCM) -->
+    <string name="announcements_channel_id" translatable="false">announcements</string>
+    <string name="announcements_channel_name">App announcements</string>
+    <string name="announcements_channel_description">Updates and service notices from TalibPay</string>
+    <string name="notifications_permission_title">Stay informed</string>
+    <string name="notifications_permission_message">Allow notifications so we can tell you about new updates or any service issue.</string>
+    <string name="notifications_permission_allow">Allow</string>
+    <string name="notifications_permission_later">Not now</string>
 </resources>
