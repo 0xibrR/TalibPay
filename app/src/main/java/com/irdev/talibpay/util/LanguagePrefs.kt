@@ -5,9 +5,9 @@ import androidx.core.os.LocaleListCompat
 
 /**
  * لغة التطبيق عبر Per-app language API في AppCompat:
- * - يغيّر اللغة فورًا ويعيد رسم الشاشات المفتوحة.
- * - يحفظ الاختيار تلقائيًا فيبقى بعد إغلاق التطبيق وفتحه (Android 13+ من النظام،
- *   والأقدم عبر خدمة autoStoreLocales في الـ Manifest).
+ * - تتغير فورًا مع recreate للشاشات المفتوحة.
+ * - الاختيار يُحفظ تلقائيًا ويبقى بعد إغلاق التطبيق (Android 13+ من النظام،
+ *   والأقدم عبر autoStoreLocales في الـ Manifest).
  */
 object LanguagePrefs {
     const val SYSTEM = ""

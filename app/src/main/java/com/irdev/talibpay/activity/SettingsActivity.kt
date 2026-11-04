@@ -26,6 +26,7 @@ import com.irdev.talibpay.util.MIN_PASSWORD_LENGTH
 import com.irdev.talibpay.util.Currency
 import com.irdev.talibpay.util.CurrencyPrefs
 import com.irdev.talibpay.util.ThemePrefs
+import com.irdev.talibpay.util.ToastKind
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.setupToolbar
 import com.irdev.talibpay.util.cardDialog
@@ -44,7 +45,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private val viewModel: SettingsViewModel by viewModels()
 
-    // النافذة المفتوحة حاليًا (تغيير كلمة المرور / تأكيد كلمة المرور) لإغلاقها عند النجاح
+    // الـ dialog المفتوح حاليًا (تغيير كلمة المرور / تأكيد كلمة المرور) لإغلاقه عند النجاح
     private var openDialog: Dialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,8 +75,8 @@ class SettingsActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.loading) { loading.setVisible(it) }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                // Toast لأن الرسالة قد تظهر فوق نافذة حوار مفتوحة
-                is UiEvent.Message -> toast(event.res, long = true)
+                // Toast لأن الرسالة قد تظهر فوق dialog مفتوح
+                is UiEvent.Message -> toast(event)
                 UiEvent.Finished -> {
                     openDialog?.dismiss()
                     openDialog = null
@@ -93,7 +94,7 @@ class SettingsActivity : AppCompatActivity() {
             goToLogin()
             return
         }
-        // حسابات البريد بلا اسم: نُخفي سطر الاسم بدل عرضه فارغًا
+        // حسابات email بلا اسم: نخفي سطر الاسم بدل عرضه فارغًا
         binding.tvUserName.text = user.displayName.orEmpty()
         binding.tvUserName.isVisible = !user.displayName.isNullOrBlank()
         binding.tvUserEmail.text = user.email ?: getString(R.string.user_email_com)
@@ -121,9 +122,9 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    /** اختيار المظهر مباشرة من مجموعة الأزرار: النظام / داكن / نهاري. */
+    /** اختيار الـ theme مباشرة من الـ toggle group: النظام / داكن / فاتح. */
     private fun setupThemeToggle() {
-        // نحدد الاختيار الحالي قبل ربط المستمع حتى لا يُعاد تطبيق المظهر بلا داعٍ
+        // نحدد الاختيار الحالي قبل ربط الـ listener حتى لا يُعاد تطبيق الـ theme بلا داعٍ
         binding.themeToggle.check(
             when (ThemePrefs.get(this)) {
                 ThemePrefs.LIGHT -> R.id.btnThemeLight
@@ -147,7 +148,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnCurrency.text = getString(R.string.currency_item, currency.symbol, getString(currency.nameRes))
     }
 
-    /** العملة التي تُعرض مع كل المبالغ؛ تغييرها لا يحوّل المبالغ المحفوظة، بل رمزها فقط. */
+    /** العملة المعروضة مع كل المبالغ؛ تغييرها لا يحوّل المبالغ المحفوظة، بل رمزها فقط. */
     private fun showCurrencyDialog() {
         val currencies = Currency.entries
         val labels = currencies.map { getString(R.string.currency_item, it.symbol, getString(it.nameRes)) }
@@ -163,7 +164,7 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    /** اختيار لغة التطبيق: النظام / العربية / English. */
+    /** لغة التطبيق: النظام / العربية / English. */
     private fun setupLanguageToggle() {
         binding.languageToggle.check(
             when (LanguagePrefs.get()) {
@@ -184,7 +185,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // ---------------- حذف الحساب ----------------
+    // ---------------- Delete account ----------------
 
     private fun confirmDeleteAccount() {
         MaterialAlertDialogBuilder(this)
@@ -194,7 +195,7 @@ class SettingsActivity : AppCompatActivity() {
                 when (viewModel.accountProvider()) {
                     AccountProvider.GOOGLE -> deleteGoogleAccount()
                     AccountProvider.PASSWORD -> showPasswordReauthDialog()
-                    AccountProvider.UNKNOWN -> toast(R.string.account_provider_type_unknown)
+                    AccountProvider.UNKNOWN -> toast(R.string.account_provider_type_unknown, ToastKind.ERROR)
                 }
             }
             .setNegativeButton(R.string.cancel, null)
@@ -202,7 +203,7 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    /** إعادة التحقق بحساب Google برمز جديد (الرمز القديم ينتهي خلال ساعة). */
+    /** Re-authentication بحساب Google بـ token جديد (القديم ينتهي خلال ساعة). */
     private fun deleteGoogleAccount() {
         lifecycleScope.launch {
             try {
@@ -215,7 +216,7 @@ class SettingsActivity : AppCompatActivity() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (!e.isUserCancellation()) toast(errorMessageRes(e))
+                if (!e.isUserCancellation()) toast(errorMessageRes(e), ToastKind.ERROR)
             }
         }
     }
@@ -223,7 +224,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun showPasswordReauthDialog() {
         val dialogBinding = DilaogEmailPasswordBinding.inflate(layoutInflater)
         val dialog = cardDialog(dialogBinding.root, cancelable = false)
-        // البريد هو بريد الحساب الحالي دائمًا
+        // الـ email هو email الحساب الحالي دائمًا
         dialogBinding.edtEmailDialog.setText(viewModel.user?.email)
         dialogBinding.edtEmailDialog.isEnabled = false
 
@@ -236,13 +237,13 @@ class SettingsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    // ---------------- كلمة المرور ----------------
+    // ---------------- Password ----------------
 
     private fun showChangePasswordDialog() {
         val dialogBinding = DialogChangePasswordBinding.inflate(layoutInflater)
         val dialog = cardDialog(dialogBinding.root, cancelable = false)
 
-        // حساب Google بلا كلمة مرور: نربط كلمة مرور جديدة بدون طلب القديمة
+        // حساب Google بلا password: نربط password جديدة بدون طلب القديمة
         val hasPassword = viewModel.hasPassword()
         dialogBinding.oldPasswordLayout.isVisible = hasPassword
 

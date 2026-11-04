@@ -24,8 +24,8 @@ import java.util.Calendar
 import java.util.Locale
 
 /**
- * مخطط أعمدة للتحصيل الشهري: لكل شهر عمود للمستحق (فاتح) وعمود للمحصّل، مع مفتاح أسفله.
- * يُرسم على Canvas مباشرة (بلا مكتبات) فيظهر كما هو عند تصدير التقرير كصورة أو PDF.
+ * Custom View: bar chart للتحصيل الشهري؛ لكل شهر عمود للمستحقات (فاتح) وعمود للمحصّل، مع legend أسفله.
+ * يُرسم على Canvas مباشرة (بدون library) فيظهر كما هو عند تصدير التقرير كصورة أو PDF.
  * الضغط على شهر يستدعي [onMonthClick]، والشهر المختار مميَّز بخلفية.
  */
 class CollectionChartView @JvmOverloads constructor(
@@ -40,7 +40,7 @@ class CollectionChartView @JvmOverloads constructor(
     private var monthLabels: List<String> = emptyList()
 
     private val collectedColor = MaterialColors.getColor(this, com.google.android.material.R.attr.colorPrimary)
-    // المستحق بلون المحصّل نفسه لكن شفاف: واضح في الوضعين الفاتح والداكن وفوق خلفية الشهر المختار
+    // المستحقات بنفس لون المحصّل لكن بشفافية (alpha): واضح في light و dark وفوق خلفية الشهر المختار
     private val billedColor = ColorUtils.setAlphaComponent(collectedColor, 0x5C)
     private val mutedText = MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant)
     private val strongText = MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface)
@@ -111,7 +111,7 @@ class CollectionChartView @JvmOverloads constructor(
                 canvas.drawRoundRect(rect, dp(8f), dp(8f), highlightPaint)
             }
 
-            // المستحق أولًا من جهة البداية ثم المحصّل
+            // المستحقات أولًا من جهة البداية (start) ثم المحصّل؛ تنعكس تلقائيًا في RTL
             val barWidth = minOf(slot * 0.28f, dp(18f))
             val gap = dp(3f)
             val startBar = if (rtl) center + gap / 2 else center - gap / 2 - barWidth
@@ -130,7 +130,7 @@ class CollectionChartView @JvmOverloads constructor(
         drawLegend(canvas, height - dp(4f), rtl)
     }
 
-    /** يرسم عمودًا بزوايا علوية مستديرة ويعيد أعلاه. */
+    /** يرسم عمودًا بزوايا علوية مستديرة ويعيد موضع أعلاه (top). */
     private fun drawBar(
         canvas: Canvas, left: Float, width: Float, value: Double, max: Double,
         top: Float, bottom: Float, color: Int
@@ -146,7 +146,7 @@ class CollectionChartView @JvmOverloads constructor(
         return rect.top
     }
 
-    /** مفتاح الألوان في المنتصف: ● المحصّل   ● المستحق (بترتيب القراءة). */
+    /** الـ legend في المنتصف: ● المحصّل   ● المستحقات (بترتيب القراءة). */
     private fun drawLegend(canvas: Canvas, baseline: Float, rtl: Boolean) {
         val dot = dp(8f)
         val inner = dp(6f)
@@ -166,7 +166,7 @@ class CollectionChartView @JvmOverloads constructor(
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility") // performClick يُستدعى عند الضغط
+    @SuppressLint("ClickableViewAccessibility") // performClick يُستدعى من super عند الضغط
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val handled = super.onTouchEvent(event)
         if (event.action == MotionEvent.ACTION_UP && points.isNotEmpty() && width > 0) {

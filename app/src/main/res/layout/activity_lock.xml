@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- شاشة قفل التطبيق: لوحة أرقام للرمز وزر البصمة -->
+<!-- شاشة الـ app lock: keypad للـ PIN وزر الـ fingerprint -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -43,7 +43,7 @@
         android:textColor="?attr/colorOnSurfaceVariant"
         tools:text="أدخل رمز الفتح" />
 
-    <!-- نقاط الرمز (6)؛ تُضاف من الكود -->
+    <!-- نقاط الـ PIN (6)؛ تُضاف من الكود -->
     <LinearLayout
         android:id="@+id/pinDots"
         android:layout_width="wrap_content"
@@ -57,7 +57,7 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- لوحة الأرقام من اليسار لليمين دائمًا كلوحة الهاتف -->
+    <!-- الـ keypad دائمًا LTR مثل لوحة الهاتف -->
     <GridLayout
         android:id="@+id/keypad"
         android:layout_width="wrap_content"

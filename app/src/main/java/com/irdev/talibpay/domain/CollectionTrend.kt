@@ -2,13 +2,13 @@ package com.irdev.talibpay.domain
 
 import com.irdev.talibpay.model.Student
 
-/** المحصّل والمستحق لشهر واحد في مخطط التحصيل. */
+/** المحصّل (collected) والمستحقات (billed) لشهر واحد في الـ chart. */
 data class TrendPoint(val month: YearMonth, val collected: Double, val billed: Double)
 
 /**
- * مخطط التحصيل: آخر عدة أشهر، الأقدم أولًا.
- * النافذة تنتهي بالشهر الحالي ما دام الشهر المختار ضمنها (فلا تقفز الأعمدة عند الضغط على شهر)،
- * وإن اختير شهر أقدم منها تنتهي به.
+ * بيانات chart التحصيل: آخر عدة أشهر، الأقدم أولًا.
+ * الـ window تنتهي بالشهر الحالي ما دام الشهر المختار ضمنها (فلا تتحرك الأعمدة عند الضغط على شهر)،
+ * وإذا اختير شهر أقدم تنتهي به.
  */
 object CollectionTrend {
 

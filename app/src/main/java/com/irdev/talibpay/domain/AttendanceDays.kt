@@ -5,7 +5,7 @@ import java.util.Calendar
 
 /**
  * أيام الأسبوع بترتيب يبدأ بالسبت (كما في فلسطين).
- * [calendarDay] لربطها بـ Calendar عند حساب "يداوم اليوم" والحضور لاحقًا.
+ * [calendarDay] للربط مع Calendar عند حساب "يداوم اليوم" والحضور لاحقًا.
  */
 enum class Weekday(val code: String, val calendarDay: Int) {
     SATURDAY("SAT", Calendar.SATURDAY),
@@ -23,8 +23,8 @@ enum class Weekday(val code: String, val calendarDay: Int) {
 }
 
 /**
- * أيام دوام الطالب، تُحفظ نصًا مختصرًا مرتبًا مثل "SAT,TUE,THU".
- * فارغة = لم تُحدَّد (الطلاب القدامى، أو لم يُدخلها المستخدم).
+ * أيام دوام الطالب، تُحفظ كنص مختصر مرتب مثل "SAT,TUE,THU".
+ * فارغة = غير محددة (طلاب قدامى، أو لم يُدخلها المستخدم).
  */
 object AttendanceDays {
 

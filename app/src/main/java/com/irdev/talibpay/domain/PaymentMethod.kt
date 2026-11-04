@@ -5,9 +5,9 @@ import androidx.annotation.StringRes
 import com.irdev.talibpay.R
 
 /**
- * طريقة الدفع تُخزَّن في Firebase كرمز ثابت ([code]) بدل النص المترجم،
- * حتى لا تتأثر البيانات بتغيير لغة الجهاز.
- * الترتيب هنا هو ترتيب العناصر في القائمة المنسدلة.
+ * طريقة الدفع تُخزَّن في Firebase كـ code ثابت ([code]) بدل النص المترجم،
+ * حتى لا تتأثر البيانات بلغة الجهاز.
+ * الترتيب هنا هو ترتيب العناصر في الـ dropdown.
  */
 enum class PaymentMethod(
     val code: String,
@@ -20,7 +20,7 @@ enum class PaymentMethod(
     UNPAID("UNPAID", R.string.method_unpaid, R.color.method_unpaid);
 
     companion object {
-        // نصوص النسخ القديمة من التطبيق (عربي وإنجليزي) قبل اعتماد الرموز
+        // Legacy: نصوص النسخ القديمة (عربي وإنجليزي) قبل اعتماد الـ codes
         private val legacyLabels = mapOf(
             "نقدي" to CASH, "Cash" to CASH,
             "بنكي" to BANK, "Bank" to BANK,

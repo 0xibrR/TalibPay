@@ -7,16 +7,16 @@ enum class WalletEntryType { DEPOSIT, USE, REFUND }
 val WalletEntry.entryType: WalletEntryType?
     get() = WalletEntryType.entries.firstOrNull { it.name == type }
 
-/** توزيع دفعة: الجزء الذي يسدد المستحق، والزيادة التي تذهب للمحفظة. */
+/** توزيع دفعة: الجزء الذي يسدد الـ charge، والزيادة التي تذهب للـ wallet. */
 data class PaymentAllocation(val applied: Double, val credited: Double)
 
 object Wallet {
 
-    /** معرّفات ثابتة تمنع تكرار الإيداع لنفس الدفعة أو الخصم لنفس المستحق. */
+    /** ids ثابتة تمنع تكرار الـ deposit لنفس الدفعة أو الـ use لنفس الـ charge. */
     fun depositId(paymentId: String) = "dep-$paymentId"
     fun useId(chargeId: String) = "use-$chargeId"
 
-    /** الرصيد = الإيداعات − (الاستخدامات + الاستردادات)، ولا يقل عن صفر. */
+    /** الرصيد = deposits − (uses + refunds)، ولا يقل عن صفر. */
     fun balance(entries: Collection<WalletEntry>): Double {
         val deposits = Money.sum(entries.filter { it.entryType == WalletEntryType.DEPOSIT }.map { it.amount })
         val spent = Money.sum(
@@ -26,13 +26,13 @@ object Wallet {
         return Money.subtract(deposits, spent).coerceAtLeast(0.0)
     }
 
-    /** ما يزيد عن المتبقي على المستحق يذهب للمحفظة. */
+    /** ما يزيد عن المتبقي على الـ charge يذهب للـ wallet. */
     fun allocate(amount: Double, dueRemaining: Double): PaymentAllocation {
         val applied = minOf(amount, dueRemaining.coerceAtLeast(0.0))
         return PaymentAllocation(applied = Money.round(applied), credited = Money.subtract(amount, applied))
     }
 
-    /** ما يُخصم من المحفظة لمستحق جديد: الأقل بين الرصيد وقيمة المستحق. */
+    /** المخصوم من الـ wallet لـ charge جديد: الأقل بين الرصيد وقيمة الـ charge. */
     fun useFor(balance: Double, chargeAmount: Double): Double =
         Money.round(minOf(balance, chargeAmount).coerceAtLeast(0.0))
 }

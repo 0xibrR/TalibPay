@@ -34,8 +34,8 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 
 /**
- * شاشة قفل التطبيق. تظهر فوق أي شاشة عند الحاجة ([AppLockGate])، ولا يمكن تجاوزها بزر الرجوع.
- * التحقق من الرمز في الخلفية (PBKDF2 مكلف عمدًا)، والانتظار بعد الأخطاء المتكررة يُعرض بعدّ تنازلي.
+ * شاشة الـ app lock. تظهر فوق أي شاشة عند الحاجة ([AppLockGate])، ولا يمكن تجاوزها بزر الرجوع.
+ * التحقق من الـ PIN في الـ background (PBKDF2 مكلف عمدًا)، والـ lockout يُعرض بعدّ تنازلي.
  */
 class LockActivity : AppCompatActivity() {
 
@@ -49,14 +49,14 @@ class LockActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // لا لقطات شاشة ولا ظهور في التطبيقات الأخيرة لشاشة إدخال الرمز
+        // FLAG_SECURE: لا screenshots ولا ظهور في الـ recent apps لشاشة إدخال الـ PIN
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         enableEdgeToEdge()
         binding = ActivityLockBinding.inflate(layoutInflater)
         setContentView(binding.root)
         applySystemBarInsets(binding.main)
 
-        // الرجوع يُخفي التطبيق بدل تجاوز القفل
+        // الرجوع يُخفي التطبيق (moveTaskToBack) بدل تجاوز الـ lock
         onBackPressedDispatcher.addCallback(this) { moveTaskToBack(true) }
         buildDots()
         buildKeypad()
@@ -80,7 +80,7 @@ class LockActivity : AppCompatActivity() {
         }
     }
 
-    /** المفاتيح تُخفى بـ INVISIBLE لا GONE حتى تبقى أماكنها في الشبكة ثابتة. */
+    /** الأزرار تُخفى بـ INVISIBLE وليس GONE حتى تبقى أماكنها في الـ grid ثابتة. */
     private fun applyMethods() {
         digitKeys.forEach { it.isInvisible = !methods.pin }
         binding.keypad.findViewById<View>(R.id.keyBackspace).isInvisible = !methods.pin
@@ -103,7 +103,7 @@ class LockActivity : AppCompatActivity() {
         binding.tvLockMessage.text = getString(res, *args)
     }
 
-    // ---------------- الرمز ----------------
+    // ---------------- PIN ----------------
 
     private fun onDigit(digit: Char) {
         if (verifying || countdown?.isActive == true || entered.length >= PinRules.LENGTH) return
@@ -140,7 +140,7 @@ class LockActivity : AppCompatActivity() {
         }
     }
 
-    /** عدّ تنازلي أثناء الانتظار، ولوحة الأرقام معطّلة خلاله. */
+    /** Countdown أثناء الـ lockout، والـ keypad معطّل خلاله. */
     private fun updateLockout() {
         countdown?.cancel()
         if (AppLockGate.lock.remainingLockoutMs() <= 0) {
@@ -169,7 +169,7 @@ class LockActivity : AppCompatActivity() {
         return String.format(Locale.US, "%d:%02d", seconds / 60, seconds % 60)
     }
 
-    // ---------------- البصمة ----------------
+    // ---------------- Fingerprint ----------------
 
     private fun startBiometric() {
         BiometricUnlock.prompt(
@@ -183,7 +183,7 @@ class LockActivity : AppCompatActivity() {
                     unlock()
                 }
                 BiometricUnlock.Outcome.Cancelled -> Unit
-                // البصمة متوقفة أو غير صالحة: الرمز بديل دائمًا
+                // الـ fingerprint متوقفة أو غير صالحة: الـ PIN بديل دائمًا
                 BiometricUnlock.Outcome.LockedOut -> fallBackToPin(R.string.lock_biometric_locked_out)
                 BiometricUnlock.Outcome.Invalidated -> {
                     AppLockGate.lock.setBiometricEnrolled(false)
@@ -201,14 +201,14 @@ class LockActivity : AppCompatActivity() {
         if (countdown?.isActive != true) showMessage(message)
     }
 
-    // ---------------- الخروج من القفل ----------------
+    // ---------------- Unlock / exit ----------------
 
     private fun unlock() {
         AppLockGate.markUnlocked()
         finish()
     }
 
-    /** نسيان الرمز: تسجيل الدخول للحساب من جديد يثبت الهوية، ثم يُفعَّل القفل مجددًا من الإعدادات. */
+    /** نسيان الـ PIN: تسجيل الدخول من جديد يثبت الهوية، ثم يُفعَّل الـ lock مجددًا من الإعدادات. */
     private fun confirmForgotPin() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.lock_forgot_pin)
@@ -220,7 +220,7 @@ class LockActivity : AppCompatActivity() {
             .show()
     }
 
-    // ---------------- بناء الواجهة ----------------
+    // ---------------- UI setup ----------------
 
     private fun buildDots() {
         val size = resources.getDimensionPixelSize(R.dimen.pin_dot_size)

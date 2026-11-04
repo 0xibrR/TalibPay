@@ -8,11 +8,11 @@ import com.irdev.talibpay.domain.overdueDues
 import java.text.Collator
 import java.util.Locale
 
-/** تصفية قائمة الطلاب حسب حالة الدفع. الفلاتر غير متنافية: الطالب قد يكون متأخرًا ومدفوعًا جزئيًا معًا. */
+/** Filters قائمة الطلاب حسب حالة الدفع. غير متنافية: الطالب قد يكون متأخرًا ومدفوعًا جزئيًا معًا. */
 enum class StudentFilter(@param:StringRes val labelRes: Int) {
     ALL(R.string.filter_all),
 
-    /** عليه مستحق حان موعده ولم يُسدَّد بالكامل. */
+    /** عليه charge حان موعده ولم يُسدَّد بالكامل. */
     OVERDUE(R.string.filter_overdue),
 
     /** دفع جزءًا وما زال عليه مبلغ. */
@@ -32,7 +32,7 @@ enum class StudentFilter(@param:StringRes val labelRes: Int) {
     }
 }
 
-/** ترتيب قائمة الطلاب. الافتراضي ترتيب الإضافة كما كان سابقًا. */
+/** ترتيب (sort) قائمة الطلاب. الافتراضي ترتيب الإضافة. */
 enum class StudentSort(@param:StringRes val labelRes: Int) {
     ADDED_OLDEST(R.string.sort_added_oldest),
     ADDED_NEWEST(R.string.sort_added_newest),
@@ -42,7 +42,7 @@ enum class StudentSort(@param:StringRes val labelRes: Int) {
     /** الأقدم تأخرًا أولًا، ثم من ليس عليه تأخير. */
     OVERDUE_OLDEST(R.string.sort_overdue);
 
-    /** @param list بترتيب الإضافة (ترتيب مفاتيح Firebase). الترتيب ثابت: المتساويان يبقيان بترتيب الإضافة. */
+    /** @param list بترتيب الإضافة (ترتيب Firebase keys). الـ sort ثابت (stable): المتساويان يبقيان بترتيب الإضافة. */
     fun apply(list: List<StudentWithPayments>, today: SimpleDate, locale: Locale): List<StudentWithPayments> =
         when (this) {
             ADDED_OLDEST -> list
@@ -62,7 +62,7 @@ enum class StudentSort(@param:StringRes val labelRes: Int) {
         val DEFAULT = ADDED_OLDEST
         fun fromName(name: String?): StudentSort = entries.firstOrNull { it.name == name } ?: DEFAULT
 
-        /** مستحق متأخر بلا تاريخ (مثل بيانات قديمة) يُعد أقدم من أي تاريخ. */
+        /** Charge متأخر بلا تاريخ (مثل بيانات legacy) يُعد أقدم من أي تاريخ. */
         private val UNDATED = SimpleDate(1900, 1, 1)
 
         private fun oldestOverdueDate(item: StudentWithPayments, today: SimpleDate): SimpleDate? =

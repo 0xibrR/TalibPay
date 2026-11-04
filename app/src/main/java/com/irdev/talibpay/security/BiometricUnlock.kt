@@ -5,7 +5,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 
-/** نافذة البصمة المرتبطة بمفتاح Keystore ([BiometricKey]). */
+/** BiometricPrompt مرتبط بمفتاح Keystore ([BiometricKey]). */
 object BiometricUnlock {
 
     sealed interface Outcome {
@@ -14,10 +14,10 @@ object BiometricUnlock {
         /** ألغاها المستخدم أو اختار "استخدام الرمز". */
         data object Cancelled : Outcome
 
-        /** محاولات بصمة خاطئة كثيرة (قفل من النظام): الرمز هو البديل. */
+        /** محاولات fingerprint خاطئة كثيرة (lockout من النظام): الـ PIN هو البديل. */
         data object LockedOut : Outcome
 
-        /** تغيّرت البصمات المسجلة: يجب إعادة تفعيل البصمة بعد التحقق بالرمز. */
+        /** تغيّرت الـ fingerprints المسجلة: يجب إعادة تفعيلها بعد التحقق بالـ PIN. */
         data object Invalidated : Outcome
         data object Unavailable : Outcome
     }
@@ -48,7 +48,7 @@ object BiometricUnlock {
                     }
                 )
             }
-            // onAuthenticationFailed: بصمة غير مطابقة؛ النافذة تبقى مفتوحة ويعرض النظام "حاول مرة أخرى"
+            // onAuthenticationFailed: fingerprint غير مطابقة؛ الـ prompt يبقى مفتوحًا والنظام يعرض "حاول مرة أخرى"
         }
         val info = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)

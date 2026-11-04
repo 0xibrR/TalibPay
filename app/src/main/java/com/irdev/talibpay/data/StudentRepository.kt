@@ -39,15 +39,15 @@ import kotlin.coroutines.resumeWithException
 
 class NotSignedInException : IllegalStateException("User is not signed in")
 
-/** الاسترداد أكبر من رصيد المحفظة الحالي (ربما تغيّر من جهاز آخر). */
+/** الـ refund أكبر من رصيد الـ wallet الحالي (ربما تغيّر من جهاز آخر). */
 class InsufficientWalletBalanceException : IllegalStateException("Wallet balance is not enough")
 
-/** دفعة أضافت رصيدًا للمحفظة: لا تُعدَّل ولا تُحذف حتى لا يختل رصيد المحفظة. */
+/** دفعة أضافت credit للـ wallet: لا تُعدَّل ولا تُحذف حتى لا يختل الرصيد. */
 class PaymentLockedByWalletException : IllegalStateException("Payment credited the wallet")
 
 /**
- * الطالب مع دفتر حسابه (المستحقات ودفعات كل منها، وحركات المحفظة).
- * مبالغ [student] محسوبة من الدفتر عند القراءة، فتبقى صحيحة حتى للبيانات القديمة.
+ * الطالب مع الـ ledger الخاص به (charges ودفعات كل منها، وحركات الـ wallet).
+ * مبالغ [student] تُحسب من الـ ledger عند القراءة، فتبقى صحيحة حتى للبيانات القديمة.
  */
 data class StudentWithPayments(val student: Student, val ledger: StudentLedger) {
     val dues: List<DueSummary> get() = ledger.dues
@@ -66,7 +66,7 @@ data class StudentInput(
     val notes: String,
     val discount: StudentDiscount = StudentDiscount.NONE,
     val attendanceDays: Set<Weekday> = emptySet(),
-    /** عند إدخال الرسوم الشهرية لأول مرة: احتساب الأشهر السابقة منذ تاريخ التسجيل. */
+    /** أول مرة تُضاف فيها monthly fee: احتساب الأشهر السابقة منذ تاريخ التسجيل (backdate). */
     val backdateMonthlyFees: Boolean = false
 )
 
@@ -86,8 +86,8 @@ data class PaymentInput(
 )
 
 /**
- * كل الوصول لبيانات الطلاب في Firebase يمر من هنا.
- * المسار: TalibPay/{uid}/students/{studentId}/{charges|payments}/{id}
+ * Repository: كل قراءة وكتابة لبيانات الطلاب في Firebase تمر من هنا.
+ * Path: TalibPay/{uid}/students/{studentId}/{charges|payments}/{id}
  */
 class StudentRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -102,7 +102,7 @@ class StudentRepository(
 
     private fun studentRef(studentId: String) = studentsRef().child(studentId)
 
-    /** بيانات تشغيلية صغيرة للمستخدم (إصدار الفهرس، آخر فحص كامل). */
+    /** Metadata صغيرة للمستخدم: إصدار الـ index وآخر full scan. */
     private fun metaRef(): DatabaseReference {
         val uid = auth.currentUser?.uid ?: throw NotSignedInException()
         return database.getReference(ROOT).child(uid).child(META)
@@ -124,7 +124,7 @@ class StudentRepository(
         awaitClose { ref.removeEventListener(listener) }
     }
 
-    /** يُصدر null عند حذف الطالب. */
+    /** يُصدر null إذا حُذف الطالب. */
     fun observeStudent(studentId: String): Flow<StudentWithPayments?> = callbackFlow {
         val ref = studentRef(studentId)
         val listener = object : ValueEventListener {
@@ -143,7 +143,7 @@ class StudentRepository(
     suspend fun getStudent(studentId: String): StudentWithPayments? =
         studentRef(studentId).get().await().toStudentWithPayments()
 
-    // ---------------- الطلاب ----------------
+    // ---------------- Students ----------------
 
     suspend fun addStudent(input: StudentInput) {
         val ref = studentsRef().push()
@@ -167,11 +167,11 @@ class StudentRepository(
             updatedAt = now
         )
         ref.setValue(student).await()
-        // دائمًا: يحدّث موعد الرسوم القادم حتى عند إلغاء الرسوم الشهرية
+        // دائمًا نحدّث nextBillingDate، حتى لو أُلغيت الـ monthly fee
         syncLedger(ref)
     }
 
-    /** يحدّث بيانات الطالب الأساسية فقط، دون المساس بالمستحقات أو الدفعات. */
+    /** يحدّث بيانات الطالب الأساسية فقط، بدون charges أو payments. */
     suspend fun updateStudent(studentId: String, input: StudentInput) {
         val ref = studentRef(studentId)
         val current = ref.get().await().getValue(Student::class.java)
@@ -195,21 +195,21 @@ class StudentRepository(
             "notes" to input.notes,
             "updatedAt" to clock()
         )
-        // احتساب الرسوم السابقة: نعيد الفوترة من تاريخ التسجيل. الأشهر الموجودة لا تتكرر
-        // لأن لكل شهر معرّفًا ثابتًا ويُتخطى إن وُجد (انظر generateDueCharges).
+        // Backdate: نعيد الـ billing من تاريخ التسجيل. الأشهر الموجودة لا تتكرر
+        // لأن id كل شهر ثابت ويُتخطى إن وُجد (انظر generateDueCharges).
         if (backdate) updates["lastBilledPeriod"] = ""
         ref.updateChildren(updates).await()
-        // دائمًا: يحدّث موعد الرسوم القادم حتى عند إلغاء الرسوم الشهرية
+        // دائمًا نحدّث nextBillingDate، حتى لو أُلغيت الـ monthly fee
         syncLedger(ref)
     }
 
     /**
-     * ينشئ الرسوم الشهرية التي حان موعدها (عند فتح التطبيق وفي المهمة اليومية).
-     * آمن للتكرار: كل شهر له معرّف ثابت، والإنشاء داخل transaction.
+     * ينشئ الـ monthly charges التي حان موعدها (عند فتح التطبيق وفي الـ daily worker).
+     * Idempotent: id كل شهر ثابت، والإنشاء داخل transaction.
      *
-     * توفير التحميل: لا نحمّل كل الطلاب، بل نستعلم عمّن موعد رسومه القادم ([NEXT_BILLING]) اليوم أو قبله؛
-     * غالبًا لا أحد. فحص كامل مرة عند أول تشغيل (لتعبئة الفهرس للطلاب الحاليين) ثم كل [FULL_SCAN_INTERVAL_MS]
-     * كشبكة أمان لأي طالب لم يُحدَّث فهرسه (مثل تعديل من نسخة قديمة من التطبيق).
+     * لتوفير التحميل: query على [NEXT_BILLING] (اليوم أو قبله) بدل تحميل كل الطلاب؛ غالبًا النتيجة فارغة.
+     * Full scan عند أول تشغيل (لتعبئة الـ index للطلاب الحاليين) ثم كل [FULL_SCAN_INTERVAL_MS]
+     * كـ safety net لأي طالب لم يُحدَّث الـ index الخاص به (مثل تعديل من نسخة قديمة).
      */
     suspend fun generateMonthlyDues() {
         val today = today()
@@ -224,17 +224,17 @@ class StudentRepository(
             return
         }
 
-        // الطلاب بلا رسوم تلقائية مفتاحهم "" فيُستبعدون بـ startAt (النص الفارغ أصغر من أي تاريخ)
+        // الطلاب بدون monthly fee قيمتهم "" فيُستبعدون بـ startAt (النص الفارغ أصغر من أي تاريخ)
         val due = studentsRef().orderByChild(NEXT_BILLING).startAt("0").endAt(today.sortKey()).get().await()
         for (snapshot in due.children) syncLedger(snapshot.ref)
     }
 
-    /** يمر على كل الطلاب: ينشئ المستحق ويصحح الفهرس إن كان ناقصًا أو قديمًا. */
+    /** Full scan: ينشئ الـ charges ويصحّح الـ index إذا كان ناقصًا أو قديمًا. */
     private suspend fun fullBillingScan(today: SimpleDate) {
         for (snapshot in studentsRef().get().await().children) {
             val student = snapshot.getValue(Student::class.java) ?: continue
             when {
-                // syncLedger يكتب الفهرس أيضًا
+                // syncLedger يكتب الـ index أيضًا
                 student.periodsDue(today).isNotEmpty() -> syncLedger(snapshot.ref)
                 student.nextBillingDate != student.nextBillingKey() ->
                     snapshot.ref.child(NEXT_BILLING).setValue(student.nextBillingKey()).await()
@@ -244,10 +244,10 @@ class StudentRepository(
 
     private fun today(): SimpleDate = todaySimpleDate(clock())
 
-    /** يخفي الطالب من القائمة ويوقف رسومه الشهرية، مع إبقاء كل سجلاته كما هي. */
+    /** Archive: يخفي الطالب من القائمة ويوقف الـ monthly fee، وكل سجلاته تبقى كما هي. */
     suspend fun archiveStudent(studentId: String) {
         val now = clock()
-        // داخل syncLedger حتى يُحدَّث فهرس موعد الرسوم (يصبح فارغًا للمؤرشف)
+        // داخل syncLedger حتى يُحدَّث nextBillingDate (يصير فارغًا للمؤرشف)
         syncLedger(studentRef(studentId)) { data ->
             data.child("archived").value = true
             data.child("archivedAt").value = now
@@ -256,8 +256,8 @@ class StudentRepository(
     }
 
     /**
-     * يعيد الطالب للقائمة، وتُستأنف رسومه الشهرية من اليوم (لا تُحتسب أشهر الأرشيف).
-     * كله في transaction واحدة: إلغاء الأرشفة ثم إنشاء رسوم اليوم إن كان موعدها اليوم.
+     * Unarchive: يعيد الطالب للقائمة، والـ monthly fee تُستأنف من اليوم (أشهر الأرشيف لا تُحتسب).
+     * كله في transaction واحدة: إلغاء الأرشفة ثم إنشاء charge اليوم إذا كان موعدها اليوم.
      */
     suspend fun unarchiveStudent(studentId: String) {
         val today = today()
@@ -271,8 +271,8 @@ class StudentRepository(
     }
 
     /**
-     * تراجع فوري عن أرشفة حدثت للتو: يعيد الحالة كما كانت تمامًا،
-     * دون تغيير بداية الفوترة كما يفعل [unarchiveStudent] (لم تمر أشهر في الأرشيف).
+     * Undo لأرشفة تمت للتو: يعيد الحالة كما كانت تمامًا،
+     * بدون تغيير بداية الـ billing مثل [unarchiveStudent] (لم تمر أشهر في الأرشيف).
      */
     suspend fun undoArchive(studentId: String) {
         syncLedger(studentRef(studentId)) { data ->
@@ -290,9 +290,9 @@ class StudentRepository(
         studentsRef().removeValue().await()
     }
 
-    // ---------------- المستحقات ----------------
+    // ---------------- Charges (المستحقات) ----------------
 
-    /** مستحق جديد يُسدَّد تلقائيًا من رصيد المحفظة إن وُجد (في نفس الـ transaction). */
+    /** Charge جديد يُسدَّد تلقائيًا من رصيد الـ wallet إن وُجد (في نفس الـ transaction). */
     suspend fun addCharge(studentId: String, input: ChargeInput) {
         val ref = studentRef(studentId)
         val id = ref.child(CHARGES).push().key ?: error("push() returned no key")
@@ -316,7 +316,7 @@ class StudentRepository(
 
     suspend fun updateCharge(studentId: String, chargeId: String, input: ChargeInput) {
         val ref = studentRef(studentId)
-        // updateChildren يُنشئ المستحق إن كان مشتقًا من بيانات قديمة ولم يُحفظ بعد
+        // updateChildren ينشئ الـ charge إذا كان legacy (مشتق من بيانات قديمة) ولم يُحفظ بعد
         ref.child(CHARGES).child(chargeId).updateChildren(
             mapOf(
                 "id" to chargeId,
@@ -329,21 +329,21 @@ class StudentRepository(
         syncLedger(ref)
     }
 
-    /** يُستدعى فقط لمستحق بلا دفعات (يتحقق منه الـ ViewModel). */
+    /** فقط لـ charge بدون دفعات (الـ ViewModel يتحقق من هذا). */
     suspend fun deleteCharge(studentId: String, chargeId: String) {
         val ref = studentRef(studentId)
         ref.child(CHARGES).child(chargeId).removeValue().await()
         syncLedger(ref)
     }
 
-    // ---------------- الدفعات ----------------
+    // ---------------- Payments ----------------
 
     /**
-     * تسجيل دفعة: ما يزيد عن المتبقي على مستحقها يُضاف للمحفظة.
-     * الدفعة وحركة الإيداع تُكتبان معًا في transaction واحدة، والمتبقي يُحسب من أحدث البيانات،
-     * فلا يتكرر الإيداع ولا يُحسب خطأً حتى لو سُجلت دفعتان لنفس المستحق من جهازين.
+     * تسجيل دفعة: الزيادة عن المتبقي على الـ charge تذهب للـ wallet.
+     * الدفعة وحركة الـ deposit تُكتبان معًا في transaction واحدة، والمتبقي يُحسب من أحدث البيانات،
+     * فلا يتكرر الـ deposit حتى لو سُجّلت دفعتان لنفس الـ charge من جهازين.
      */
-    /** @return معرّف الدفعة الجديدة (لإرسال إيصالها). */
+    /** @return id الدفعة الجديدة (لإرسال الـ receipt). */
     suspend fun addPayment(studentId: String, input: PaymentInput): String {
         val ref = studentRef(studentId)
         val id = ref.child(PAYMENTS).push().key ?: error("push() returned no key")
@@ -372,7 +372,7 @@ class StudentRepository(
         return id
     }
 
-    /** تعديل دفعة لم تُضف للمحفظة (المبلغ لا يتجاوز المتبقي، يتحقق منه الـ ViewModel). */
+    /** تعديل دفعة لم تُضِف للـ wallet (المبلغ ≤ المتبقي، الـ ViewModel يتحقق). */
     suspend fun updatePayment(studentId: String, paymentId: String, input: PaymentInput) {
         val ref = studentRef(studentId)
         var locked = false
@@ -397,9 +397,9 @@ class StudentRepository(
         if (locked) throw PaymentLockedByWalletException()
     }
 
-    // ---------------- المحفظة ----------------
+    // ---------------- Wallet ----------------
 
-    /** استرداد مبلغ من المحفظة للطالب؛ يُرفض إن تجاوز الرصيد الحالي وقت التنفيذ. */
+    /** Refund من الـ wallet للطالب؛ يُرفض إذا تجاوز الرصيد وقت التنفيذ. */
     suspend fun refundFromWallet(studentId: String, amount: Double, note: String) {
         val ref = studentRef(studentId)
         val id = "ref-" + (ref.child(WALLET).push().key ?: error("push() returned no key"))
@@ -424,14 +424,13 @@ class StudentRepository(
     }
 
     /**
-     * يعيد بناء دفتر الطالب داخل transaction ويكتب القيم المحسوبة:
-     * - يحفظ مستحق "الرسوم" القديم إن كان مشتقًا من دفعات بلا مستحق (ترحيل تلقائي).
-     * - يربط كل دفعة بمستحقها ويكتب المتبقي بعدها وطريقة الدفع.
-     * - يكتب مجاميع الطالب.
-     */
-    /**
-     * @param mutate تعديل يُطبَّق داخل نفس الـ transaction قبل إعادة الحساب
-     * (إضافة دفعة أو مستحق...)، ويعيد معرّفات المستحقات الجديدة التي أنشأها.
+     * يعيد بناء الـ ledger داخل transaction ويكتب القيم المحسوبة:
+     * - Migration: يحفظ charge "الرسوم" الـ legacy إذا كان مشتقًا من دفعات بدون charge.
+     * - يربط كل دفعة بالـ charge الخاص بها ويكتب المتبقي بعدها وطريقة الدفع.
+     * - يكتب totals الطالب و nextBillingDate.
+     *
+     * @param mutate تعديل داخل نفس الـ transaction قبل إعادة الحساب
+     * (إضافة دفعة أو charge...)، ويعيد ids الـ charges الجديدة التي أنشأها.
      */
     private suspend fun syncLedger(
         studentRef: DatabaseReference,
@@ -469,12 +468,12 @@ class StudentRepository(
             data.child("remaining").value = totals.remaining
             data.child("walletBalance").value = totals.walletBalance
             data.child("updatedAt").value = now
-            // فهرس موعد الرسوم القادم: بعد كل تغيير (إنشاء رسوم، أرشفة، تعديل الرسوم...)
+            // Index الـ billing القادم: بعد أي تغيير (charge جديد، أرشفة، تعديل الرسوم...)
             data.child(NEXT_BILLING).value = data.getValue(Student::class.java)?.nextBillingKey().orEmpty()
         }
     }
 
-    /** دفتر الطالب من البيانات الحالية داخل الـ transaction. */
+    /** الـ ledger من البيانات الحالية داخل الـ transaction. */
     private fun MutableData.ledger(): StudentLedger = StudentLedger.build(
         child(CHARGES).children.mapNotNull { it.getValue(Charge::class.java) },
         child(PAYMENTS).children.mapNotNull { it.getValue(Payment::class.java) },
@@ -482,9 +481,9 @@ class StudentRepository(
     )
 
     /**
-     * يسدد المستحقات الجديدة من رصيد المحفظة، الأقدم أولًا، كليًا أو جزئيًا.
-     * حركة الخصم معرّفها ثابت لكل مستحق (use-{id})، فلا يُخصم للمستحق نفسه مرتين.
-     * الخصم ليس دفعة: لا يظهر في النقدي أو البنكي.
+     * يسدد الـ charges الجديدة من رصيد الـ wallet، الأقدم أولًا، كليًا أو جزئيًا.
+     * id حركة الخصم ثابت لكل charge (use-{id})، فلا يُخصم لنفس الـ charge مرتين.
+     * الخصم من الـ wallet ليس دفعة: لا يظهر في النقدي أو البنكي.
      */
     private fun MutableData.applyWalletToNewCharges(chargeIds: List<String>, now: Long) {
         if (chargeIds.isEmpty()) return
@@ -507,8 +506,8 @@ class StudentRepository(
     }
 
     /**
-     * ينشئ رسوم الأشهر التي حان موعدها داخل الـ transaction، بمعرّف ثابت لكل شهر.
-     * @return معرّفات المستحقات التي أُنشئت فعلًا الآن
+     * ينشئ charges الأشهر التي حان موعدها داخل الـ transaction، بـ id ثابت لكل شهر.
+     * @return ids الـ charges التي أُنشئت الآن فعلًا
      */
     private fun MutableData.generateDueCharges(today: SimpleDate, now: Long): List<String> {
         val student = getValue(Student::class.java) ?: return emptyList()
@@ -534,7 +533,7 @@ class StudentRepository(
         return created
     }
 
-    // القيم المحسوبة هنا مبدئية؛ القيم النهائية تُكتب في recalculate
+    // القيم هنا مبدئية؛ القيم النهائية تُكتب في recalculate
     private fun PaymentInput.toPayment(id: String): Payment = Payment(
         id = id,
         chargeId = chargeId,
@@ -582,8 +581,8 @@ class StudentRepository(
 }
 
 /**
- * transaction كـ suspend. إذا لم تكن العقدة موجودة محليًا نتركها كما هي،
- * وسيعيد Firebase المحاولة بالقيمة الحقيقية من الخادم إن وُجدت.
+ * runTransaction كـ suspend. إذا لم تكن العقدة موجودة في الـ local cache نتركها كما هي،
+ * و Firebase يعيد المحاولة بالقيمة الحقيقية من الـ server إن وُجدت.
  */
 private suspend fun DatabaseReference.awaitTransaction(update: (MutableData) -> Unit) =
     suspendCancellableCoroutine { cont ->

@@ -12,7 +12,7 @@ import javax.crypto.SecretKey
 
 /**
  * مفتاح HMAC سري لا يمكن استخراجه من الجهاز.
- * يُستخدم لربط قيمة التحقق من الرمز بالجهاز، ولتوقيع إعدادات القفل ضد التلاعب.
+ * يربط قيمة التحقق من الـ PIN بالجهاز، ويوقّع prefs الـ lock ضد الـ tampering.
  */
 interface KeyedMac {
     fun exists(): Boolean
@@ -20,7 +20,7 @@ interface KeyedMac {
     fun destroy()
 }
 
-/** المفتاح داخل Android Keystore (عتادي إن توفر TEE/StrongBox)، ولا يغادره أبدًا. */
+/** المفتاح داخل Android Keystore (hardware-backed إن توفر TEE/StrongBox)، ولا يغادره أبدًا. */
 class KeystoreMac(private val alias: String = ALIAS) : KeyedMac {
 
     private val keyStore: KeyStore get() = KeyStore.getInstance(PROVIDER).apply { load(null) }
@@ -52,21 +52,21 @@ class KeystoreMac(private val alias: String = ALIAS) : KeyedMac {
     }
 }
 
-/** تخزين إعدادات القفل كنصوص؛ التحقق من سلامتها في [AppLock]. */
+/** تخزين prefs الـ lock كنصوص؛ التحقق من سلامتها في [AppLock]. */
 interface LockStore {
     fun read(): Map<String, String>
     fun write(values: Map<String, String>)
     fun clear()
 }
 
-/** ملف إعدادات خاص بالقفل، مستثنى من النسخ الاحتياطي (انظر backup_rules و data_extraction_rules). */
+/** SharedPreferences خاصة بالـ lock، مستثناة من الـ backup (انظر backup_rules و data_extraction_rules). */
 class PrefsLockStore(context: Context) : LockStore {
     private val prefs = context.applicationContext.getSharedPreferences("app_lock", Context.MODE_PRIVATE)
 
     override fun read(): Map<String, String> =
         prefs.all.mapNotNull { (key, value) -> (value as? String)?.let { key to it } }.toMap()
 
-    // commit (لا apply): حالة المحاولات يجب أن تُحفظ فورًا قبل أن يتمكن أحد من إغلاق التطبيق
+    // commit وليس apply: عدد المحاولات يجب أن يُحفظ فورًا قبل أن يُغلَق التطبيق
     override fun write(values: Map<String, String>) {
         prefs.edit(commit = true) {
             clear()
@@ -79,7 +79,7 @@ class PrefsLockStore(context: Context) : LockStore {
     }
 }
 
-/** ساعة لا تتأثر بتغيير وقت الجهاز، ورقم الإقلاع لمعرفة إعادة التشغيل. */
+/** elapsedRealtime لا يتأثر بتغيير وقت الجهاز، و boot count لمعرفة الـ reboot. */
 interface LockClock {
     fun elapsedRealtime(): Long
     fun bootCount(): Int

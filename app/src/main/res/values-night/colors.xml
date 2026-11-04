@@ -47,4 +47,8 @@
     <color name="swipe_restore">#00531F</color>
 
     <color name="splash_background">#111318</color>
+    <!-- في الـ dark mode خلفية الـ toast فاتحة، فالألوان أغمق -->
+    <color name="toast_success">#1B7F3B</color>
+    <color name="toast_error">#B3261E</color>
+    <color name="toast_info">#0B67C2</color>
 </resources>

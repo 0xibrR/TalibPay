@@ -13,6 +13,7 @@ import com.irdev.talibpay.domain.entryType
 import com.irdev.talibpay.domain.overdueDues
 import com.irdev.talibpay.domain.overdueTotal
 import com.irdev.talibpay.domain.todaySimpleDate
+import com.irdev.talibpay.util.ToastKind
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,10 +30,10 @@ data class DashboardSummary(
     val paid: Double = 0.0,
     val remaining: Double = 0.0,
     val total: Double = 0.0,
-    /** ما استُرد للطلاب من محافظهم: مال خرج، فيُخصم من المحصّل. */
+    /** مجموع الـ refunds للطلاب من الـ wallets: مال خرج، فيُخصم من المحصّل. */
     val refunded: Double = 0.0
 ) {
-    /** المحصّل فعلًا: نقدي + بنكي ناقص المسترد (مثل التقرير الشهري). */
+    /** المحصّل فعلًا: نقدي + بنكي ناقص الـ refunds (مثل التقرير الشهري). */
     val collected: Double get() = Money.subtract(paid, refunded)
 }
 
@@ -41,14 +42,14 @@ data class MainUiState(
     val students: List<StudentWithPayments> = emptyList(),
     val studentCount: Int = 0,
     val summary: DashboardSummary = DashboardSummary(),
-    /** كل الطلاب الذين عليهم مستحقات متأخرة (بغض النظر عن البحث)، الأعلى مبلغًا أولًا. */
+    /** كل الطلاب المتأخرين (بغض النظر عن البحث)، الأعلى مبلغًا أولًا. */
     val overdue: List<OverdueStudent> = emptyList(),
     val filter: StudentFilter = StudentFilter.ALL,
     val sort: StudentSort = StudentSort.DEFAULT,
-    /** عدد الطلاب في كل فلتر (ضمن نتيجة البحث)، للعرض على أزرار التصفية. */
+    /** عدد الطلاب في كل filter (ضمن نتيجة البحث)، للعرض على الـ chips. */
     val filterCounts: Map<StudentFilter, Int> = emptyMap(),
     val archivedCount: Int = 0,
-    /** كل الطلاب ومنهم المؤرشفون (للتصدير). */
+    /** كل الطلاب ومنهم المؤرشفون (للـ Excel export). */
     val everyone: List<StudentWithPayments> = emptyList()
 ) {
     val hasAnyStudent: Boolean get() = studentCount > 0
@@ -62,8 +63,8 @@ class MainViewModel : BaseViewModel() {
     private val sort = MutableStateFlow(StudentSort.DEFAULT)
 
     init {
-        // عند فتح التطبيق: إنشاء الرسوم الشهرية التي حان موعدها (ومنها أشهر فاتت دون فتح التطبيق).
-        // فشلها لا يمنع عرض البيانات، وستُعاد المحاولة في المهمة اليومية وعند الفتح التالي.
+        // عند فتح التطبيق: إنشاء الـ monthly charges التي حان موعدها (ومنها أشهر فاتت بدون فتح التطبيق).
+        // فشلها لا يمنع عرض البيانات، وتُعاد المحاولة في الـ daily worker وعند الفتح التالي.
         viewModelScope.launch {
             try {
                 repository.generateMonthlyDues()
@@ -81,9 +82,9 @@ class MainViewModel : BaseViewModel() {
             emit(emptyList())
         }
 
-    // المستمع على Firebase يعمل فقط أثناء ظهور الشاشة (+5 ثوانٍ لتغيير الاتجاه)
+    // الـ Firebase listener يعمل فقط أثناء ظهور الشاشة (+5 ثوانٍ تكفي للـ rotation)
     val uiState: StateFlow<MainUiState> = combine(allStudents, query, filter, sort) { all, q, f, s ->
-        // المؤرشفون في شاشة الأرشيف فقط: لا يظهرون في القائمة ولا في الملخص ولا في التذكير
+        // المؤرشفون في شاشة الأرشيف فقط: لا يظهرون في القائمة ولا الـ summary ولا التذكير
         val list = all.filterNot { it.student.archived }
         val today = todaySimpleDate()
         val searched = search(list, q)
@@ -122,7 +123,7 @@ class MainViewModel : BaseViewModel() {
         query.value = text
     }
 
-    /** الأرشفة بالسحب: فورية لأنها قابلة للتراجع (الحذف من ملف الطالب فقط). */
+    /** Archive بالسحب: فوري لأنه قابل للـ undo (الحذف من ملف الطالب فقط). */
     fun archive(item: StudentWithPayments) = runAction {
         repository.archiveStudent(item.student.id)
         send(UiEvent.StudentArchived(item))
@@ -134,7 +135,7 @@ class MainViewModel : BaseViewModel() {
 
     fun deleteAll() = runAction {
         repository.deleteAllStudents()
-        send(UiEvent.Message(R.string.delete_all_note))
+        send(UiEvent.Message(R.string.all_students_deleted, kind = ToastKind.SUCCESS))
     }
 
     private fun search(list: List<StudentWithPayments>, query: String): List<StudentWithPayments> {
@@ -149,14 +150,14 @@ class MainViewModel : BaseViewModel() {
     }
 }
 
-/** طالب عليه مستحقات متأخرة، مع هذه المستحقات ومجموعها (لقائمة التذكير). */
+/** طالب متأخر، مع الـ charges المتأخرة ومجموعها (لقائمة التذكير). */
 data class OverdueStudent(
     val data: StudentWithPayments,
     val dues: List<DueSummary>,
     val total: Double
 )
 
-/** الطلاب المتأخرون مرتبين من الأعلى مبلغًا متأخرًا. */
+/** الطلاب المتأخرون، الأعلى مبلغًا متأخرًا أولًا. */
 fun overdueStudents(list: List<StudentWithPayments>, today: SimpleDate): List<OverdueStudent> =
     list.mapNotNull { item ->
         val dues = item.ledger.overdueDues(today)

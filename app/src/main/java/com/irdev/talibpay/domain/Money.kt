@@ -7,7 +7,7 @@ import java.util.Locale
 
 /**
  * المبالغ تبقى Double في Firebase للتوافق مع البيانات الحالية،
- * لكن كل جمع وطرح يتم بـ BigDecimal ويُقرَّب لخانتين حتى لا تظهر أخطاء مثل 0.1 + 0.2.
+ * لكن كل جمع وطرح يتم بـ BigDecimal مع تقريب لخانتين، لتجنب أخطاء floating point مثل 0.1 + 0.2.
  */
 object Money {
 
@@ -22,7 +22,7 @@ object Money {
         (BigDecimal.valueOf(a) - BigDecimal.valueOf(b)).setScale(2, RoundingMode.HALF_UP).toDouble()
 
     /**
-     * يحوّل نص المستخدم لمبلغ: يقبل الأرقام العربية والفاصلة العربية/الأوروبية.
+     * Parse لنص المستخدم إلى مبلغ: يقبل الأرقام العربية والفاصلة العربية أو الأوروبية.
      * يعيد null للنص غير الصالح أو السالب.
      */
     fun parse(text: String?): Double? {

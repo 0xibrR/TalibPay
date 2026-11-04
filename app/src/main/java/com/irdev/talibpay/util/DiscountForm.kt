@@ -16,8 +16,8 @@ import com.irdev.talibpay.model.Student
 import java.util.Locale
 
 /**
- * حقول الخصم في نموذج الطالب: تظهر فقط عند إدخال رسوم شهرية،
- * وتعرض الرسوم بعد الخصم أثناء الكتابة.
+ * حقول الخصم في form الطالب: تظهر فقط عند إدخال monthly fee،
+ * وتعرض الرسوم بعد الخصم أثناء الكتابة (live preview).
  */
 fun ViewDiscountFieldsBinding.setup(feeField: EditText, initial: StudentDiscount) {
     val context = root.context
@@ -62,7 +62,7 @@ private fun ViewDiscountFieldsBinding.selectedType(): DiscountType? = when (disc
     else -> null
 }
 
-/** الخصم المُدخل بعد التحقق منه؛ null مع عرض الخطأ إن لم يكن صالحًا. بلا رسوم شهرية لا خصم. */
+/** الخصم المُدخل بعد الـ validation؛ null مع عرض الخطأ إن لم يكن صالحًا. بدون monthly fee لا خصم. */
 fun ViewDiscountFieldsBinding.readDiscount(monthlyFee: Double): StudentDiscount? {
     if (monthlyFee <= 0) return StudentDiscount.NONE
     val context = root.context
@@ -91,7 +91,7 @@ fun Context.discountLabel(discount: StudentDiscount): String {
     return if (discount.reason.isBlank()) value else getString(R.string.discount_with_reason, value, discount.reason)
 }
 
-/** الرسوم الشهرية للعرض: "100 ₪"، أو مع الخصم "100 ₪ − 20% (أخ) = 80 ₪". */
+/** الـ monthly fee للعرض: "100 ₪"، أو مع الخصم "100 ₪ − 20% (أخ) = 80 ₪". */
 fun Context.monthlyFeeText(student: Student): String {
     val discount = student.discount
     if (!discount.isActive) return money(student.monthlyFee)

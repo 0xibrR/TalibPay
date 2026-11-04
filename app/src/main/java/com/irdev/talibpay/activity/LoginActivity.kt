@@ -17,12 +17,14 @@ import com.irdev.talibpay.data.addGoogleAccountIntent
 import com.irdev.talibpay.data.requestGoogleIdToken
 import com.irdev.talibpay.databinding.ActivityLoginBinding
 import com.irdev.talibpay.util.LoadingDialog
+import com.irdev.talibpay.util.ToastKind
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.errorMessageRes
 import com.irdev.talibpay.util.isUserCancellation
 import com.irdev.talibpay.util.requireRawText
 import com.irdev.talibpay.util.requireText
+import com.irdev.talibpay.util.showToast
 import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.AuthViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
@@ -76,7 +78,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun signInWithGoogle() {
-        // نافذة اختيار الحساب مفتوحة بالفعل: نتجاهل النقر المتكرر
+        // اختيار الحساب مفتوح بالفعل: نتجاهل النقر المتكرر
         if (googleRequestInProgress) return
         googleRequestInProgress = true
         lifecycleScope.launch {
@@ -87,7 +89,7 @@ class LoginActivity : AppCompatActivity() {
             } catch (_: NoCredentialException) {
                 showAddGoogleAccountDialog()
             } catch (e: Exception) {
-                if (!e.isUserCancellation()) toast(errorMessageRes(e), long = true)
+                if (!e.isUserCancellation()) toast(errorMessageRes(e), ToastKind.ERROR, long = true)
             } finally {
                 googleRequestInProgress = false
             }
@@ -103,7 +105,7 @@ class LoginActivity : AppCompatActivity() {
                 try {
                     addGoogleAccount.launch(addGoogleAccountIntent())
                 } catch (_: ActivityNotFoundException) {
-                    toast(R.string.google_sign_in_failed)
+                    toast(R.string.google_sign_in_failed, ToastKind.ERROR)
                 }
             }
             .setNegativeButton(R.string.cancel, null)
@@ -117,11 +119,11 @@ class LoginActivity : AppCompatActivity() {
                     "${getString(R.string.login_successfully_google_account)} ${event.displayName}"
                 else
                     getString(R.string.login_successfully_email)
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                showToast(message, ToastKind.SUCCESS)
                 openMain()
             }
 
-            is UiEvent.Message -> toast(event.res, long = true)
+            is UiEvent.Message -> toast(event)
             else -> Unit
         }
     }

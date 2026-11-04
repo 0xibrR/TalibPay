@@ -29,7 +29,7 @@ import com.irdev.talibpay.viewmodel.ReportState
 import com.irdev.talibpay.viewmodel.ReportViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 
-/** التقرير الشهري: المحصّل، ومستحقات الشهر، ومن لم يسدّد؛ مع مشاركته كصورة أو PDF. */
+/** التقرير الشهري: المحصّل، و charges الشهر، ومن لم يسدّد؛ مع مشاركته كصورة أو PDF. */
 class ReportActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReportBinding
@@ -91,7 +91,7 @@ class ReportActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    /** يملأ محتوى التقرير؛ [context] هو سياق العرض (فاتح دائمًا عند التصدير). */
+    /** يملأ محتوى التقرير؛ [context] هو context العرض (light دائمًا عند التصدير). */
     private fun bindReport(b: ActivityReportBinding, state: ReportState, context: Context) {
         val report = state.report
         val inflater = LayoutInflater.from(context)
@@ -104,7 +104,7 @@ class ReportActivity : AppCompatActivity() {
 
         b.tvReportHeading.text = getString(R.string.report_heading, monthName(report.month))
 
-        // المحصّل
+        // Collected
         b.tvCollected.text = money(report.collected)
         b.collectedRows.removeAllViews()
         b.collectedRows.addRow(getString(R.string.label_cash), money(report.collectedCash))
@@ -117,10 +117,10 @@ class ReportActivity : AppCompatActivity() {
             resources.getQuantityString(R.plurals.payments_count, report.paymentCount, report.paymentCount)
         )
 
-        // التحصيل خلال الأشهر الأخيرة
+        // Chart التحصيل في الأشهر الأخيرة
         b.collectionChart.setData(state.trend, report.month)
 
-        // مستحقات الشهر
+        // Charges الشهر
         b.duesRows.removeAllViews()
         b.duesProgress.setProgressCompat(paidPercent(report.billedPaid, report.billed), false)
         b.duesProgress.visibility = if (report.billed > 0) View.VISIBLE else View.GONE
@@ -137,7 +137,7 @@ class ReportActivity : AppCompatActivity() {
             b.duesRows.addRow(getString(R.string.report_no_dues), "")
         }
 
-        // غير المسدّدين
+        // Unpaid
         b.tvUnpaidTitle.text = getString(R.string.report_unpaid_title, report.unpaid.size)
         b.unpaidRows.removeAllViews()
         if (report.unpaid.isEmpty()) {
@@ -156,12 +156,12 @@ class ReportActivity : AppCompatActivity() {
         b.tvGeneratedAt.text = getString(R.string.report_generated, todaySimpleDate().format())
     }
 
-    /** نسخة من التقرير بالوضع الفاتح خارج الشاشة للتصدير (انظر DocumentExport). */
+    /** نسخة off-screen من التقرير بالـ light mode للتصدير (انظر DocumentExport). */
     private fun renderForExport(state: ReportState): View {
         val inflater = DocumentExport.inflater(this)
         val export = ActivityReportBinding.inflate(inflater)
         bindReport(export, state, inflater.context)
-        // شريط التقدم لا يُرسم خارج الشاشة، فنخفيه بدل ترك فراغ
+        // الـ progress indicator لا يُرسم off-screen، فنخفيه بدل ترك فراغ
         export.duesProgress.visibility = View.GONE
         return DocumentExport.layout(this, export.reportContent)
     }

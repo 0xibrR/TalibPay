@@ -31,7 +31,7 @@ object ReminderPrefs {
     }
 }
 
-/** رمز دولة الطالب، أو الرمز الافتراضي من الإعدادات إن لم يُحدَّد له رمز (الطلاب القدامى). */
+/** رمز دولة الطالب، أو الافتراضي من الإعدادات إن لم يُحدَّد له رمز (طلاب قدامى). */
 fun Context.countryCodeFor(student: Student): String =
     student.phoneCountryCode.ifBlank { ReminderPrefs.countryCode(this) }
 
@@ -40,22 +40,22 @@ fun Context.displayPhone(student: Student): String =
     PhoneNumbers.display(student.phoneNumber, countryCodeFor(student))
 
 /**
- * حقل رمز الدولة: قائمة بالدول الشائعة (الرمز · الاسم) مع إمكانية كتابة أي رمز آخر.
- * كتابة أرقام تصفّي القائمة، واختيار دولة يضع رمزها فقط في الحقل.
+ * حقل رمز الدولة: dropdown بالدول الشائعة (الرمز · الاسم) مع إمكانية كتابة أي رمز آخر.
+ * كتابة أرقام تفلتر القائمة، واختيار دولة يضع رمزها فقط في الحقل.
  */
 fun MaterialAutoCompleteTextView.setupCountryCodePicker(initialCode: String) {
     val options = resources.getStringArray(R.array.country_codes).map { it.split("|", limit = 2) }
     val labels = options.map { (code, country) -> context.getString(R.string.country_code_item, code, country) }
     setAdapter(ArrayAdapter(context, android.R.layout.simple_list_item_1, labels))
     setOnItemClickListener { parent, _, position, _ ->
-        // القائمة المصفّاة تتغير مع الكتابة، فنقرأ النص المختار ونستخرج رمزه
+        // القائمة المفلترة تتغير مع الكتابة، فنقرأ النص المختار ونستخرج رمزه
         val label = parent.getItemAtPosition(position) as String
         setText(label.substringBefore(" "), false)
     }
     setText(initialCode, false)
 }
 
-/** نص التذكير بلغة التطبيق: اسم الطالب، كل مستحق متأخر ومتبقيه، والمجموع. */
+/** نص التذكير بلغة التطبيق: اسم الطالب، كل charge متأخر ومتبقيه، والمجموع. */
 fun Context.reminderMessage(student: Student, overdue: List<DueSummary>): String {
     val lines = overdue.map { getString(R.string.reminder_due_line, dueTitle(it.charge), money(it.remaining)) }
     return getString(
@@ -69,9 +69,9 @@ fun Context.reminderMessage(student: Student, overdue: List<DueSummary>): String
 private val WHATSAPP_PACKAGES = listOf("com.whatsapp", "com.whatsapp.w4b")
 
 /**
- * يفتح محادثة واتساب مع الرقم والرسالة جاهزة (واتساب العادي ثم واتساب للأعمال)،
- * وإن لم يكن واتساب مثبتًا يفتح الرسائل النصية بنفس النص.
- * إن لم يكن الرقم صالحًا يعرض قائمة المشاركة ليختار المستخدم التطبيق والمستلم بنفسه.
+ * يفتح محادثة WhatsApp مع الرقم والرسالة جاهزة (WhatsApp ثم WhatsApp Business)،
+ * وإن لم يكن مثبتًا يفتح الـ SMS بنفس النص.
+ * إن لم يكن الرقم صالحًا يعرض الـ share sheet ليختار المستخدم التطبيق والمستلم بنفسه.
  */
 fun Context.sendReminder(student: Student, message: String) {
     val phone = PhoneNumbers.toInternational(student.phoneNumber, countryCodeFor(student))
@@ -93,7 +93,7 @@ fun Context.sendReminder(student: Student, message: String) {
             Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:+$phone")).putExtra("sms_body", message)
         )
     } catch (_: ActivityNotFoundException) {
-        toast(R.string.reminder_no_app)
+        toast(R.string.reminder_no_app, ToastKind.ERROR)
     }
 }
 

@@ -36,7 +36,7 @@ class RegisterActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.loading) { loading.setVisible(it) }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> toast(event.res, long = true)
+                is UiEvent.Message -> toast(event)
                 UiEvent.Finished -> finish()
                 else -> Unit
             }

@@ -206,7 +206,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- تذكير ولي الأمر بالمستحقات المتأخرة (خارج البطاقة حتى لا يظهر في صورة الإشعار) -->
+            <!-- تذكير ولي الأمر عبر WhatsApp (خارج الـ card حتى لا يظهر في الصورة المُشارَكة) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRemind"
                 style="@style/Widget.Material3.Button.TonalButton.Icon"
@@ -218,7 +218,7 @@
                 app:icon="@drawable/ic_chat"
                 tools:visibility="visible" />
 
-            <!-- المحفظة: الرصيد الدائن وسجل الحركات -->
+            <!-- الـ wallet: الرصيد الدائن وسجل الحركات -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -296,7 +296,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- المستحقات: كل مستحق مع ما دُفع منه ودفعاته -->
+            <!-- الـ charges: كل charge مع المدفوع منه ودفعاته -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

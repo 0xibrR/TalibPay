@@ -21,7 +21,7 @@ import kotlin.math.ceil
 
 /**
  * تصدير المستندات المرسلة للأهالي (التقرير، الإيصال، كشف الحساب) كصورة أو PDF.
- * تُرسم دائمًا بالوضع الفاتح وبعرض ثابت، خارج الشاشة، لتكون واضحة ومناسبة للطباعة مهما كان مظهر التطبيق.
+ * تُرسم off-screen دائمًا بالـ light mode وبعرض ثابت، لتكون واضحة وصالحة للطباعة مهما كان theme التطبيق.
  */
 object DocumentExport {
 
@@ -29,7 +29,7 @@ object DocumentExport {
     private const val A4_WIDTH_PT = 595
     private const val A4_HEIGHT_PT = 842
 
-    /** سياق بالوضع الفاتح (مع لغة التطبيق الحالية) لإنشاء نسخة التصدير. */
+    /** Context بالـ light mode (مع لغة التطبيق الحالية) لإنشاء نسخة التصدير. */
     fun lightContext(activity: Activity): Context {
         val config = Configuration(activity.resources.configuration).apply {
             uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or Configuration.UI_MODE_NIGHT_NO
@@ -39,7 +39,7 @@ object DocumentExport {
 
     fun inflater(activity: Activity): LayoutInflater = LayoutInflater.from(lightContext(activity))
 
-    /** يفصل [content] عن أبيه ويقيسه بعرض التصدير؛ عرض بلا أب لا يرث اتجاه اللغة فنحدده صراحة. */
+    /** يفصل [content] عن الـ parent ويعمل measure/layout بعرض التصدير؛ View بلا parent لا يرث الـ layoutDirection فنحدده صراحة. */
     fun layout(activity: Activity, content: View): View {
         (content.parent as? ViewGroup)?.removeView(content)
         content.layoutDirection = activity.resources.configuration.layoutDirection
@@ -92,7 +92,7 @@ object DocumentExport {
         }
     }
 
-    /** الملف في cache الخاص بالتطبيق، ويُشارك عبر FileProvider بصلاحية قراءة مؤقتة. */
+    /** الملف في الـ cache الخاص بالتطبيق، ويُشارك عبر FileProvider بصلاحية قراءة مؤقتة. */
     fun share(activity: Activity, file: File, mimeType: String, caption: String? = null) {
         val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {

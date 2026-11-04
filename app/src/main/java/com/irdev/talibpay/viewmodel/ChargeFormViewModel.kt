@@ -12,19 +12,20 @@ import com.irdev.talibpay.domain.DueSummary
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.validateCharge
 import com.irdev.talibpay.util.Extras
+import com.irdev.talibpay.util.ToastKind
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * بيانات تعبئة النموذج: المستحق عند التعديل، أو اقتراح قيمة عند الإضافة.
- * @param suggestMonthTitle اقتراح "رسوم الشهر" كاسم للمستحق الجديد: فقط لطالب بلا رسوم شهرية تلقائية،
- *   وإلا لتكرر اسم مستحق الشهر التلقائي نفسه.
+ * بيانات تعبئة الـ form: الـ charge عند التعديل، أو قيمة مقترحة عند الإضافة.
+ * @param suggestMonthTitle اقتراح "رسوم الشهر" كاسم للـ charge الجديد: فقط لطالب بدون monthly fee تلقائية،
+ *   وإلا سيتكرر اسم الـ monthly charge التلقائي نفسه.
  */
 data class ChargeFormPrefill(val due: DueSummary?, val suggestedAmount: Double?, val suggestMonthTitle: Boolean = false)
 
-/** إضافة مستحق (بدون معرّف) أو تعديل مستحق موجود. */
+/** إضافة charge (بدون id) أو تعديل charge موجود. */
 class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() {
 
     private val repository = StudentRepository()
@@ -44,8 +45,8 @@ class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() 
                 _prefill.value = if (id != null) {
                     ChargeFormPrefill(data.ledger.due(id), null)
                 } else {
-                    // طالب بلا رسوم تلقائية: غالبًا يضيف رسوم كل شهر يدويًا بنفس القيمة، فنقترح الاسم والقيمة.
-                    // من له رسوم تلقائية: المستحق اليدوي شيء آخر (كتب، تسجيل...)، فلا اقتراح.
+                    // طالب بدون رسوم تلقائية: غالبًا يضيف رسوم كل شهر يدويًا بنفس القيمة، فنقترح الاسم والقيمة.
+                    // من له رسوم تلقائية: الـ charge اليدوي شيء آخر (كتب، تسجيل...)، فلا اقتراح.
                     val manualBilling = !data.student.hasMonthlyBilling
                     ChargeFormPrefill(
                         null,
@@ -60,17 +61,17 @@ class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() 
     }
 
     /**
-     * @param keepGeneratedTitle الاسم المعروض مولَّد (رسوم شهرية أو قديمة) ولم يغيّره المستخدم:
-     * نبقيه فارغًا في البيانات ليبقى مولَّدًا ويُترجم مع لغة التطبيق.
+     * @param keepGeneratedTitle الاسم المعروض generated (رسوم شهرية أو legacy) ولم يغيّره المستخدم:
+     * نتركه فارغًا في البيانات ليبقى generated ويُترجم حسب لغة التطبيق.
      */
     fun save(title: String, keepGeneratedTitle: Boolean, amountText: String, dueDate: String, note: String) {
         if (studentId.isEmpty()) {
-            send(UiEvent.Message(R.string.error_generic))
+            send(UiEvent.Message(R.string.error_generic, kind = ToastKind.ERROR))
             return
         }
         runAction {
             val id = chargeId
-            // عند التعديل: لا تقل القيمة عمّا دُفع من المستحق
+            // عند التعديل: القيمة لا تقل عن المدفوع من الـ charge
             val alreadyPaid = if (id == null) 0.0
             else repository.getStudent(studentId)?.ledger?.due(id)?.paid ?: 0.0
 
@@ -85,10 +86,10 @@ class ChargeFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() 
             val input = ChargeInput(if (keepGeneratedTitle) "" else valid.title, valid.amount, dueDate, note)
             if (id == null) {
                 repository.addCharge(studentId, input)
-                send(UiEvent.Message(R.string.due_added))
+                send(UiEvent.Message(R.string.due_added, kind = ToastKind.SUCCESS))
             } else {
                 repository.updateCharge(studentId, id, input)
-                send(UiEvent.Message(R.string.updated_successfully))
+                send(UiEvent.Message(R.string.updated_successfully, kind = ToastKind.SUCCESS))
             }
             send(UiEvent.Finished)
         }

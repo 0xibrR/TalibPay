@@ -21,7 +21,7 @@ import com.irdev.talibpay.util.dueTitle
 import com.irdev.talibpay.util.money
 import com.irdev.talibpay.util.paidPercent
 
-/** بطاقات المستحقات، وتحت كل مستحق دفعاته. */
+/** Cards الـ charges، وتحت كل charge دفعاته. */
 class DueAdapter(
     private val onPay: (DueSummary) -> Unit,
     private val onDueMenu: (DueSummary, View) -> Unit,
@@ -59,15 +59,15 @@ class DueAdapter(
             dueProgress.setIndicatorColor(color)
             tvDueSummary.text = listOfNotNull(
                 context.getString(R.string.due_summary, context.money(due.paid), context.money(due.remaining)),
-                // ما سُدِّد من المحفظة (ليس دفعة، فلا يظهر في قائمة الدفعات)
+                // المسدَّد من الـ wallet (ليس دفعة، فلا يظهر في قائمة الدفعات)
                 if (due.walletUsed > 0) context.getString(R.string.due_wallet_used, context.money(due.walletUsed)) else null,
-                // الرسوم الشهرية المنشأة بخصم: نوضح قيمتها قبل الخصم
+                // Monthly charge أُنشئ بخصم: نوضح قيمته قبل الخصم
                 if (due.charge.discount > 0) context.getString(
                     R.string.due_discount, context.money(Money.sum(listOf(due.charge.amount, due.charge.discount))), context.money(due.charge.discount)
                 ) else null
             ).joinToString("\n")
 
-            // الدفعات: الأحدث أولًا، مع المتبقي من المستحق بعد كل دفعة
+            // الدفعات: الأحدث أولًا، مع المتبقي من الـ charge بعد كل دفعة
             duePayments.removeAllViews()
             val inflater = LayoutInflater.from(context)
             due.payments.asReversed().forEach { payment ->
@@ -88,7 +88,7 @@ class DueAdapter(
                 row.root.setOnClickListener { onPaymentClick(due, payment) }
             }
 
-            // زر الدفع يظهر فقط لمستحق لم يُسدَّد بالكامل
+            // زر الدفع يظهر فقط لـ charge غير مسدد بالكامل
             btnPayDue.isVisible = due.remaining > 0
             dueBottomSpace.isVisible = due.remaining <= 0
             btnPayDue.setOnClickListener { onPay(due) }

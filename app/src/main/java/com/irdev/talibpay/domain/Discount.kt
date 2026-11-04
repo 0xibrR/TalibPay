@@ -7,8 +7,8 @@ import java.math.RoundingMode
 enum class DiscountType { PERCENT, AMOUNT }
 
 /**
- * خصم دائم على الرسوم الشهرية للطالب (مثل الإخوة أو منحة).
- * يُطبَّق عند إنشاء كل مستحق شهري، فتغييره لا يمس المستحقات السابقة.
+ * خصم دائم على الـ monthly fee للطالب (مثل الإخوة أو منحة).
+ * يُطبَّق عند إنشاء كل monthly charge، فتغييره لا يمس الـ charges السابقة.
  */
 data class StudentDiscount(
     val type: DiscountType? = null,
@@ -17,7 +17,7 @@ data class StudentDiscount(
 ) {
     val isActive: Boolean get() = type != null && value > 0
 
-    /** ما يُخصم من رسوم شهرية قيمتها [fee]؛ لا يتجاوز الرسوم نفسها. */
+    /** قيمة الخصم من fee قيمتها [fee]؛ لا يتجاوز الـ fee نفسها. */
     fun amountOff(fee: Double): Double {
         if (!isActive || fee <= 0) return 0.0
         val off = when (type) {
@@ -31,7 +31,7 @@ data class StudentDiscount(
         return off.coerceAtMost(fee)
     }
 
-    /** الرسوم بعد الخصم. */
+    /** الـ fee بعد الخصم. */
     fun netFee(fee: Double): Double = Money.subtract(fee, amountOff(fee))
 
     companion object {
@@ -40,7 +40,7 @@ data class StudentDiscount(
     }
 }
 
-/** خصم الطالب من حقوله المحفوظة. */
+/** خصم الطالب من حقوله المحفوظة في Firebase. */
 val Student.discount: StudentDiscount
     get() = StudentDiscount(
         DiscountType.entries.firstOrNull { it.name == discountType },
@@ -55,7 +55,7 @@ sealed interface DiscountValidation {
     data object ExceedsFee : DiscountValidation
 }
 
-/** @param type null = بدون خصم (تُتجاهل القيمة). */
+/** @param type null = بدون خصم (القيمة تُتجاهل). */
 fun validateDiscount(type: DiscountType?, valueText: String, reason: String, monthlyFee: Double): DiscountValidation {
     if (type == null) return DiscountValidation.Valid(StudentDiscount.NONE)
     val value = Money.parse(valueText)

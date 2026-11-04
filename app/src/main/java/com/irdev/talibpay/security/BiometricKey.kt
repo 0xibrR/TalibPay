@@ -14,9 +14,9 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
 /**
- * مفتاح AES في Android Keystore لا يُستخدم إلا بعد بصمة قوية (Class 3)، ويُلغى تلقائيًا
- * عند إضافة بصمة جديدة للجهاز. الفتح يتطلب تشفيرًا فعليًا بالمفتاح بعد البصمة ([confirm])،
- * فلا يكفي استدعاء onAuthenticationSucceeded وحده (مثلًا عبر أداة تلاعب) لفتح التطبيق.
+ * مفتاح AES في Android Keystore لا يُستخدم إلا بعد fingerprint قوية (Class 3)، ويُلغى تلقائيًا
+ * عند إضافة fingerprint جديدة للجهاز. الفتح يتطلب encryption فعلي بالمفتاح بعد الـ fingerprint ([confirm])،
+ * فلا يكفي استدعاء onAuthenticationSucceeded وحده (مثلًا عبر hooking tool) لفتح التطبيق.
  */
 object BiometricKey {
 
@@ -28,16 +28,16 @@ object BiometricKey {
     sealed interface Prepared {
         data class Ready(val cryptoObject: BiometricPrompt.CryptoObject) : Prepared
 
-        /** أُضيفت بصمة جديدة أو أُزيلت كل البصمات: المفتاح لم يعد صالحًا. */
+        /** أُضيفت fingerprint جديدة أو أُزيلت كلها: المفتاح لم يعد صالحًا (KeyPermanentlyInvalidated). */
         data object Invalidated : Prepared
         data object Unavailable : Prepared
     }
 
-    /** الجهاز فيه حساس بصمة قوي، والمستخدم سجّل بصمة واحدة على الأقل. */
+    /** الجهاز فيه sensor قوي، والمستخدم سجّل fingerprint واحدة على الأقل. */
     fun isAvailable(context: Context): Boolean =
         BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
 
-    /** هل يدعم الجهاز البصمة أصلًا (حتى لو لم تُسجَّل بصمة بعد). */
+    /** هل الجهاز يدعم الـ fingerprint أصلًا (حتى لو لم تُسجَّل بعد). */
     fun hasHardware(context: Context): Boolean =
         BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE &&
             BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE
@@ -53,7 +53,7 @@ object BiometricKey {
             .setUserAuthenticationRequired(true)
             .setInvalidatedByBiometricEnrollment(true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // كل استخدام يحتاج بصمة جديدة (لا مهلة)، وبصمة قوية فقط
+            // كل استخدام يحتاج fingerprint جديدة (بدون timeout)، و strong biometric فقط
             builder.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
         }
         KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PROVIDER).run {
@@ -66,7 +66,7 @@ object BiometricKey {
         if (exists()) keyStore().deleteEntry(ALIAS)
     }
 
-    /** يجهّز Cipher مرتبطًا بالمفتاح ليُمرَّر لـ BiometricPrompt. */
+    /** يجهّز Cipher مرتبط بالمفتاح ليُمرَّر لـ BiometricPrompt (CryptoObject). */
     fun prepare(context: Context): Prepared {
         if (!isAvailable(context)) return Prepared.Unavailable
         val key = keyStore().getKey(ALIAS, null) as? SecretKey ?: return Prepared.Invalidated
@@ -79,7 +79,7 @@ object BiometricKey {
         }
     }
 
-    /** بعد نجاح البصمة: تشفير حقيقي بالمفتاح؛ يفشل إن لم تكن البصمة قد فتحت المفتاح فعلًا. */
+    /** بعد نجاح الـ fingerprint: encryption حقيقي بالمفتاح؛ يفشل إن لم تفتح الـ fingerprint المفتاح فعلًا. */
     fun confirm(result: BiometricPrompt.AuthenticationResult): Boolean = try {
         val cipher = result.cryptoObject?.cipher ?: return false
         cipher.doFinal(CHALLENGE).isNotEmpty()

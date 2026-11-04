@@ -11,7 +11,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.irdev.talibpay.util.canAccessApp
 import kotlinx.coroutines.tasks.await
 
-/** البريد مسجّل بطريقة دخول أخرى ولا يمكن ربط Google به تلقائيًا. */
+/** البريد مسجّل بطريقة sign-in أخرى، ولا يمكن ربط Google به تلقائيًا. */
 class GoogleAccountCollisionException(cause: Throwable) :
     IllegalStateException("Account exists with a different sign-in method", cause)
 
@@ -19,7 +19,7 @@ enum class EmailSignInResult { SUCCESS, NOT_VERIFIED }
 
 enum class AccountProvider { GOOGLE, PASSWORD, UNKNOWN }
 
-/** طريقة إعادة التحقق من الهوية قبل العمليات الحساسة (حذف الحساب). */
+/** طريقة الـ re-authentication قبل العمليات الحساسة (مثل حذف الحساب). */
 sealed interface Reauthentication {
     data class Password(val password: String) : Reauthentication
     data class Google(val idToken: String) : Reauthentication
@@ -32,11 +32,11 @@ class AuthRepository(
 
     val currentUser: FirebaseUser? get() = auth.currentUser
 
-    /** مستخدم مسجّل ومسموح له بالدخول (بريده مؤكَّد أو حساب Google). */
+    /** مستخدم مسجّل ومسموح له يدخل (بريده verified أو حساب Google). */
     fun hasActiveSession(): Boolean {
         val user = auth.currentUser ?: return false
         if (user.canAccessApp()) return true
-        // جلسة متبقية لحساب غير مؤكَّد: نُنهيها
+        // Session قديمة لحساب غير verified: ننهيها
         auth.signOut()
         return false
     }
@@ -56,7 +56,7 @@ class AuthRepository(
     suspend fun signInWithEmail(email: String, password: String): EmailSignInResult {
         val user = auth.signInWithEmailAndPassword(email, password).await().user
         if (user == null || !user.isEmailVerified) {
-            // لا نترك جلسة لحساب غير مؤكَّد، وإلا سيدخل تلقائيًا عند فتح التطبيق
+            // لا نترك session لحساب غير verified، وإلا سيدخل تلقائيًا عند فتح التطبيق
             auth.signOut()
             return EmailSignInResult.NOT_VERIFIED
         }
@@ -64,7 +64,7 @@ class AuthRepository(
     }
 
     /**
-     * يحوّل أخطاء Firebase الخاصة بـ Google إلى أخطاء واضحة، حتى لا تظهر رسالة
+     * يحوّل أخطاء Firebase الخاصة بـ Google لأخطاء واضحة، حتى لا تظهر رسالة
      * "البريد أو كلمة المرور غير صحيحة" لمستخدم لم يكتب كلمة مرور أصلًا.
      */
     suspend fun signInWithGoogle(idToken: String): FirebaseUser {
@@ -78,7 +78,7 @@ class AuthRepository(
         return user ?: throw GoogleCredentialException()
     }
 
-    /** ينشئ الحساب ويرسل رسالة التأكيد، ثم يسجّل الخروج حتى يؤكد المستخدم بريده. */
+    /** ينشئ الحساب ويرسل verification email، ثم sign out حتى يؤكد المستخدم بريده. */
     suspend fun register(email: String, password: String) {
         val user = auth.createUserWithEmailAndPassword(email, password).await().user
         try {
@@ -88,7 +88,7 @@ class AuthRepository(
         }
     }
 
-    /** نفس النتيجة سواء كان البريد مسجّلًا أم لا، حتى لا تُكشف الحسابات الموجودة. */
+    /** نفس النتيجة سواء البريد مسجّل أو لا، حتى لا نكشف الحسابات الموجودة (account enumeration). */
     suspend fun sendPasswordReset(email: String) {
         try {
             auth.sendPasswordResetEmail(email).await()
@@ -104,8 +104,8 @@ class AuthRepository(
     }
 
     /**
-     * ربط كلمة مرور بحساب Google لأول مرة.
-     * @return true إذا كان البريد مؤكَّدًا، false إذا أُرسلت رسالة تأكيد.
+     * ربط password بحساب Google لأول مرة.
+     * @return true إذا البريد verified، و false إذا أُرسل verification email.
      */
     suspend fun linkPassword(newPassword: String): Boolean {
         val user = requireUser()
@@ -120,8 +120,8 @@ class AuthRepository(
     }
 
     /**
-     * يتحقق من الهوية أولًا، ثم يحذف بيانات المستخدم ثم الحساب.
-     * التحقق الحديث يضمن ألا يفشل حذف الحساب بعد حذف البيانات.
+     * Re-authentication أولًا، ثم حذف بيانات المستخدم، ثم الحساب.
+     * الـ recent login يضمن إن حذف الحساب لا يفشل بعد حذف البيانات.
      */
     suspend fun deleteAccount(reauthentication: Reauthentication) {
         val user = requireUser()

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.irdev.talibpay.data.NotSignedInException
 import com.irdev.talibpay.data.StudentWithPayments
+import com.irdev.talibpay.util.ToastKind
 import com.irdev.talibpay.util.errorMessageRes
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -16,9 +17,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-/** أحداث تُعرض مرة واحدة (رسائل، تنقل). */
+/** One-shot events تُعرض مرة واحدة (رسائل، navigation). */
 sealed interface UiEvent {
-    data class Message(@param:StringRes val res: Int, val arg: String? = null) : UiEvent
+    data class Message(
+        @param:StringRes val res: Int,
+        val arg: String? = null,
+        val kind: ToastKind = ToastKind.INFO
+    ) : UiEvent
     data object NotSignedIn : UiEvent
     data object Finished : UiEvent
     data class SignedIn(val displayName: String?) : UiEvent
@@ -26,7 +31,7 @@ sealed interface UiEvent {
     data class StudentArchived(val student: StudentWithPayments) : UiEvent
     data class StudentRestored(val student: StudentWithPayments) : UiEvent
 
-    /** دفعة جديدة حُفظت؛ الشاشة السابقة تعرض إرسال إيصالها. */
+    /** دفعة جديدة حُفظت؛ الشاشة السابقة تعرض زر إرسال الـ receipt. */
     data class PaymentSaved(val paymentId: String) : UiEvent
 }
 
@@ -47,11 +52,11 @@ abstract class BaseViewModel : ViewModel() {
             send(UiEvent.NotSignedIn)
         } else {
             Log.w(javaClass.simpleName, "Operation failed", e)
-            send(UiEvent.Message(errorMessageRes(e)))
+            send(UiEvent.Message(errorMessageRes(e), kind = ToastKind.ERROR))
         }
     }
 
-    /** ينفذ عملية مع حالة التحميل ومعالجة الأخطاء، ويتجاهل النقر المتكرر أثناء التنفيذ. */
+    /** ينفذ عملية مع loading state و error handling، ويتجاهل النقر المتكرر أثناء التنفيذ. */
     protected fun runAction(block: suspend () -> Unit) {
         if (_loading.value) return
         _loading.value = true

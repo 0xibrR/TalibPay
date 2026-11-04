@@ -29,6 +29,7 @@ import com.irdev.talibpay.util.Extras
 import com.irdev.talibpay.util.ListPrefs
 import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.SwipeAction
+import com.irdev.talibpay.util.ToastKind
 import com.irdev.talibpay.util.attachSwipeActions
 import com.irdev.talibpay.util.cardDialog
 import com.irdev.talibpay.util.collectWhileStarted
@@ -37,6 +38,7 @@ import com.irdev.talibpay.util.paidPercent
 import com.irdev.talibpay.util.reminderMessage
 import com.irdev.talibpay.util.sendReminder
 import com.irdev.talibpay.util.setupToolbar
+import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.MainUiState
 import com.irdev.talibpay.viewmodel.MainViewModel
 import com.irdev.talibpay.viewmodel.OverdueStudent
@@ -58,10 +60,10 @@ class MainActivity : AppCompatActivity() {
     // الطلاب الذين أُرسل لهم تذكير في هذه الجلسة (لتمييزهم في القائمة)
     private val remindedIds = mutableSetOf<String>()
 
-    // الفلتر والترتيب المعروضان حاليًا، لمعرفة متى يتغيّران
+    // الـ filter والـ sort المعروضان حاليًا، لمعرفة متى يتغيّران
     private var shownListOptions: Pair<StudentFilter, StudentSort>? = null
 
-    // زر التصفية الخاص بكل فلتر
+    // الـ chip الخاص بكل filter
     private val filterChips = mapOf(
         StudentFilter.ALL to R.id.chipAll,
         StudentFilter.OVERDUE to R.id.chipOverdue,
@@ -69,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         StudentFilter.PAID to R.id.chipPaid
     )
 
-    // العملة التي رُسمت بها الشاشة؛ إن تغيّرت من الإعدادات نعيد رسمها عند العودة
+    // العملة التي رُسمت بها الشاشة؛ إن تغيّرت من الإعدادات نعيد الرسم عند العودة
     private lateinit var shownCurrency: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,14 +85,14 @@ class MainActivity : AppCompatActivity() {
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
-        // يمين = تعديل، يسار = أرشفة (الحذف من ملف الطالب فقط حتى لا يحدث بسحب عابر)
+        // Swipe يمين = تعديل، يسار = أرشفة (الحذف من ملف الطالب فقط حتى لا يحدث بسحب عابر)
         binding.recyclerView.attachSwipeActions(
             right = SwipeAction(R.drawable.ic_edit, R.color.swipe_edit) { position -> openEdit(adapter.currentList[position]) },
             left = SwipeAction(R.drawable.ic_archive, R.color.swipe_archive) { position ->
                 viewModel.archive(adapter.currentList[position])
             }
         )
-        // تصغير زر الإضافة أثناء التمرير للأسفل حتى لا يغطي البطاقات
+        // تصغير الـ FAB أثناء التمرير للأسفل حتى لا يغطي الـ cards
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 if (dy > 0) binding.newStudentFAB.shrink() else if (dy < 0) binding.newStudentFAB.extend()
@@ -124,7 +126,7 @@ class MainActivity : AppCompatActivity() {
             val chip = binding.filterChips.findViewById<Chip>(chipId)
             chip.text = getString(R.string.filter_with_count, getString(filter.labelRes), state.filterCounts[filter] ?: 0)
         }
-        // مزامنة الزر المختار مع الحالة (مثلًا بعد تدوير الشاشة)
+        // مزامنة الـ chip المختار مع الحالة (مثلًا بعد الـ rotation)
         val checkedId = filterChips.getValue(state.filter)
         if (binding.filterChips.checkedChipId != checkedId) binding.filterChips.check(checkedId)
         binding.tvStudentsCount.text = resources.getQuantityString(
@@ -141,7 +143,7 @@ class MainActivity : AppCompatActivity() {
             tvCollectionRate.text = getString(R.string.collection_rate, percent)
         }
 
-        // عند تغيير الفلتر أو الترتيب نعود لأول القائمة بعد تطبيق الترتيب الجديد (لا قبله)
+        // عند تغيير الـ filter أو الـ sort نعود لأول القائمة بعد تطبيق الترتيب الجديد (لا قبله)
         val listChanged = shownListOptions != null && shownListOptions != state.filter to state.sort
         shownListOptions = state.filter to state.sort
         adapter.submitList(state.students) {
@@ -152,9 +154,7 @@ class MainActivity : AppCompatActivity() {
     private fun onEvent(event: UiEvent) {
         when (event) {
             is UiEvent.StudentArchived -> showArchivedSnackbar(event.student)
-            is UiEvent.Message -> snackbar(
-                if (event.arg != null) getString(event.res, event.arg) else getString(event.res)
-            )
+            is UiEvent.Message -> toast(event)
 
             UiEvent.NotSignedIn -> {
                 startActivity(Intent(this, LoginActivity::class.java))
@@ -190,11 +190,11 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    /** كل الطلاب ومنهم المؤرشفون في ملف Excel واحد؛ الكتابة خارج الخيط الرئيسي. */
+    /** Excel export لكل الطلاب ومنهم المؤرشفون؛ الكتابة خارج الـ main thread. */
     private fun exportExcel() {
         val students = viewModel.uiState.value.everyone
         if (students.isEmpty()) {
-            snackbar(getString(R.string.excel_nothing))
+            toast(R.string.excel_nothing)
             return
         }
         lifecycleScope.launch {
@@ -203,15 +203,9 @@ class MainActivity : AppCompatActivity() {
                 ExcelExport.share(this@MainActivity, file)
             } catch (e: IOException) {
                 Log.w("MainActivity", "Excel export failed", e)
-                snackbar(getString(R.string.error_generic))
+                toast(R.string.error_generic, ToastKind.ERROR)
             }
         }
-    }
-
-    private fun snackbar(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
-            .setAnchorView(binding.newStudentFAB)
-            .show()
     }
 
     private fun showSummaryExplanation() {
@@ -310,7 +304,7 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    /** اختيار ترتيب القائمة؛ يُحفظ ويبقى بعد إغلاق التطبيق. */
+    /** اختيار الـ sort؛ يُحفظ ويبقى بعد إغلاق التطبيق. */
     private fun showSortDialog() {
         val sorts = StudentSort.entries
         val current = sorts.indexOf(viewModel.uiState.value.sort)
@@ -327,7 +321,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * قائمة المتأخرين: الضغط على طالب يفتح واتساب برسالة جاهزة له،
+     * قائمة المتأخرين: الضغط على طالب يفتح WhatsApp برسالة جاهزة له،
      * وتبقى القائمة مفتوحة ليُرسل للتالي بعد العودة، مع علامة ✓ لمن أُرسل له.
      */
     private fun showOverdueReminders() {

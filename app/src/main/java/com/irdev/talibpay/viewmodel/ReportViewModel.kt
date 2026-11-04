@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-/** تقرير الشهر المختار مع مخطط التحصيل للأشهر الأخيرة. */
+/** تقرير الشهر المختار مع بيانات الـ chart للأشهر الأخيرة. */
 data class ReportState(val report: MonthlyReport, val trend: List<TrendPoint>)
 
 /** التقرير الشهري للشهر المختار (الحالي افتراضيًا)؛ null أثناء التحميل. */
@@ -23,7 +23,7 @@ class ReportViewModel(private val savedState: SavedStateHandle) : BaseViewModel(
     private val repository = StudentRepository()
     private val currentMonth: YearMonth get() = todaySimpleDate().yearMonth
 
-    // الشهر يبقى بعد تدوير الشاشة أو إغلاق التطبيق في الخلفية
+    // SavedStateHandle: الشهر يبقى بعد الـ rotation أو process death
     private val month = savedState.getStateFlow(KEY_MONTH, currentMonth.key)
 
     val state: StateFlow<ReportState?> = combine(
@@ -54,7 +54,7 @@ class ReportViewModel(private val savedState: SavedStateHandle) : BaseViewModel(
         if (canGoNext(current)) savedState[KEY_MONTH] = current.next().key
     }
 
-    /** الضغط على شهر في المخطط. */
+    /** الضغط على شهر في الـ chart. */
     fun selectMonth(value: YearMonth) {
         if (value <= currentMonth) savedState[KEY_MONTH] = value.key
     }

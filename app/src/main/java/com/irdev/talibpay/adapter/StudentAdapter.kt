@@ -69,7 +69,7 @@ class StudentAdapter(
             val color = ContextCompat.getColor(context, method?.color ?: R.color.method_none)
             paymentMethodTextView.setTextColor(color)
             paidProgress.setIndicatorColor(color)
-            // mutate() حتى لا يتشارك كل الصفوف نفس الخلفية فيتغير لونها معًا
+            // mutate() حتى لا تتشارك كل الـ rows نفس الـ background drawable فيتغير لونها معًا
             (initialTextView.background?.mutate() as? GradientDrawable)?.color =
                 ColorStateList.valueOf(color)
 

@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.snackbar.Snackbar
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.StudentInput
 import com.irdev.talibpay.domain.StudentDiscount
@@ -25,6 +24,7 @@ import com.irdev.talibpay.util.setupCountryCodePicker
 import com.irdev.talibpay.util.requireText
 import com.irdev.talibpay.util.showDatePicker
 import com.irdev.talibpay.util.showYearPicker
+import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.util.todayDate
 import com.irdev.talibpay.viewmodel.StudentFormViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
@@ -49,9 +49,9 @@ class AddActivity : AppCompatActivity() {
         binding.edtBirthYear.setOnClickListener {
             showYearPicker { binding.edtBirthYear.setText(it.toString()) }
         }
-        // تاريخ التسجيل: اليوم افتراضيًا، ويمكن تغييره من منتقي التاريخ
+        // تاريخ التسجيل: اليوم افتراضيًا، ويمكن تغييره من الـ date picker
         if (savedInstanceState == null) binding.edtRegistrationDate.setText(todayDate())
-        // رمز الدولة: الرمز الافتراضي من الإعدادات، ويمكن اختيار غيره لكل طالب
+        // رمز الدولة: الافتراضي من الإعدادات، ويمكن اختيار غيره لكل طالب
         binding.edtCountryCode.setupCountryCodePicker(ReminderPrefs.countryCode(this))
         binding.edtRegistrationDate.setOnClickListener {
             showDatePicker { binding.edtRegistrationDate.setText(it) }
@@ -78,8 +78,7 @@ class AddActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.loading) { binding.btnAddStudent.isEnabled = !it }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> Snackbar.make(binding.root, event.res, Snackbar.LENGTH_LONG)
-                    .setAnchorView(binding.btnAddStudent).show()
+                is UiEvent.Message -> toast(event)
 
                 // نبقى في الشاشة لإضافة طالب آخر بسرعة
                 UiEvent.Finished -> clearForm()

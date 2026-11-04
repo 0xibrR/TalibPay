@@ -7,9 +7,9 @@ import com.irdev.talibpay.model.WalletEntry
 enum class DueStatus { PAID, PARTIAL, UNPAID }
 
 /**
- * مستحق مع دفعاته (من الأقدم للأحدث) وما سُدِّد منه وما بقي.
- * @param paid ما سُدِّد من المستحق: الجزء المطبَّق من الدفعات + ما خُصم من المحفظة
- * @param walletUsed ما سُدِّد من المحفظة (ليس دفعة نقدية)
+ * Charge مع دفعاته (من الأقدم للأحدث) وما سُدِّد منه وما بقي.
+ * @param paid المسدَّد من الـ charge: الجزء المطبَّق من الدفعات + ما خُصم من الـ wallet
+ * @param walletUsed المسدَّد من الـ wallet (ليس دفعة نقدية)
  */
 data class DueSummary(
     val charge: Charge,
@@ -18,7 +18,7 @@ data class DueSummary(
     val remaining: Double,
     val walletUsed: Double = 0.0
 ) {
-    /** للمستحق دفعات أو خصم من المحفظة: لا يُحذف حتى لا تضيع حركات مالية. */
+    /** للـ charge دفعات أو خصم من الـ wallet: لا يُحذف حتى لا تضيع حركات مالية. */
     val hasActivity: Boolean get() = payments.isNotEmpty() || walletUsed > 0
 
     val status: DueStatus
@@ -28,7 +28,7 @@ data class DueSummary(
             else -> DueStatus.UNPAID
         }
 
-    /** المستحق مشتق من بيانات قديمة ولم يُحفظ بعد كمستحق حقيقي. */
+    /** Legacy charge: مشتق من بيانات قديمة ولم يُحفظ بعد كـ charge حقيقي. */
     val isLegacy: Boolean get() = charge.id == StudentLedger.LEGACY_CHARGE_ID
 }
 
@@ -42,11 +42,11 @@ data class StudentTotals(
 )
 
 /**
- * دفتر حساب الطالب: المستحقات ودفعات كل منها، وحركات المحفظة.
- * - المستحقات مرتبة حسب الإنشاء، والدفعات حسب المفتاح (زمنيًا).
- * - "المتبقي" في كل دفعة = ما بقي من مستحقها بعدها (رصيد تراكمي داخل المستحق).
- * - المجموع: الرسوم = مجموع المستحقات، المتبقي = مجموع ما بقي من كل مستحق،
- *   المدفوع = المال المستلم فعلًا (نقدي + بنكي، ومنه ما أُضيف للمحفظة).
+ * Ledger الطالب: الـ charges ودفعات كل منها، وحركات الـ wallet.
+ * - الـ charges مرتبة حسب الإنشاء، والدفعات حسب الـ key (زمنيًا).
+ * - "remaining" في كل دفعة = ما بقي من الـ charge بعدها (running balance داخل الـ charge).
+ * - Totals: الرسوم = مجموع الـ charges، المتبقي = مجموع ما بقي من كل charge،
+ *   المدفوع = المال المستلم فعلًا (نقدي + بنكي، ومنه ما أُضيف للـ wallet).
  */
 data class StudentLedger(
     val dues: List<DueSummary>,
@@ -70,13 +70,13 @@ data class StudentLedger(
     /** كل الدفعات بعد حساب الرصيد، مرتبة زمنيًا. */
     val payments: List<Payment> by lazy { dues.flatMap { it.payments }.sortedBy { it.id } }
 
-    /** المستحقات التي لم تُسدَّد بالكامل، الأقدم أولًا. */
+    /** الـ charges غير المسدّدة بالكامل، الأقدم أولًا. */
     val openDues: List<DueSummary> get() = dues.filter { it.remaining > 0 }
 
     fun due(chargeId: String): DueSummary? = dues.firstOrNull { it.charge.id == chargeId }
 
     companion object {
-        /** معرّف المستحق الذي تُجمع فيه دفعات النسخ القديمة (قبل نظام المستحقات). */
+        /** id الـ charge الذي تُجمع فيه دفعات النسخ القديمة (قبل نظام الـ charges). */
         const val LEGACY_CHARGE_ID = "legacy"
 
         fun build(
@@ -85,7 +85,7 @@ data class StudentLedger(
             walletEntries: List<WalletEntry> = emptyList()
         ): StudentLedger {
             val known = charges.map { it.id }.toSet()
-            // دفعات قديمة بلا مستحق: تُجمع في مستحق "الرسوم" قيمته آخر رسوم سُجلت معها
+            // دفعات legacy بلا charge: تُجمع في charge "الرسوم" وقيمته آخر رسوم سُجلت معها
             val orphans = payments.filter { it.chargeId !in known }
             val allCharges = if (orphans.isNotEmpty() && LEGACY_CHARGE_ID !in known) {
                 val paidByOrphans = Money.sum(orphans.map { Money.sum(listOf(it.cash, it.bank)) })
@@ -95,7 +95,7 @@ data class StudentLedger(
                 charges
             }
             val byCharge = payments.groupBy { if (it.chargeId in known) it.chargeId else LEGACY_CHARGE_ID }
-            // ما خُصم من المحفظة لكل مستحق (يُطبَّق أولًا لأنه يحدث عند إنشاء المستحق)
+            // ما خُصم من الـ wallet لكل charge (يُطبَّق أولًا لأنه يحدث عند إنشاء الـ charge)
             val walletUsedByCharge = walletEntries
                 .filter { it.entryType == WalletEntryType.USE }
                 .groupBy { it.chargeId }
@@ -106,7 +106,7 @@ data class StudentLedger(
                 var paidSoFar = walletUsed
                 val duePayments = byCharge[charge.id].orEmpty().sortedBy { it.id }.map { p ->
                     val paid = Money.sum(listOf(p.cash, p.bank))
-                    // الزيادة التي ذهبت للمحفظة لا تُحسب على المستحق
+                    // الزيادة التي ذهبت للـ wallet لا تُحسب على الـ charge
                     val applied = Money.subtract(paid, p.credited.coerceIn(0.0, paid))
                     paidSoFar = Money.sum(listOf(paidSoFar, applied))
                     p.copy(
@@ -139,20 +139,20 @@ fun methodFor(cash: Double, bank: Double): PaymentMethod = when {
     else -> PaymentMethod.UNPAID
 }
 
-// ---------------- التحقق من المدخلات ----------------
+// ---------------- Validation ----------------
 
 sealed interface PaymentValidation {
     data class Valid(val cash: Double, val bank: Double) : PaymentValidation
     data object InvalidAmount : PaymentValidation
     data object EmptyPayment : PaymentValidation
 
-    /** الدفعة أكبر من المتبقي على المستحق؛ [maxAllowed] أقصى مبلغ ممكن. */
+    /** الدفعة أكبر من المتبقي على الـ charge؛ [maxAllowed] أقصى مبلغ ممكن. */
     data class ExceedsDue(val maxAllowed: Double) : PaymentValidation
 }
 
 /**
- * @param dueAmount قيمة المستحق
- * @param paidByOtherPayments ما دُفع لهذا المستحق في دفعاته الأخرى (عدا الدفعة المعدَّلة)
+ * @param dueAmount قيمة الـ charge
+ * @param paidByOtherPayments المدفوع لهذا الـ charge في دفعاته الأخرى (عدا الدفعة التي تُعدَّل)
  */
 fun validatePayment(
     cashText: String?,
@@ -167,7 +167,7 @@ fun validatePayment(
     if (amount <= 0) return PaymentValidation.EmptyPayment
 
     val maxAllowed = Money.subtract(dueAmount, paidByOtherPayments).coerceAtLeast(0.0)
-    // allowCredit: دفعة جديدة يذهب ما يزيد منها للمحفظة بدل رفضها
+    // allowCredit: في الدفعة الجديدة تذهب الزيادة للـ wallet بدل رفضها
     if (!allowCredit && amount > maxAllowed) return PaymentValidation.ExceedsDue(maxAllowed)
     return PaymentValidation.Valid(cash, bank)
 }
@@ -177,7 +177,7 @@ sealed interface ChargeValidation {
     data object MissingTitle : ChargeValidation
     data object InvalidAmount : ChargeValidation
 
-    /** لا يمكن أن تقل قيمة المستحق عمّا دُفع منه. */
+    /** قيمة الـ charge لا تقل عن المدفوع منه. */
     data class BelowPaid(val alreadyPaid: Double) : ChargeValidation
 }
 

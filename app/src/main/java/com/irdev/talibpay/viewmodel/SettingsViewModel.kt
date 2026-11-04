@@ -5,6 +5,7 @@ import com.irdev.talibpay.R
 import com.irdev.talibpay.data.AccountProvider
 import com.irdev.talibpay.data.AuthRepository
 import com.irdev.talibpay.data.Reauthentication
+import com.irdev.talibpay.util.ToastKind
 import com.google.firebase.auth.FirebaseUser
 
 class SettingsViewModel : BaseViewModel() {
@@ -19,20 +20,20 @@ class SettingsViewModel : BaseViewModel() {
 
     fun signOut() {
         repository.signOut()
-        send(UiEvent.Message(R.string.signed_out_successfully))
+        send(UiEvent.Message(R.string.signed_out_successfully, kind = ToastKind.SUCCESS))
         send(UiEvent.SignedOut)
     }
 
-    /** تغيير كلمة المرور، أو ربط كلمة مرور لأول مرة لحساب Google. */
+    /** تغيير كلمة المرور، أو ربط password لأول مرة لحساب Google. */
     fun changePassword(oldPassword: String?, newPassword: String) = runAction {
         if (repository.hasPassword()) {
             try {
                 repository.changePassword(oldPassword.orEmpty(), newPassword)
             } catch (_: FirebaseAuthInvalidCredentialsException) {
-                send(UiEvent.Message(R.string.wrong_old_password))
+                send(UiEvent.Message(R.string.wrong_old_password, kind = ToastKind.ERROR))
                 return@runAction
             }
-            send(UiEvent.Message(R.string.password_changed_success))
+            send(UiEvent.Message(R.string.password_changed_success, kind = ToastKind.SUCCESS))
         } else {
             val verified = repository.linkPassword(newPassword)
             send(
@@ -48,7 +49,7 @@ class SettingsViewModel : BaseViewModel() {
     fun deleteAccount(reauthentication: Reauthentication) = runAction {
         repository.deleteAccount(reauthentication)
         repository.signOut()
-        send(UiEvent.Message(R.string.data_deleted_successfully))
+        send(UiEvent.Message(R.string.account_deleted, kind = ToastKind.SUCCESS))
         send(UiEvent.SignedOut)
     }
 }

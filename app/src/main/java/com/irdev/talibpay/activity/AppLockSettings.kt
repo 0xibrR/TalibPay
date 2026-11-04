@@ -16,6 +16,7 @@ import com.irdev.talibpay.security.LockMode
 import com.irdev.talibpay.security.LockState
 import com.irdev.talibpay.security.PinResult
 import com.irdev.talibpay.security.PinRules
+import com.irdev.talibpay.util.ToastKind
 import com.irdev.talibpay.util.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,8 +24,8 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 
 /**
- * إعدادات قفل التطبيق في شاشة الإعدادات: التفعيل، وطريقة الفتح، وتغيير الرمز، والتعطيل.
- * كل تغيير بعد التفعيل يتطلب التحقق من الهوية (بصمة أو الرمز الحالي) ويخضع لحدود المحاولات.
+ * إعدادات الـ app lock في شاشة الإعدادات: التفعيل، وطريقة الفتح، وتغيير الـ PIN، والتعطيل.
+ * كل تغيير بعد التفعيل يتطلب التحقق من الهوية (fingerprint أو الـ PIN الحالي) ويخضع لحدود المحاولات.
  */
 class AppLockSettings(private val activity: AppCompatActivity, private val button: MaterialButton) {
 
@@ -50,7 +51,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
         }
     }
 
-    // ---------------- التفعيل ----------------
+    // ---------------- Enable ----------------
 
     private fun startEnable() {
         val uid = AppLockGate.currentUid() ?: return
@@ -65,7 +66,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
         }
     }
 
-    /** يعرض الطرق المتاحة؛ بدون بصمة مسجّلة على الجهاز يُستخدم الرمز مع توضيح السبب. */
+    /** يعرض الطرق المتاحة؛ بدون fingerprint مسجّلة على الجهاز يُستخدم الـ PIN مع توضيح السبب. */
     private fun chooseMode(current: LockMode?, onChosen: (LockMode) -> Unit) {
         if (!BiometricKey.isAvailable(activity)) {
             if (!BiometricKey.hasHardware(activity)) return onChosen(LockMode.PIN)
@@ -88,7 +89,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
             .show()
     }
 
-    /** إنشاء مفتاح البصمة وتأكيده ببصمة فعلية؛ عند الإلغاء يبقى القفل بالرمز. */
+    /** إنشاء مفتاح الـ fingerprint وتأكيده بـ fingerprint فعلية؛ عند الإلغاء يبقى الـ lock بالـ PIN. */
     private fun enrollBiometric() {
         BiometricKey.create()
         BiometricUnlock.prompt(
@@ -108,7 +109,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
         }
     }
 
-    // ---------------- بعد التفعيل ----------------
+    // ---------------- After enable ----------------
 
     private fun showOptions(state: LockState.Enabled) {
         val options = listOf(R.string.app_lock_method, R.string.app_lock_change_pin, R.string.app_lock_disable)
@@ -167,9 +168,9 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
             .show()
     }
 
-    // ---------------- التحقق من الهوية ----------------
+    // ---------------- Verify identity ----------------
 
-    /** بصمة إن كانت متاحة (مع خيار الرمز)، وإلا الرمز الحالي. */
+    /** Fingerprint إن كانت متاحة (مع خيار الـ PIN)، وإلا الـ PIN الحالي. */
     private fun verifyIdentity(onVerified: () -> Unit) {
         val state = AppLockGate.state() as? LockState.Enabled ?: return
         if (AppLockGate.biometricUsable(activity, state)) {
@@ -200,7 +201,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
         }
     }
 
-    /** ينفّذ التحقق في الخلفية ويعرض النتيجة على الحقل؛ تجاوز المحاولات أو التلاعب ينهي الجلسة. */
+    /** ينفّذ التحقق في الـ background ويعرض النتيجة على الحقل؛ تجاوز المحاولات أو الـ tampering ينهي الجلسة. */
     private fun submit(dialog: AlertDialog, field: TextInputLayout, check: () -> PinResult, onSuccess: () -> Unit) {
         val positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
         positive.isEnabled = false
@@ -231,7 +232,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
         }
     }
 
-    // ---------------- نوافذ الرمز ----------------
+    // ---------------- PIN dialogs ----------------
 
     private fun askNewPin(title: Int, onPin: (String) -> Unit) {
         val dialogBinding = DialogPinBinding.inflate(activity.layoutInflater)
@@ -245,7 +246,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
         }
     }
 
-    /** الرمز الجديد بعد التحقق من قواعده ومطابقة تأكيده؛ null مع عرض الخطأ. */
+    /** الـ PIN الجديد بعد التحقق من قواعده ومطابقة تأكيده؛ null مع عرض الخطأ. */
     private fun readNewPin(b: DialogPinBinding): String? {
         val pin = b.edtNewPin.text?.toString().orEmpty()
         b.newPinLayout.error = when (PinRules.validate(pin)) {
@@ -276,7 +277,7 @@ class AppLockSettings(private val activity: AppCompatActivity, private val butto
 
     private fun finishChange(message: Int) {
         render()
-        activity.toast(message, long = true)
+        activity.toast(message, ToastKind.SUCCESS, long = true)
     }
 
     private fun formatDuration(ms: Long): String {

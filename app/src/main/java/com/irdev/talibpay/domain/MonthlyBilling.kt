@@ -2,7 +2,7 @@ package com.irdev.talibpay.domain
 
 import java.util.Locale
 
-/** تاريخ يوم بسيط (بدون وقت ولا منطقة زمنية) بصيغة التخزين dd/MM/yyyy. */
+/** تاريخ يوم فقط (بدون وقت أو timezone)، صيغة التخزين dd/MM/yyyy. */
 data class SimpleDate(val year: Int, val month: Int, val day: Int) : Comparable<SimpleDate> {
 
     val yearMonth: YearMonth get() = YearMonth(year, month)
@@ -12,7 +12,7 @@ data class SimpleDate(val year: Int, val month: Int, val day: Int) : Comparable<
 
     fun format(): String = String.format(Locale.US, "%02d/%02d/%04d", day, month, year)
 
-    /** مفتاح قابل للترتيب نصيًا (yyyy-MM-dd) لاستعلامات Firebase. */
+    /** Key قابل للترتيب نصيًا (yyyy-MM-dd) لـ Firebase queries. */
     fun sortKey(): String = String.format(Locale.US, "%04d-%02d-%02d", year, month, day)
 
     companion object {
@@ -28,7 +28,7 @@ data class SimpleDate(val year: Int, val month: Int, val day: Int) : Comparable<
     }
 }
 
-/** شهر محدد؛ مفتاحه yyyy-MM يُستخدم في معرّف الرسوم ولمنع التكرار. */
+/** شهر محدد؛ الـ key (yyyy-MM) يدخل في id الـ charge ويمنع التكرار. */
 data class YearMonth(val year: Int, val month: Int) : Comparable<YearMonth> {
 
     val key: String get() = String.format(Locale.US, "%04d-%02d", year, month)
@@ -57,9 +57,9 @@ fun daysInMonth(year: Int, month: Int): Int = when (month) {
     else -> 31
 }
 
-/** رسوم شهر واحد: الشهر وتاريخ استحقاقه. */
+/** Charge شهر واحد: الشهر وتاريخ استحقاقه. */
 data class BillingPeriod(val month: YearMonth, val dueDate: SimpleDate) {
-    /** معرّف ثابت لكل شهر: يمنع إنشاء رسوم الشهر نفسه مرتين حتى من جهازين. */
+    /** id ثابت لكل شهر: يمنع إنشاء charge نفس الشهر مرتين حتى من جهازين. */
     val chargeId: String get() = chargeIdFor(month)
 
     companion object {
@@ -69,12 +69,12 @@ data class BillingPeriod(val month: YearMonth, val dueDate: SimpleDate) {
 }
 
 /**
- * جدول الرسوم الشهرية لكل طالب:
- * - يوم الاستحقاق = يوم التسجيل من كل شهر، وإن لم يوجد في الشهر (مثل 31 في نيسان)
+ * جدول الـ monthly billing لكل طالب:
+ * - يوم الاستحقاق = يوم التسجيل من كل شهر؛ وإن لم يوجد في الشهر (مثل 31 في نيسان)
  *   يُستخدم آخر يوم فيه، ويعود اليوم الأصلي في الأشهر التالية (لأنه يُحسب دائمًا من يوم التسجيل).
- * - لا تُنشأ رسوم قبل تاريخ التسجيل ولا قبل بداية الفوترة [billingStart].
- * - لا تُنشأ رسوم لشهر سبق إنشاؤه أو تجاوزه ([lastBilled])، فتعديل تاريخ التسجيل
- *   يغيّر الاستحقاقات القادمة فقط، والرسوم المحذوفة لا تُعاد.
+ * - لا charges قبل تاريخ التسجيل ولا قبل [billingStart].
+ * - لا charge لشهر سبق إنشاؤه أو تجاوزه ([lastBilled])، فتعديل تاريخ التسجيل
+ *   يغيّر القادم فقط، والـ charges المحذوفة لا تُعاد.
  */
 object MonthlyBilling {
 
@@ -84,7 +84,7 @@ object MonthlyBilling {
     fun dueDateFor(month: YearMonth, anchorDay: Int): SimpleDate =
         SimpleDate(month.year, month.month, minOf(anchorDay, daysInMonth(month.year, month.month)))
 
-    /** الأشهر التي حان موعد رسومها حتى [today] ولم تُنشأ بعد، الأقدم أولًا. */
+    /** الأشهر التي حان موعدها حتى [today] ولم تُنشأ بعد، الأقدم أولًا. */
     fun periodsDue(
         registration: SimpleDate,
         billingStart: SimpleDate,
@@ -119,8 +119,8 @@ object MonthlyBilling {
     }
 
     /**
-     * أول موعد رسوم لم يُنشأ بعد، بغض النظر عن اليوم.
-     * [periodsDue] يكون غير فارغ تمامًا عندما يكون هذا الموعد اليوم أو قبله.
+     * أول موعد billing لم يُنشأ بعد، بغض النظر عن اليوم.
+     * [periodsDue] غير فارغ تمامًا عندما يكون هذا الموعد اليوم أو قبله.
      */
     fun firstUnbilledDue(registration: SimpleDate, billingStart: SimpleDate, lastBilled: YearMonth?): SimpleDate {
         var month = startMonth(registration, billingStart, lastBilled)

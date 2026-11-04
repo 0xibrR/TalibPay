@@ -5,10 +5,10 @@
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="register">Register</string>
-    <string name="enter_value">Please enter what is required</string>
+    <string name="enter_value">This field is required</string>
     <string name="verification_email">A verification link has been sent to your email.</string>
     <string name="Password_does_not_match">Password does not match</string>
-    <string name="check_email">Please make sure the email format is correct</string>
+    <string name="check_email">Invalid email format</string>
     <string name="forgot_password">Forgot password?</string>
     <string name="sign_in">Sign in</string>
     <string name="sign_up">Sign up</string>
@@ -23,9 +23,9 @@
     <string name="email_sent">The link has been successfully emailed to reset your password.</string>
     <string name="delete_account">Delete account</string>
     <string name="sign_out">Sign out</string>
-    <string name="signed_out_message">Are you sure to log out of the account?</string>
+    <string name="signed_out_message">Are you sure you want to sign out?</string>
     <string name="signed_out_successfully">Signed out successfully</string>
-    <string name="data_deleted_successfully">Data deleted successfully</string>
+    <string name="account_deleted">Your account and all its data have been deleted</string>
     <string name="delete_account_message">Are you sure you want to delete the account?</string>
     <string name="no_google_account_found">There is no Google account on this device.</string>
     <string name="google_add_account">Add account</string>
@@ -35,8 +35,8 @@
     <string name="settings">Settings</string>
     <string name="delete_all_students">Delete all students</string>
     <string name="please_enter_the_email_and_password_you_registered_with">Please enter the email and password you registered with.</string>
-    <string name="account_provider_type_unknown">The account provider type cannot be determined!</string>
-    <string name="you_don_t_have_any_students_yet">You dont have any students yet.</string>
+    <string name="account_provider_type_unknown">Could not determine how this account signs in</string>
+    <string name="you_don_t_have_any_students_yet">You don\'t have any students yet</string>
     <string name="full_name">Full name</string>
     <string name="year_of_birth">Year of birth</string>
     <string name="payment_date">Payment date</string>
@@ -50,30 +50,30 @@
     <string name="payment_summary">Payment Summary</string>
     <string name="edit_student">Edit student</string>
     <string name="confirm_edit_title">Confirm Edit</string>
-    <string name="confirm_edit_message">Are you sure you want to edit this students data?</string>
+    <string name="confirm_edit_message">Are you sure you want to edit this student\'s details?</string>
     <string name="updated_successfully">Edited successfully</string>
     <string name="delete_title_with_name">Delete student %1$s?</string>
     <string name="delete_message_with_name">Are you sure you want to delete %1$s?</string>
     <string name="student_archived_with_name">%1$s was archived</string>
     <string name="restored_successfully_with_name">%1$s is back in the list</string>
-    <string name="undo">undo</string>
+    <string name="undo">Undo</string>
     <string name="details_student">Student details</string>
     <string name="are_you_sure_you_want_to_delete_all_student">Are you sure you want to delete all students?</string>
     <string name="slide_to_delete_all">Swipe to delete all students</string>
     <string name="this_process_is_irreversible">(This process is irreversible)</string>
-    <string name="delete_all_note">All notes have been deleted.</string>
+    <string name="all_students_deleted">All students have been deleted</string>
     <string name="payment_summary_explained_title">Payment Summary Explanation</string>
     <string name="payment_summary_popup_title2">The payment summary shows the total amount paid (cash + bank) for all students</string>
-    <string name="payment_summary_cash">Paid Cash: Total paid in cash.</string>
-    <string name="payment_summary_bank">Paid Bank: Total transferred through bank.</string>
+    <string name="payment_summary_cash">Cash: total paid in cash.</string>
+    <string name="payment_summary_bank">Bank: total transferred through the bank.</string>
     <string name="payment_summary_total">Collected: cash and bank payments, minus what was refunded to students from their wallets.</string>
     <string name="payment_summary_refunds">Refunded from wallets so far: %1$s</string>
     <string name="payment_summary_remaining">Remaining: Total unpaid amount.</string>
     <string name="last_modified">Last modified</string>
     <string name="search">Search</string>
-    <string name="edit">edit</string>
-    <string name="delete">delete</string>
-    <string name="share">share</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
     <string name="added">Added on</string>
     <string name="share_name">👤 Name: %1$s</string>
     <string name="share_birth_year">🎂 Year of Birth: %1$s</string>
@@ -92,7 +92,7 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="backdate_yes">Yes, bill them</string>
     <string name="backdate_no">No, start from the next cycle</string>
     <string name="share_phone">📞 Phone Number: %1$s</string>
-    <string name="share_paid_cash">💰 Paid in Cash: %1$s</string>
+    <string name="share_paid_cash">💰 Paid in cash: %1$s</string>
     <string name="share_paid_bank">🏦 Paid by Bank: %1$s</string>
     <string name="share_paid_total">💸 Total Paid: %1$s</string>
     <string name="share_total_amount">📊 Total Fees: %1$s</string>
@@ -105,14 +105,14 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="app_version_placeholder">App Version: %1$s</string>
     <string name="profile">Profile</string>
     <string name="user_email_com">user@email.com</string>
-    <string name="user_name">user name</string>
+    <string name="user_name">User name</string>
     <string name="change_password">Change password</string>
     <string name="old_password">Current Password</string>
     <string name="new_password">New Password</string>
     <string name="confirm_new_password">Confirm New Password</string>
     <string name="save">Save</string>
     <string name="password_changed_success">Password changed successfully.</string>
-    <string name="wrong_old_password">The old password you entered is incorrect.</string>
+    <string name="wrong_old_password">The current password is incorrect</string>
     <string name="password_too_short">The new password must be at least 8 characters.</string>
     <string name="passwords_not_match">The new password and its confirmation do not match.</string>
     <string name="fill_all_fields">Please fill in all fields.</string>
@@ -132,11 +132,11 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="method_cash">Cash</string>
     <string name="method_mixed">Part cash and part bank</string>
     <string name="method_bank">Bank</string>
-    <string name="method_unpaid">Not Paid</string>
+    <string name="method_unpaid">Not paid</string>
     <string name="no_payments">No payments</string>
     <string name="invalid_amount">Enter a valid amount</string>
 
-    <!-- التصميم الجديد -->
+    <!-- عناصر الواجهة العامة (Login، Dashboard، تفاصيل الطالب) -->
     <string name="currency_symbol" translatable="false">₪</string>
     <string name="app_tagline">Student tuition payments, organized</string>
     <string name="register_subtitle">Create an account to start managing your students.</string>
@@ -460,5 +460,5 @@ Choose \"No\" if you already added these months manually, to avoid billing them 
     <string name="chart_title">Collection in recent months</string>
     <string name="chart_collected">Collected</string>
     <string name="chart_billed">Dues</string>
-    <string name="chart_month_description">%1$s: collected %2$s of %3$s dues</string>
+    <string name="chart_month_description">%1$s: collected %2$s, dues %3$s</string>
 </resources>

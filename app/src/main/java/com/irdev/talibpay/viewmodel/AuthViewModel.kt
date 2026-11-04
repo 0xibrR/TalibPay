@@ -3,8 +3,9 @@ package com.irdev.talibpay.viewmodel
 import com.irdev.talibpay.R
 import com.irdev.talibpay.data.AuthRepository
 import com.irdev.talibpay.data.EmailSignInResult
+import com.irdev.talibpay.util.ToastKind
 
-/** يخدم شاشات تسجيل الدخول وإنشاء الحساب واستعادة كلمة المرور. */
+/** ViewModel لشاشات Login و Register و Forgot password. */
 class AuthViewModel : BaseViewModel() {
 
     private val repository = AuthRepository()
@@ -32,7 +33,7 @@ class AuthViewModel : BaseViewModel() {
 
     fun sendPasswordReset(email: String) = runAction {
         repository.sendPasswordReset(email)
-        send(UiEvent.Message(R.string.email_sent))
+        send(UiEvent.Message(R.string.email_sent, kind = ToastKind.SUCCESS))
         send(UiEvent.Finished)
     }
 }

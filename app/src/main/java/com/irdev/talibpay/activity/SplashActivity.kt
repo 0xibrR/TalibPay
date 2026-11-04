@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 /**
- * نقطة الدخول: تعرض شاشة البداية الرسمية (SplashScreen API) أثناء تحميل التطبيق فقط،
- * بدون انتظار ثابت، ثم تنتقل لشاشة الدخول التي تقرر الوجهة.
+ * Entry point: تعرض الـ splash (SplashScreen API) أثناء تحميل التطبيق فقط،
+ * بدون انتظار ثابت، ثم تنتقل لـ LoginActivity التي تقرر الوجهة.
  */
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : AppCompatActivity() {

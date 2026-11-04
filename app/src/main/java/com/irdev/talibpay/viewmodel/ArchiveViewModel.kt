@@ -22,7 +22,7 @@ class ArchiveViewModel : BaseViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    /** إلغاء الأرشفة بالسحب: تُستأنف رسومه الشهرية من اليوم. */
+    /** Unarchive بالسحب (swipe): الـ monthly fee تُستأنف من اليوم. */
     fun restore(item: StudentWithPayments) = runAction {
         repository.unarchiveStudent(item.student.id)
         send(UiEvent.StudentRestored(item))

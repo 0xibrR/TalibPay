@@ -22,7 +22,7 @@ import com.irdev.talibpay.viewmodel.ChargeFormViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 import java.util.Locale
 
-/** إضافة مستحق جديد على الطالب أو تعديل مستحق موجود. */
+/** إضافة charge جديد على الطالب أو تعديل charge موجود. */
 class ChargeFormActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityChargeBinding
@@ -61,7 +61,7 @@ class ChargeFormActivity : AppCompatActivity() {
             val due = prefill.due
             if (due != null) {
                 binding.edtChargeTitle.setText(dueTitle(due.charge))
-                // اسم مولَّد (رسوم شهرية أو قديمة): إن لم يغيّره المستخدم يبقى مولَّدًا ويُترجم مع اللغة
+                // اسم generated (رسوم شهرية أو legacy): إن لم يغيّره المستخدم يبقى generated ويُترجم مع اللغة
                 if (due.charge.title.isBlank()) generatedTitle = dueTitle(due.charge)
                 binding.edtChargeAmount.setText(plainAmount(due.charge.amount))
                 binding.edtChargeDueDate.setText(due.charge.dueDate)
@@ -94,6 +94,6 @@ class ChargeFormActivity : AppCompatActivity() {
         }
     }
 
-    // أرقام لاتينية بدون فواصل آلاف حتى يقبلها حقل الإدخال الرقمي
+    // أرقام لاتينية بدون فواصل آلاف حتى يقبلها الـ numeric input
     private fun plainAmount(value: Double) = Money.format(value, Locale.US).replace(",", "")
 }

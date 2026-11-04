@@ -3,7 +3,7 @@ package com.irdev.talibpay.util
 import android.content.Context
 import androidx.core.content.edit
 
-/** ترتيب قائمة الطلاب المختار؛ يبقى بعد إغلاق التطبيق (الفلتر لا يُحفظ ويعود إلى "الكل"). */
+/** الـ sort المختار لقائمة الطلاب؛ يبقى بعد إغلاق التطبيق (الـ filter لا يُحفظ ويعود "الكل"). */
 object ListPrefs {
     private const val PREFS = "appSettings"
     private const val KEY_SORT = "StudentSort"

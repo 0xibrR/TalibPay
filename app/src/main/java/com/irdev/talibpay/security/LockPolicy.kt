@@ -1,8 +1,8 @@
 package com.irdev.talibpay.security
 
-/** طرق فتح التطبيق. الرمز (PIN) موجود دائمًا كبديل حتى في وضع البصمة فقط. */
+/** طرق فتح التطبيق. الـ PIN موجود دائمًا كبديل حتى في وضع الـ fingerprint فقط. */
 enum class LockMode {
-    /** البصمة فقط؛ يُستخدم الرمز تلقائيًا إن لم تتوفر البصمة. */
+    /** Fingerprint فقط؛ يُستخدم الـ PIN تلقائيًا إن لم تتوفر. */
     BIOMETRIC,
     PIN,
 
@@ -16,18 +16,18 @@ enum class LockMode {
     }
 }
 
-/** ما تعرضه شاشة القفل، حسب الوضع المختار وتوفّر البصمة الآن. */
+/** ما تعرضه شاشة الـ lock حسب الـ mode وتوفّر الـ fingerprint الآن. */
 data class UnlockMethods(val biometric: Boolean, val pin: Boolean)
 
 fun unlockMethodsFor(mode: LockMode, biometricAvailable: Boolean): UnlockMethods = when {
-    // البصمة غير متوفرة (أُزيلت أو تعطلت): الرمز بديل دائمًا حتى لا يُحبس المستخدم خارج التطبيق
+    // الـ fingerprint غير متوفرة (أُزيلت أو تعطلت): الـ PIN بديل دائمًا حتى لا يُحبس المستخدم خارج التطبيق
     !biometricAvailable -> UnlockMethods(biometric = false, pin = true)
     mode == LockMode.BIOMETRIC -> UnlockMethods(biometric = true, pin = false)
     mode == LockMode.PIN -> UnlockMethods(biometric = false, pin = true)
     else -> UnlockMethods(biometric = true, pin = true)
 }
 
-/** قواعد الرمز: 6 أرقام، ويُرفض الضعيف الذي يُخمَّن بسهولة. */
+/** قواعد الـ PIN: 6 أرقام، ويُرفض الضعيف سهل التخمين. */
 object PinRules {
     const val LENGTH = 6
 
@@ -54,10 +54,10 @@ object PinRules {
 }
 
 /**
- * سياسة المحاولات الخاطئة:
- * - أول [FREE_ATTEMPTS] محاولات بلا انتظار.
- * - بعدها انتظار يتضاعف مع كل خطأ: 30 ث، 1 د، 2 د، 4 د...
- * - عند [MAX_ATTEMPTS] تُعاد تهيئة القفل ويُطلب تسجيل الدخول للحساب من جديد.
+ * سياسة المحاولات الخاطئة (lockout):
+ * - أول [FREE_ATTEMPTS] محاولات بدون انتظار.
+ * - بعدها انتظار يتضاعف مع كل خطأ: 30 ث، 1 د، 2 د، 4 د... (exponential backoff)
+ * - عند [MAX_ATTEMPTS] يُعاد ضبط الـ lock ويُطلب تسجيل الدخول من جديد.
  */
 object LockoutPolicy {
     const val FREE_ATTEMPTS = 5
@@ -65,7 +65,7 @@ object LockoutPolicy {
     private const val BASE_DELAY_MS = 30_000L
     private const val MAX_DELAY_MS = 60 * 60_000L
 
-    /** مدة الانتظار بعد [failedAttempts] محاولة خاطئة متتالية. */
+    /** مدة الـ lockout بعد [failedAttempts] محاولة خاطئة متتالية. */
     fun delayAfter(failedAttempts: Int): Long {
         if (failedAttempts < FREE_ATTEMPTS) return 0
         val doublings = (failedAttempts - FREE_ATTEMPTS).coerceAtMost(20)

@@ -37,6 +37,7 @@
         <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
         <item name="materialCardViewStyle">@style/Widget.TalibPay.Card</item>
         <item name="toolbarStyle">@style/Widget.TalibPay.Toolbar</item>
+        <item name="snackbarStyle">@style/Widget.TalibPay.Snackbar</item>
     </style>
 
     <style name="Theme.TalibPay" parent="Base.Theme.TalibPay" />
@@ -168,5 +169,15 @@
 
     <style name="TextAppearance.TalibPay.Caption" parent="TextAppearance.Material3.LabelMedium">
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Snackbar (للرسائل التي فيها زر مثل "تراجع") بنفس زوايا الـ toast المخصص -->
+    <style name="Widget.TalibPay.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="shapeAppearance">@style/ShapeAppearance.TalibPay.Message</item>
+    </style>
+
+    <style name="ShapeAppearance.TalibPay.Message" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
     </style>
 </resources>

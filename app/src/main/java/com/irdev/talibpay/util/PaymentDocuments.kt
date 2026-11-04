@@ -19,9 +19,9 @@ import com.irdev.talibpay.domain.todaySimpleDate
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.model.Student
 
-// ---------------- إيصال الدفع ----------------
+// ---------------- Receipt ----------------
 
-/** إيصال دفعة واحدة: صورة أو PDF، يُرسل لولي الأمر عبر واتساب أو أي تطبيق. */
+/** إيصال دفعة واحدة كصورة أو PDF، يُرسل لولي الأمر عبر WhatsApp أو أي تطبيق. */
 fun Activity.shareReceipt(student: Student, due: DueSummary, payment: Payment) {
     val fileName = "Receipt-${Receipts.number(payment.id)}"
     val caption = getString(R.string.receipt_caption, student.name, money(payment.paid))
@@ -65,9 +65,9 @@ private fun Activity.renderReceipt(student: Student, due: DueSummary, payment: P
     return DocumentExport.layout(this, b.root)
 }
 
-// ---------------- كشف الحساب ----------------
+// ---------------- Account statement ----------------
 
-/** كشف حساب الطالب: كل المستحقات وحالتها، والمجاميع، ورصيد المحفظة. */
+/** كشف حساب الطالب: كل الـ charges وحالتها، والمجاميع، ورصيد الـ wallet. */
 fun Activity.shareStatement(data: StudentWithPayments) {
     val fileName = "Statement-${data.student.name.filter { it.isLetterOrDigit() }.ifEmpty { "student" }}"
     val caption = getString(R.string.statement_caption, data.student.name)
@@ -122,9 +122,9 @@ private fun Activity.renderStatement(data: StudentWithPayments): View {
     return DocumentExport.layout(this, b.root)
 }
 
-// ---------------- مشترك ----------------
+// ---------------- Shared ----------------
 
-/** صف عنوان/قيمة في مستند؛ [context] سياق التصدير (فاتح دائمًا). */
+/** صف label/value في مستند؛ [context] هو context التصدير (light دائمًا). */
 private fun ViewGroup.addDocRow(context: Context, label: String, value: String, @ColorRes valueColor: Int? = null) {
     val row = ItemReportRowBinding.inflate(android.view.LayoutInflater.from(context), this, true)
     row.tvRowLabel.text = label

@@ -115,7 +115,7 @@
                             app:drawableStartCompat="@drawable/ic_palette"
                             app:drawableTint="?attr/colorOnSurfaceVariant" />
 
-                        <!-- اختيار المظهر: النظام / داكن / نهاري -->
+                        <!-- اختيار الـ theme: النظام / داكن / فاتح -->
                         <com.google.android.material.button.MaterialButtonToggleGroup
                             android:id="@+id/themeToggle"
                             android:layout_width="match_parent"

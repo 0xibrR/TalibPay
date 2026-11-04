@@ -6,10 +6,10 @@
     <string name="password">كلمة المرور</string>
     <string name="confirm_password">تأكيد كلمة المرور</string>
     <string name="register">إنشاء حساب</string>
-    <string name="enter_value">الرجاء إدخال ما هو مطلوب</string>
+    <string name="enter_value">هذا الحقل مطلوب</string>
     <string name="verification_email">لقد تم إرسال رابط التحقق إلى بريدك الإلكتروني.</string>
     <string name="Password_does_not_match">كلمة المرور غير متطابقة</string>
-    <string name="check_email">يرجى التحقق من صحة تنسيق البريد الإلكتروني</string>
+    <string name="check_email">صيغة البريد الإلكتروني غير صحيحة</string>
     <string name="forgot_password">نسيت كلمة المرور؟</string>
     <string name="sign_in">تسجيل الدخول</string>
     <string name="sign_up">إنشاء حساب</string>
@@ -18,7 +18,7 @@
     <string name="login_successfully_email">لقد قمت بتسجيل الدخول بنجاح باستخدام بريدك الإلكتروني.</string>
     <string name="login_successfully_google_account">لقد قمت بتسجيل الدخول بنجاح باستخدام حساب Google الخاص بك.</string>
     <string name="check_verification_email">يُرجى التحقق من بريدك الإلكتروني لتفعيل الحساب</string>
-    <string name="google_sign_in_failed">فشل تسجيل الدخول إلى جوجل.</string>
+    <string name="google_sign_in_failed">تعذّر تسجيل الدخول عبر Google</string>
     <string name="dialog_forgot">أدخل بريدك الإلكتروني وسيتم إرسال رابط لإعادة تعيين كلمة المرور إليك. إذا لم تجد رسالة في بريدك الإلكتروني الأساسي، فقد تكون ضمن الرسائل غير المرغوب فيها.</string>
     <string name="ok">موافق</string>
     <string name="cancel">إلغاء</string>
@@ -27,7 +27,7 @@
     <string name="sign_out">تسجيل الخروج</string>
     <string name="signed_out_message">هل أنت متأكد من تسجيل الخروج من الحساب؟</string>
     <string name="signed_out_successfully">تم تسجيل الخروج بنجاح</string>
-    <string name="data_deleted_successfully">تم حذف البيانات بنجاح</string>
+    <string name="account_deleted">تم حذف الحساب وجميع بياناته</string>
     <string name="delete_account_message">هل أنت متأكد أنك تريد حذف الحساب؟</string>
     <string name="no_google_account_found">لا يوجد حساب Google على هذا الجهاز.</string>
     <string name="google_add_account">إضافة حساب</string>
@@ -37,7 +37,7 @@
     <string name="settings">الإعدادات</string>
     <string name="delete_all_students">حذف جميع الطلاب</string>
     <string name="please_enter_the_email_and_password_you_registered_with">الرجاء إدخال البريد الإلكتروني وكلمة المرور التي قمت بالتسجيل بها.</string>
-    <string name="account_provider_type_unknown">لا يمكن تحديد نوع مزود الحساب!</string>
+    <string name="account_provider_type_unknown">تعذّر تحديد طريقة الدخول لهذا الحساب</string>
     <string name="you_don_t_have_any_students_yet">ليس لديك أي طلاب حتى الآن</string>
     <string name="full_name">الاسم الكامل</string>
     <string name="year_of_birth">سنة الميلاد</string>
@@ -63,12 +63,12 @@
     <string name="are_you_sure_you_want_to_delete_all_student">هل أنت متأكد أنك تريد حذف جميع الطلاب؟</string>
     <string name="slide_to_delete_all">اسحب لحذف جميع الطلاب</string>
     <string name="this_process_is_irreversible">(هذه العملية لا رجعة فيها)</string>
-    <string name="delete_all_note">تم حذف جميع الملاحظات</string>
+    <string name="all_students_deleted">تم حذف جميع الطلاب</string>
     <string name="payment_summary_explained_title">شرح ملخص الدفع</string>
-    <string name="payment_summary_popup_title2">ملخص الدفع يُظهر مجموع ما تم دفعه (نقدًا + بنكيًا) لجميع الطلاب</string>
-    <string name="payment_summary_cash">المدفوع كاش: مجموع المبالغ المدفوعة نقدًا.</string>
-    <string name="payment_summary_bank">المدفوع بنكي: مجموع المبالغ المحولة عن طريق البنك.</string>
-    <string name="payment_summary_total">المحصّل: مجموع المدفوع (كاش + بنكي)، ناقص ما استُرد للطلاب من محافظهم.</string>
+    <string name="payment_summary_popup_title2">ملخص الدفع يُظهر مجموع ما دُفع (نقدي + بنكي) لجميع الطلاب.</string>
+    <string name="payment_summary_cash">النقدي: مجموع ما دُفع نقدًا.</string>
+    <string name="payment_summary_bank">البنكي: مجموع ما حُوّل عبر البنك.</string>
+    <string name="payment_summary_total">المحصّل: مجموع المدفوع (نقدي + بنكي)، ناقص ما استُرد للطلاب من محافظهم.</string>
     <string name="payment_summary_refunds">المسترد من المحافظ حتى الآن: %1$s</string>
     <string name="payment_summary_remaining">المتبقي: مجموع المبالغ التي لم تُدفع بعد.</string>
     <string name="last_modified">آخر تعديل</string>
@@ -94,7 +94,7 @@
     <string name="backdate_yes">نعم، احتسبها</string>
     <string name="backdate_no">لا، من الدورة القادمة</string>
     <string name="share_phone">📞 رقم الهاتف: %1$s</string>
-    <string name="share_paid_cash">💰 مدفوع كاش: %1$s</string>
+    <string name="share_paid_cash">💰 مدفوع نقدًا: %1$s</string>
     <string name="share_paid_bank">🏦 مدفوع بنكي: %1$s</string>
     <string name="share_paid_total">💸 إجمالي المدفوع: %1$s</string>
     <string name="share_total_amount">📊 المبلغ الإجمالي: %1$s</string>
@@ -114,7 +114,7 @@
     <string name="confirm_new_password">تأكيد كلمة المرور الجديدة</string>
     <string name="save">حفظ</string>
     <string name="password_changed_success">تم تغيير كلمة المرور بنجاح.</string>
-    <string name="wrong_old_password">كلمة المرور القديمة غير صحيحة.</string>
+    <string name="wrong_old_password">كلمة المرور الحالية غير صحيحة</string>
     <string name="password_too_short">يجب أن تتكون كلمة المرور الجديدة من 8 أحرف على الأقل.</string>
     <string name="passwords_not_match">كلمة المرور الجديدة وتأكيدها غير متطابقين.</string>
     <string name="fill_all_fields">يرجى ملء جميع الحقول.</string>
@@ -137,7 +137,7 @@
     <string name="no_payments">لا يوجد دفعات</string>
     <string name="invalid_amount">أدخل مبلغًا صحيحًا</string>
 
-    <!-- التصميم الجديد -->
+    <!-- عناصر الواجهة العامة (Login، Dashboard، تفاصيل الطالب) -->
     <string name="app_tagline">إدارة رسوم الطلاب ودفعاتهم بسهولة</string>
     <string name="register_subtitle">أنشئ حسابًا لتبدأ بإدارة طلابك.</string>
     <string name="password_requirements">8 أحرف على الأقل</string>
@@ -162,7 +162,7 @@
     <string name="app_theme">مظهر التطبيق</string>
     <string name="theme_system">النظام</string>
     <string name="theme_dark">داكن</string>
-    <string name="theme_light">نهاري</string>
+    <string name="theme_light">فاتح</string>
     <string name="app_language">لغة التطبيق</string>
     <string name="settings_account">الحساب</string>
     <string name="settings_danger_zone">منطقة الخطر</string>
@@ -477,5 +477,5 @@
     <string name="chart_title">التحصيل في الأشهر الأخيرة</string>
     <string name="chart_collected">المحصّل</string>
     <string name="chart_billed">المستحقات</string>
-    <string name="chart_month_description">%1$s: حُصّل %2$s من مستحقات %3$s</string>
+    <string name="chart_month_description">%1$s: المحصّل %2$s، المستحقات %3$s</string>
 </resources>

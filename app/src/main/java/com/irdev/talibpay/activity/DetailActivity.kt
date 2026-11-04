@@ -65,7 +65,7 @@ class DetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailBinding
     private val viewModel: DetailViewModel by viewModels()
 
-    // نموذج الدفعة يعيد معرّف الدفعة الجديدة لعرض إرسال إيصالها
+    // الـ PaymentForm يعيد id الدفعة الجديدة لعرض إرسال الـ receipt
     private val paymentForm = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         result.data?.getStringExtra(Extras.PAYMENT_ID)?.let(::offerReceipt)
     }
@@ -96,7 +96,7 @@ class DetailActivity : AppCompatActivity() {
         binding.btnWalletRefund.setOnClickListener { showRefundDialog() }
         binding.btnRemind.setOnClickListener { sendOverdueReminder() }
         binding.fabAddPayment.setOnClickListener {
-            // لا دفعة بلا مستحق مفتوح: نوجّه المستخدم لإضافة مستحق أولًا
+            // لا دفعة بدون charge مفتوح: نوجّه المستخدم لإضافة charge أولًا
             val data = viewModel.student.value
             if (data != null && data.ledger.openDues.isEmpty()) {
                 MaterialAlertDialogBuilder(this)
@@ -113,11 +113,7 @@ class DetailActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.student) { it?.let(::render) }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> Snackbar.make(
-                    binding.root,
-                    if (event.arg != null) getString(event.res, event.arg) else getString(event.res),
-                    Snackbar.LENGTH_LONG
-                ).setAnchorView(binding.fabAddPayment).show()
+                is UiEvent.Message -> toast(event)
 
                 UiEvent.Finished -> finish()
                 UiEvent.NotSignedIn -> {
@@ -134,7 +130,7 @@ class DetailActivity : AppCompatActivity() {
         val student = data.student
 
         with(binding) {
-            // البطاقة العلوية: الاسم والحالة والتقدم الإجمالي
+            // الـ header card: الاسم والحالة والتقدم الإجمالي
             tvName.text = student.name
             tvInitial.text = student.name.firstOrNull()?.toString() ?: "?"
             studentProgress.setProgressCompat(paidPercent(student.paid, student.total), true)
@@ -155,10 +151,10 @@ class DetailActivity : AppCompatActivity() {
             btnRemind.isVisible = data.ledger.overdueDues(todaySimpleDate()).isNotEmpty()
             if (tvArchivedBanner.isVisible != student.archived) {
                 tvArchivedBanner.isVisible = student.archived
-                invalidateOptionsMenu() // أرشفة أو إلغاء أرشفة: تبديل خيار القائمة
+                invalidateOptionsMenu() // أرشفة أو إلغاء أرشفة: تبديل خيار الـ menu
             }
 
-            // المستحقات
+            // Charges
             val dueCount = data.dues.size
             val paymentCount = data.payments.size
             tvDuesCount.text = listOf(
@@ -172,7 +168,7 @@ class DetailActivity : AppCompatActivity() {
             rowBirthYear.bind(R.drawable.ic_cake, R.string.year_of_birth, student.birthYear)
             rowRegistrationDate.bind(R.drawable.ic_calendar, R.string.registration_date, student.registrationDate)
             rowAttendanceDays.bind(R.drawable.ic_date_range, R.string.attendance_days, attendanceDaysText(student.attendanceDaySet))
-            // الرسوم الشهرية وموعد الاستحقاق القادم
+            // الـ monthly fee وموعد الاستحقاق القادم
             val nextDue = student.nextMonthlyDue(todaySimpleDate())
             rowMonthlyFee.bind(
                 R.drawable.ic_cash, R.string.monthly_fee,
@@ -198,7 +194,7 @@ class DetailActivity : AppCompatActivity() {
         renderWallet(data)
     }
 
-    /** المحفظة: الرصيد وسجل الحركات (الأحدث أولًا). */
+    /** الـ wallet: الرصيد وسجل الحركات (الأحدث أولًا). */
     private fun renderWallet(data: StudentWithPayments) {
         val balance = data.ledger.walletBalance
         binding.tvWalletBalance.text = money(balance)
@@ -244,7 +240,7 @@ class DetailActivity : AppCompatActivity() {
             .setPositiveButton(R.string.wallet_refund, null)
             .setNegativeButton(R.string.cancel, null)
             .show()
-        // التحقق داخل الحوار حتى لا يُغلق ويضيع ما كتبه المستخدم عند الخطأ
+        // الـ validation داخل الـ dialog حتى لا يُغلق ويضيع ما كتبه المستخدم عند الخطأ
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             val amountText = dialogBinding.edtRefundAmount.text?.toString().orEmpty()
             val error = when (val result = validateRefund(amountText, balance)) {
@@ -261,7 +257,7 @@ class DetailActivity : AppCompatActivity() {
         }
     }
 
-    /** @param color null = لون نص البطاقة (حالة محايدة). */
+    /** @param color null = لون نص الـ card (حالة محايدة). */
     private fun setStatus(text: String, @ColorRes color: Int?) {
         binding.tvStatus.text = text
         binding.tvStatus.setTextColor(
@@ -276,7 +272,7 @@ class DetailActivity : AppCompatActivity() {
         tvValue.text = value.ifBlank { getString(R.string.none_value) }
     }
 
-    // ---------------- التنقل ----------------
+    // ---------------- Navigation ----------------
 
     private fun openChargeForm(chargeId: String?) {
         startActivity(
@@ -297,7 +293,7 @@ class DetailActivity : AppCompatActivity() {
         )
     }
 
-    // ---------------- خيارات المستحق والدفعة ----------------
+    // ---------------- Charge & payment options ----------------
 
     private fun showDueMenu(due: DueSummary, anchor: View) {
         PopupMenu(this, anchor).apply {
@@ -330,7 +326,7 @@ class DetailActivity : AppCompatActivity() {
     private fun showPaymentOptions(due: DueSummary, payment: Payment) {
         val title = getString(R.string.payment_of_due, money(payment.paid), dueTitle(due.charge))
         val student = viewModel.student.value?.student ?: return
-        // دفعة أضافت رصيدًا للمحفظة مقفلة: تعديلها أو حذفها قد يجعل الرصيد سالبًا، لكن إيصالها متاح
+        // دفعة أضافت credit للـ wallet مقفلة: تعديلها أو حذفها قد يجعل الرصيد سالبًا، لكن الـ receipt متاح
         if (payment.credited > 0) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(title)
@@ -353,7 +349,7 @@ class DetailActivity : AppCompatActivity() {
             .show()
     }
 
-    /** بعد تسجيل دفعة جديدة: رسالة الحفظ مع زر إرسال إيصالها مباشرة. */
+    /** بعد تسجيل دفعة جديدة: Snackbar الحفظ مع زر إرسال الـ receipt مباشرة. */
     private fun offerReceipt(paymentId: String) {
         Snackbar.make(binding.root, R.string.payment_added_successfully, Snackbar.LENGTH_LONG)
             .setAction(R.string.receipt_send) { sendReceipt(paymentId) }
@@ -381,7 +377,7 @@ class DetailActivity : AppCompatActivity() {
             .show()
     }
 
-    // ---------------- القائمة العلوية ----------------
+    // ---------------- Toolbar menu ----------------
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.detail_menu, menu)
@@ -472,7 +468,7 @@ class DetailActivity : AppCompatActivity() {
             .show()
     }
 
-    /** يفتح واتساب على رقم الطالب برسالة جاهزة فيها المستحقات المتأخرة ومجموعها. */
+    /** يفتح WhatsApp على رقم الطالب برسالة جاهزة فيها الـ charges المتأخرة ومجموعها. */
     private fun sendOverdueReminder() {
         val data = viewModel.student.value ?: return
         val overdue = data.ledger.overdueDues(todaySimpleDate())

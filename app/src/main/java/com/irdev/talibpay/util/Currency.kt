@@ -6,7 +6,7 @@ import androidx.core.content.edit
 import com.irdev.talibpay.R
 import com.irdev.talibpay.domain.Money
 
-/** العملات المتاحة للعرض؛ المبالغ تُحفظ أرقامًا فقط، والعملة رمز يُعرض بجانبها. */
+/** العملات المتاحة؛ المبالغ تُحفظ أرقامًا فقط، والعملة رمز يُعرض بجانبها. */
 enum class Currency(val symbol: String, @param:StringRes val nameRes: Int) {
     ILS("₪", R.string.currency_ils),
     USD("$", R.string.currency_usd),
@@ -32,8 +32,8 @@ enum class Currency(val symbol: String, @param:StringRes val nameRes: Int) {
 }
 
 /**
- * عملة التطبيق: تُحفظ على الجهاز وتُحمَّل مرة عند بدء التطبيق،
- * فيمكن تنسيق المبالغ حتى في الأماكن التي لا يتوفر فيها Context (مثل ViewModel).
+ * عملة التطبيق: تُحفظ في SharedPreferences وتُحمَّل مرة عند البدء،
+ * فيمكن تنسيق المبالغ حتى بدون Context (مثل داخل الـ ViewModel).
  */
 object CurrencyPrefs {
     private const val PREFS = "appSettings"
@@ -56,5 +56,5 @@ object CurrencyPrefs {
     val symbol: String get() = (cached ?: Currency.DEFAULT).symbol
 }
 
-/** المبلغ مع رمز العملة، مثل "150 ₪" أو "150 $"؛ مسافة غير قابلة للكسر حتى لا ينفصل الرمز عن الرقم. */
+/** المبلغ مع رمز العملة، مثل "150 ₪"؛ non-breaking space حتى لا ينفصل الرمز عن الرقم. */
 fun formatAmount(value: Double): String = Money.format(value) + " " + CurrencyPrefs.symbol

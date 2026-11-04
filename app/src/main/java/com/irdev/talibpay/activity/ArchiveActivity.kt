@@ -18,10 +18,11 @@ import com.irdev.talibpay.util.applySystemBarInsets
 import com.irdev.talibpay.util.attachSwipeActions
 import com.irdev.talibpay.util.collectWhileStarted
 import com.irdev.talibpay.util.setupToolbar
+import com.irdev.talibpay.util.toast
 import com.irdev.talibpay.viewmodel.ArchiveViewModel
 import com.irdev.talibpay.viewmodel.UiEvent
 
-/** الطلاب المؤرشفون: فتح أي طالب يعرض سجله كاملًا، والسحب يعيده للقائمة. */
+/** الطلاب المؤرشفون: فتح أي طالب يعرض سجله كاملًا، والـ swipe يعيده للقائمة. */
 class ArchiveActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityArchiveBinding
@@ -42,7 +43,7 @@ class ArchiveActivity : AppCompatActivity() {
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
-        // السحب لليسار يعيد الطالب للقائمة (نفس اتجاه الأرشفة في الشاشة الرئيسية)
+        // Swipe لليسار يعيد الطالب للقائمة (نفس اتجاه الأرشفة في الشاشة الرئيسية)
         binding.recyclerView.attachSwipeActions(
             right = null,
             left = SwipeAction(R.drawable.ic_unarchive, R.color.swipe_restore) { position ->
@@ -58,7 +59,7 @@ class ArchiveActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
                 is UiEvent.StudentRestored -> showRestoredSnackbar(event.student)
-                is UiEvent.Message -> Snackbar.make(binding.root, event.res, Snackbar.LENGTH_LONG).show()
+                is UiEvent.Message -> toast(event)
                 UiEvent.NotSignedIn -> {
                     startActivity(Intent(this, LoginActivity::class.java))
                     finishAffinity()

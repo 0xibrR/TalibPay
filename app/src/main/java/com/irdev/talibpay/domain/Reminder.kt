@@ -1,31 +1,31 @@
 package com.irdev.talibpay.domain
 
 /**
- * المستحقات المتأخرة التي يُذكَّر بها ولي الأمر:
- * عليها مبلغ متبقٍ، وتاريخ استحقاقها اليوم أو قبله (أو بلا تاريخ، فهي مستحقة الآن).
- * المستحق ذو التاريخ المستقبلي لا يُعد متأخرًا بعد.
+ * الـ charges المتأخرة التي يُذكَّر بها ولي الأمر:
+ * عليها متبقٍ، وتاريخ استحقاقها اليوم أو قبله (أو بلا تاريخ، فهي مستحقة الآن).
+ * الـ charge ذو التاريخ المستقبلي لا يُعد متأخرًا.
  */
 fun StudentLedger.overdueDues(today: SimpleDate): List<DueSummary> =
     dues.filter { due ->
         due.remaining > 0 && SimpleDate.parse(due.charge.dueDate).let { it == null || it <= today }
     }
 
-/** مجموع المتبقي على المستحقات المتأخرة. */
+/** مجموع المتبقي على الـ charges المتأخرة. */
 fun List<DueSummary>.overdueTotal(): Double = Money.sum(map { it.remaining })
 
-/** تحويل رقم الهاتف إلى الصيغة الدولية التي يقبلها واتساب (أرقام فقط، بدون + أو 00). */
+/** تحويل رقم الهاتف للصيغة الدولية التي يقبلها WhatsApp (أرقام فقط، بدون + أو 00). */
 object PhoneNumbers {
 
-    /** رمز الدولة الافتراضي لفلسطين؛ يمكن تغييره من الإعدادات. */
+    /** رمز الدولة الافتراضي (فلسطين)؛ يتغير من الإعدادات. */
     const val DEFAULT_COUNTRY_CODE = "970"
 
     private const val MIN_LENGTH = 8
     private const val MAX_LENGTH = 15 // أقصى طول لرقم دولي (E.164)
 
     /**
-     * @return الرقم بصيغة دولية، أو null إن لم يكن رقمًا صالحًا.
-     * - "+972 59-123" أو "00972..." → يُحذف + و 00 ويبقى الرقم كما هو.
-     * - "0591234567" (رقم محلي) → يُستبدل الصفر الأول برمز الدولة.
+     * @return الرقم بصيغة دولية، أو null إذا لم يكن صالحًا.
+     * - "+972 59-123" أو "00972..." → نحذف + و 00 ويبقى الرقم كما هو.
+     * - "0591234567" (رقم محلي) → الصفر الأول يُستبدل برمز الدولة.
      * - رقم يبدأ برمز الدولة أصلًا → يبقى كما هو.
      */
     fun toInternational(raw: String, countryCode: String): String? {
@@ -52,7 +52,7 @@ object PhoneNumbers {
         return "+$countryCode ${trimmed.removePrefix("0")}"
     }
 
-    /** رمز دولة صالح: من 1 إلى 3 أرقام لا يبدأ بصفر. */
+    /** رمز دولة صالح: 1 إلى 3 أرقام، لا يبدأ بصفر. */
     fun isValidCountryCode(code: String): Boolean =
         code.length in 1..3 && code.all { it.isDigit() } && !code.startsWith("0")
 }

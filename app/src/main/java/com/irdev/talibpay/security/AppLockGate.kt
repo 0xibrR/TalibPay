@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
-import android.widget.Toast
 import androidx.annotation.StringRes
 import com.google.firebase.auth.FirebaseAuth
 import com.irdev.talibpay.activity.ForgotPasswordActivity
@@ -17,21 +16,22 @@ import com.irdev.talibpay.activity.RegisterActivity
 import com.irdev.talibpay.activity.SplashActivity
 import com.irdev.talibpay.data.AuthRepository
 import com.irdev.talibpay.data.clearGoogleCredentialState
+import com.irdev.talibpay.util.toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * يعرض شاشة القفل عند فتح التطبيق، وعند العودة إليه بعد أكثر من [RELOCK_AFTER_MS] في الخلفية.
- * العودة السريعة (من واتساب أو المشاركة مثلًا) لا تطلب الفتح من جديد.
- * حالة الفتح في الذاكرة فقط: إعادة تشغيل التطبيق تعني قفلًا من جديد.
+ * ActivityLifecycleCallbacks: يعرض LockActivity عند فتح التطبيق، وعند العودة بعد أكثر من [RELOCK_AFTER_MS] في الـ background.
+ * العودة السريعة (من WhatsApp أو الـ share مثلًا) لا تطلب الفتح من جديد.
+ * حالة الفتح في الذاكرة فقط: إعادة تشغيل التطبيق = lock من جديد.
  */
 object AppLockGate : Application.ActivityLifecycleCallbacks {
 
     const val RELOCK_AFTER_MS = 60_000L
 
-    /** شاشات قبل تسجيل الدخول وشاشة القفل نفسها لا تُقفل. */
+    /** شاشات ما قبل تسجيل الدخول وشاشة الـ lock نفسها لا تُقفل. */
     private val exempt: Set<Class<out Activity>> = setOf(
         LockActivity::class.java, SplashActivity::class.java, LoginActivity::class.java,
         RegisterActivity::class.java, ForgotPasswordActivity::class.java
@@ -54,18 +54,18 @@ object AppLockGate : Application.ActivityLifecycleCallbacks {
 
     fun state(): LockState = lock.state(currentUid())
 
-    /** بعد فتح القفل أو تفعيله من الإعدادات. */
+    /** بعد فتح الـ lock أو تفعيله من الإعدادات. */
     fun markUnlocked() {
         unlocked = true
     }
 
-    /** البصمة صالحة للفتح الآن: مفعّلة في القفل، ومفتاحها موجود، والجهاز يتعرف على بصمة. */
+    /** الـ fingerprint صالحة للفتح الآن: مفعّلة في الـ lock، ومفتاحها موجود، والجهاز فيه fingerprint مسجّلة. */
     fun biometricUsable(context: Context, state: LockState.Enabled): Boolean =
         state.mode.usesBiometric && state.biometricEnrolled && BiometricKey.exists() && BiometricKey.isAvailable(context)
 
     /**
-     * إلغاء القفل وتسجيل الخروج: عند التلاعب، أو تجاوز المحاولات، أو "نسيت الرمز".
-     * تسجيل الدخول للحساب من جديد هو ما يثبت الهوية، ثم يمكن تفعيل القفل مجددًا.
+     * إلغاء الـ lock و sign out: عند الـ tampering، أو تجاوز المحاولات، أو "نسيت الرمز".
+     * تسجيل الدخول من جديد هو ما يثبت الهوية، وبعدها يمكن تفعيل الـ lock مجددًا.
      */
     fun resetAndSignOut(activity: Activity, @StringRes message: Int) {
         lock.reset()
@@ -75,17 +75,17 @@ object AppLockGate : Application.ActivityLifecycleCallbacks {
         CoroutineScope(SupervisorJob() + Dispatchers.Main).launch {
             clearGoogleCredentialState(activity.applicationContext)
         }
-        Toast.makeText(activity.applicationContext, message, Toast.LENGTH_LONG).show()
+        activity.toast(message, long = true)
         activity.startActivity(
             Intent(activity, LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         )
         activity.finish()
     }
 
-    // ---------------- دورة حياة الشاشات ----------------
+    // ---------------- Activity lifecycle ----------------
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        // عند تفعيل القفل: لا تظهر محتويات التطبيق في قائمة التطبيقات الأخيرة
+        // مع الـ lock: FLAG_SECURE يخفي محتوى التطبيق في الـ recent apps
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && state() !is LockState.NotEnabled) {
             activity.setRecentsScreenshotEnabled(false)
         }
@@ -110,7 +110,7 @@ object AppLockGate : Application.ActivityLifecycleCallbacks {
 
     override fun onActivityStopped(activity: Activity) {
         startedActivities = (startedActivities - 1).coerceAtLeast(0)
-        // تدوير الشاشة يوقف الشاشة ويعيد إنشاءها: ليس خروجًا من التطبيق
+        // الـ rotation يعمل stop ثم recreate للشاشة: ليس خروجًا من التطبيق
         if (startedActivities == 0 && !activity.isChangingConfigurations) {
             backgroundSince = SystemClock.elapsedRealtime()
         }

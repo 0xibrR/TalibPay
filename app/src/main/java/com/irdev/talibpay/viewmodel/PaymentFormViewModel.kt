@@ -12,14 +12,15 @@ import com.irdev.talibpay.domain.PaymentValidation
 import com.irdev.talibpay.domain.validatePayment
 import com.irdev.talibpay.model.Payment
 import com.irdev.talibpay.util.Extras
+import com.irdev.talibpay.util.ToastKind
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * @param dues المستحقات التي يمكن الدفع لها (غير المسددة، ومعها مستحق الدفعة المعدَّلة)
- * @param selectedDueId المستحق المختار مبدئيًا
+ * @param dues الـ charges التي يمكن الدفع لها (غير المسددة، ومعها charge الدفعة التي تُعدَّل)
+ * @param selectedDueId الـ charge المختار مبدئيًا
  * @param existing الدفعة عند التعديل
  */
 data class PaymentFormState(
@@ -27,16 +28,16 @@ data class PaymentFormState(
     val selectedDueId: String?,
     val existing: Payment?
 ) {
-    /** المتاح للدفع في المستحق: المتبقي عليه + قيمة الدفعة المعدَّلة إن كانت منه. */
+    /** المتاح للدفع في الـ charge: المتبقي عليه + قيمة الدفعة التي تُعدَّل إن كانت منه. */
     fun availableFor(dueId: String): Double {
         val due = dues.firstOrNull { it.charge.id == dueId } ?: return 0.0
-        // الجزء المطبَّق فقط من الدفعة المعدَّلة (الزيادة التي ذهبت للمحفظة لا تُحسب)
+        // الجزء المطبَّق فقط من الدفعة (الزيادة التي ذهبت للـ wallet لا تُحسب)
         val own = existing?.takeIf { it.chargeId == dueId }?.let { Money.subtract(it.paid, it.credited) } ?: 0.0
         return Money.sum(listOf(due.remaining, own))
     }
 }
 
-/** تسجيل دفعة لمستحق (بدون معرّف دفعة) أو تعديل دفعة موجودة. */
+/** تسجيل دفعة لـ charge (بدون id دفعة) أو تعديل دفعة موجودة. */
 class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel() {
 
     private val repository = StudentRepository()
@@ -57,7 +58,7 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
                 val dues = ledger.dues.filter {
                     it.remaining > 0 || it.charge.id == existing?.chargeId
                 }
-                // الافتراضي: مستحق الدفعة المعدَّلة، أو المطلوب، أو أقدم مستحق غير مسدد
+                // الافتراضي: charge الدفعة التي تُعدَّل، أو المطلوب، أو أقدم charge غير مسدد
                 val selected = existing?.chargeId
                     ?: requestedDueId?.takeIf { id -> dues.any { it.charge.id == id } }
                     ?: dues.firstOrNull()?.charge?.id
@@ -70,7 +71,7 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
 
     fun save(dueId: String?, cashText: String, bankText: String, paymentDate: String, note: String) {
         if (studentId.isEmpty()) {
-            send(UiEvent.Message(R.string.error_generic))
+            send(UiEvent.Message(R.string.error_generic, kind = ToastKind.ERROR))
             return
         }
         if (dueId == null) {
@@ -78,22 +79,22 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
             return
         }
         runAction {
-            // نقرأ أحدث البيانات قبل التحقق، فقد تكون دفعة أخرى سُجّلت من جهاز آخر
+            // نقرأ أحدث البيانات قبل الـ validation، فقد تكون دفعة أخرى سُجّلت من جهاز آخر
             val due = repository.getStudent(studentId)?.ledger?.due(dueId)
                 ?: return@runAction send(UiEvent.Message(R.string.choose_due))
             val editing = due.payments.firstOrNull { it.id == paymentId }
-            // دفعة أضافت رصيدًا للمحفظة لا تُعدَّل حتى لا يختل رصيد المحفظة
+            // دفعة أضافت credit للـ wallet لا تُعدَّل حتى لا يختل رصيد الـ wallet
             if (editing != null && editing.credited > 0) {
                 return@runAction send(UiEvent.Message(R.string.payment_locked_by_wallet))
             }
-            // ما سُدِّد من المستحق بغير هذه الدفعة: خصم المحفظة + الجزء المطبَّق من الدفعات الأخرى
+            // المسدَّد من الـ charge بغير هذه الدفعة: خصم الـ wallet + الجزء المطبَّق من الدفعات الأخرى
             val paidByOthers = Money.sum(
                 listOf(due.walletUsed) +
                     due.payments.filter { it.id != paymentId }.map { Money.subtract(it.paid, it.credited) }
             )
 
             val amounts = when (
-                // دفعة جديدة: ما يزيد عن المتبقي يذهب للمحفظة. التعديل: لا يتجاوز المتبقي
+                // دفعة جديدة: الزيادة عن المتبقي تذهب للـ wallet. التعديل: لا يتجاوز المتبقي
                 val result = validatePayment(
                     cashText, bankText, due.charge.amount, paidByOthers, allowCredit = paymentId == null
                 )
@@ -109,11 +110,11 @@ class PaymentFormViewModel(savedStateHandle: SavedStateHandle) : BaseViewModel()
             val input = PaymentInput(dueId, amounts.cash, amounts.bank, paymentDate, note)
             val id = paymentId
             if (id == null) {
-                // صفحة الطالب تعرض رسالة الحفظ مع زر إرسال الإيصال
+                // صفحة الطالب تعرض رسالة الحفظ مع زر إرسال الـ receipt
                 send(UiEvent.PaymentSaved(repository.addPayment(studentId, input)))
             } else {
                 repository.updatePayment(studentId, id, input)
-                send(UiEvent.Message(R.string.updated_successfully))
+                send(UiEvent.Message(R.string.updated_successfully, kind = ToastKind.SUCCESS))
                 send(UiEvent.Finished)
             }
         }

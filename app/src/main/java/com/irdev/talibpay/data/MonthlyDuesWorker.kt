@@ -13,14 +13,14 @@ import com.google.firebase.auth.FirebaseAuth
 import java.util.concurrent.TimeUnit
 
 /**
- * مهمة يومية في الخلفية تنشئ الرسوم الشهرية التي حان موعدها،
- * فتظهر الرسوم في موعدها حتى لو لم يُفتح التطبيق ذلك اليوم.
- * التكرار آمن: الإنشاء بمعرّف ثابت لكل شهر داخل transaction (انظر StudentRepository).
+ * Daily background worker (WorkManager) ينشئ الـ monthly charges التي حان موعدها،
+ * فتظهر في موعدها حتى لو لم يُفتح التطبيق ذلك اليوم.
+ * Idempotent: id ثابت لكل شهر داخل transaction (انظر StudentRepository).
  */
 class MonthlyDuesWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        // بدون مستخدم مسجّل لا توجد بيانات؛ ستعمل المهمة عند التشغيل التالي بعد الدخول
+        // بدون user مسجّل لا توجد بيانات؛ يعمل الـ worker في المرة التالية بعد الدخول
         if (FirebaseAuth.getInstance().currentUser == null) return Result.success()
         return try {
             StudentRepository().generateMonthlyDues()
@@ -35,7 +35,7 @@ class MonthlyDuesWorker(context: Context, params: WorkerParameters) : CoroutineW
         private const val TAG = "MonthlyDuesWorker"
         private const val WORK_NAME = "monthly-dues-generation"
 
-        /** يجدول المهمة مرة يوميًا (KEEP: لا يعيد جدولتها إن كانت مجدولة). */
+        /** يجدول الـ worker مرة يوميًا (KEEP: لا يعيد الجدولة إذا كان مجدولًا). */
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<MonthlyDuesWorker>(1, TimeUnit.DAYS)
                 .setConstraints(

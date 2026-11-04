@@ -22,19 +22,19 @@ import com.irdev.talibpay.data.PaymentLockedByWalletException
 
 const val MIN_PASSWORD_LENGTH = 8
 
-// حساب البريد/كلمة المرور لا يدخل التطبيق قبل تأكيد البريد، وحساب Google مؤكَّد مسبقًا
+// حساب email/password لا يدخل قبل الـ verification، وحساب Google verified مسبقًا
 fun FirebaseUser.canAccessApp(): Boolean =
     isEmailVerified || providerData.any { it.providerId == GoogleAuthProvider.PROVIDER_ID }
 
-/** المستخدم أغلق نافذة اختيار حساب Google بنفسه: لا نعرض خطأ. */
+/** المستخدم أغلق اختيار حساب Google بنفسه: لا نعرض خطأ. */
 fun Throwable.isUserCancellation(): Boolean = this is GetCredentialCancellationException
 
-/** رسالة آمنة ومترجمة بدل عرض رسالة Firebase الخام للمستخدم. */
+/** رسالة آمنة ومترجمة بدل رسالة Firebase الخام. */
 @StringRes
 fun errorMessageRes(e: Throwable?): Int = when (e) {
     is FirebaseAuthWeakPasswordException -> R.string.error_weak_password
     is FirebaseAuthUserCollisionException -> R.string.error_email_in_use
-    // لا نفرّق بين "المستخدم غير موجود" و"كلمة المرور خاطئة" لمنع كشف الحسابات
+    // لا نفرّق بين "user not found" و "wrong password" لمنع كشف الحسابات (account enumeration)
     is FirebaseAuthInvalidUserException,
     is FirebaseAuthInvalidCredentialsException -> R.string.error_invalid_credentials
     is FirebaseNetworkException -> R.string.error_network

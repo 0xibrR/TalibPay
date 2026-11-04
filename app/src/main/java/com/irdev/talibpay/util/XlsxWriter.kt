@@ -5,9 +5,9 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * كاتب ملفات Excel (.xlsx) خفيف بدون مكتبات خارجية (Apache POI يضيف عدة ميجابايت للتطبيق).
- * ملف xlsx هو أرشيف ZIP لملفات XML (معيار Office Open XML)؛ نكتب الحد الأدنى منه:
- * عدة أوراق، صف عنوان عريض، نصوص وأرقام حقيقية (قابلة للجمع في Excel)، واتجاه من اليمين لليسار عند الحاجة.
+ * كاتب Excel (.xlsx) خفيف بدون libraries (Apache POI يضيف عدة MB للتطبيق).
+ * ملف xlsx هو ZIP لملفات XML (Office Open XML)؛ نكتب الحد الأدنى منه:
+ * عدة sheets، header عريض، نصوص وأرقام حقيقية (قابلة للجمع في Excel)، و RTL عند الحاجة.
  */
 object XlsxWriter {
 
@@ -16,7 +16,7 @@ object XlsxWriter {
         data class Number(val value: Double) : Cell
     }
 
-    /** @param header صف العنوان (يُكتب عريضًا ويُثبَّت أعلى الورقة). */
+    /** @param header صف العناوين (bold ومثبَّت أعلى الـ sheet). */
     data class Sheet(val name: String, val header: List<String>, val rows: List<List<Cell>>)
 
     fun write(out: OutputStream, sheets: List<Sheet>, rightToLeft: Boolean) {
@@ -76,7 +76,7 @@ object XlsxWriter {
         return sb.toString()
     }
 
-    /** يهرّب رموز XML ويحذف محارف التحكم غير المسموحة فيه (قد تأتي من ملاحظات ملصوقة). */
+    /** XML escape، ويحذف control characters غير المسموحة في XML (قد تأتي من ملاحظات ملصوقة). */
     internal fun escape(text: String): String = buildString(text.length) {
         for (ch in text) {
             when {
@@ -90,12 +90,12 @@ object XlsxWriter {
         }
     }
 
-    /** أرقام بدون أس علمي، ونقطة عشرية دائمًا (مهما كانت لغة الجهاز). */
+    /** أرقام بدون scientific notation، ونقطة عشرية دائمًا (مهما كانت لغة الجهاز). */
     internal fun formatNumber(value: Double): String =
         if (value == Math.rint(value) && kotlin.math.abs(value) < 1e15) value.toLong().toString()
         else java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString()
 
-    /** أسماء الأوراق: 31 حرفًا كحد أقصى وبدون الرموز الممنوعة في Excel. */
+    /** أسماء الـ sheets: 31 حرفًا كحد أقصى وبدون الرموز الممنوعة في Excel. */
     internal fun safeSheetName(name: String): String =
         name.filterNot { it in "[]:*?/\\" }.take(31).ifBlank { "Sheet" }
 
@@ -144,7 +144,7 @@ object XlsxWriter {
         """<Relationship Id="rId1" Type="$NS_DOC_REL/officeDocument" Target="xl/workbook.xml"/>""" +
         "</Relationships>"
 
-    /** نمطان: 0 عادي، 1 عريض بخلفية رمادية فاتحة (صف العنوان). */
+    /** Styles: 0 عادي، 1 bold بخلفية رمادية فاتحة (صف العناوين). */
     private const val STYLES = XML_HEADER +
         """<styleSheet xmlns="$NS_MAIN">""" +
         """<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>""" +

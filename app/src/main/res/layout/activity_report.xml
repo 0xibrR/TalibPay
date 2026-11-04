@@ -61,7 +61,7 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- محتوى التقرير: هو نفسه ما يُشارك كصورة أو PDF، لذلك له خلفية -->
+        <!-- محتوى التقرير: هو نفسه ما يُشارك كصورة أو PDF، لذلك له background -->
         <LinearLayout
             android:id="@+id/reportContent"
             android:layout_width="match_parent"

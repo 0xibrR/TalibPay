@@ -3,39 +3,39 @@ package com.irdev.talibpay.security
 import java.security.MessageDigest
 import java.security.SecureRandom
 
-/** حالة القفل للمستخدم الحالي. */
+/** حالة الـ lock للمستخدم الحالي. */
 sealed interface LockState {
     data object NotEnabled : LockState
     data class Enabled(val mode: LockMode, val biometricEnrolled: Boolean) : LockState
 
-    /** الإعدادات عُدّلت أو حُذفت من خارج التطبيق: لا يُوثق بها. */
+    /** الـ prefs عُدّلت أو حُذفت من خارج التطبيق (tampering): لا يُوثق بها. */
     data object Tampered : LockState
 }
 
 sealed interface PinResult {
     data object Success : PinResult
 
-    /** @param attemptsBeforeLockout محاولات متبقية قبل بدء الانتظار. @param lockoutMs الانتظار الذي بدأ الآن (0 إن لم يبدأ). */
+    /** @param attemptsBeforeLockout المحاولات المتبقية قبل الـ lockout. @param lockoutMs الـ lockout الذي بدأ الآن (0 إن لم يبدأ). */
     data class Wrong(val attemptsBeforeLockout: Int, val lockoutMs: Long) : PinResult
 
-    /** ممنوع المحاولة الآن؛ لم يُفحص الرمز أصلًا. */
+    /** المحاولة ممنوعة الآن (lockout)؛ لم يُفحص الـ PIN أصلًا. */
     data class LockedOut(val remainingMs: Long) : PinResult
 
-    /** تجاوز الحد الأقصى: أُلغي القفل ويجب تسجيل الدخول للحساب من جديد. */
+    /** تجاوز الحد الأقصى: أُلغي الـ lock ويجب تسجيل الدخول من جديد. */
     data object TooManyAttempts : PinResult
 
     data object Tampered : PinResult
 }
 
 /**
- * قفل التطبيق: رمز من 6 أرقام وبصمة اختيارية.
+ * App lock: PIN من 6 أرقام و fingerprint اختيارية.
  *
- * الأمان:
- * - الرمز لا يُخزَّن أبدًا: نخزّن ملحًا عشوائيًا و HMAC_Keystore(PBKDF2(الرمز، الملح)).
- *   مفتاح HMAC في Android Keystore ولا يغادر الجهاز، فنسخ ملف الإعدادات لا يسمح بتخمين الرمز خارجه.
- * - كل الإعدادات (ومنها عدد المحاولات ووقت الانتظار) موقّعة بنفس المفتاح؛ أي تعديل يُكتشف ([LockState.Tampered]).
- * - حذف الإعدادات مع بقاء المفتاح يُعد تلاعبًا أيضًا (لا يمكن تعطيل القفل بحذف الملف).
- * - الانتظار يُحسب بساعة الإقلاع لا بساعة الجهاز، فتغيير الوقت لا يختصره؛ وإعادة التشغيل تعيد عدّه من البداية.
+ * Security:
+ * - الـ PIN لا يُخزَّن أبدًا: نخزّن salt عشوائي و HMAC_Keystore(PBKDF2(PIN, salt)).
+ *   مفتاح الـ HMAC في Android Keystore ولا يغادر الجهاز، فنسخ ملف الـ prefs لا يسمح بالـ brute force خارجه.
+ * - كل الـ prefs (ومنها عدد المحاولات ووقت الـ lockout) موقّعة بنفس المفتاح؛ أي تعديل يُكتشف ([LockState.Tampered]).
+ * - حذف الـ prefs مع بقاء المفتاح يُعد tampering أيضًا (لا يمكن تعطيل الـ lock بحذف الملف).
+ * - الـ lockout يُحسب بـ elapsedRealtime لا بساعة الجهاز، فتغيير الوقت لا يختصره؛ والـ reboot يعيد العد من البداية.
  */
 class AppLock(
     private val store: LockStore,
@@ -45,7 +45,7 @@ class AppLock(
     private val iterations: Int = DEFAULT_ITERATIONS
 ) {
 
-    /** إعدادات القفل المحفوظة (بعد التحقق من توقيعها). */
+    /** Prefs الـ lock بعد التحقق من الـ signature. */
     private data class Config(
         val ownerUid: String,
         val mode: LockMode,
@@ -65,11 +65,11 @@ class AppLock(
         data class Ok(val config: Config) : Loaded
     }
 
-    // ---------------- الحالة ----------------
+    // ---------------- State ----------------
 
     /**
-     * @param uid المستخدم المسجّل حاليًا؛ null إن لم يكن هناك مستخدم (لا قفل قبل تسجيل الدخول).
-     * قفل مستخدم آخر (سجّل خروجه ودخل غيره) يُلغى تلقائيًا.
+     * @param uid المستخدم المسجّل حاليًا؛ null إن لم يوجد (لا lock قبل تسجيل الدخول).
+     * Lock مستخدم آخر (sign out ثم دخل غيره) يُلغى تلقائيًا.
      */
     fun state(uid: String?): LockState = when (val loaded = load()) {
         Loaded.Missing -> LockState.NotEnabled
@@ -84,7 +84,7 @@ class AppLock(
         }
     }
 
-    // ---------------- التفعيل والتعديل ----------------
+    // ---------------- Enable / change ----------------
 
     fun enable(uid: String, pin: String, mode: LockMode) {
         require(PinRules.validate(pin) == PinRules.Validation.Valid) { "Invalid PIN" }
@@ -101,7 +101,7 @@ class AppLock(
         )
     }
 
-    /** يغيّر الرمز بعد التحقق من الرمز الحالي؛ يخضع لنفس حدود المحاولات. */
+    /** يغيّر الـ PIN بعد التحقق من الحالي؛ يخضع لنفس حدود المحاولات. */
     fun changePin(currentPin: String, newPin: String): PinResult {
         require(PinRules.validate(newPin) == PinRules.Validation.Valid) { "Invalid PIN" }
         val result = verifyPin(currentPin)
@@ -112,7 +112,7 @@ class AppLock(
         return PinResult.Success
     }
 
-    /** يُستدعى بعد تحقق المستخدم من هويته (رمز أو بصمة). */
+    /** بعد تحقق المستخدم من هويته (PIN أو fingerprint). */
     fun setMode(mode: LockMode) {
         val config = (load() as? Loaded.Ok)?.config ?: return
         save(config.copy(mode = mode))
@@ -123,13 +123,13 @@ class AppLock(
         save(config.copy(biometricEnrolled = enrolled))
     }
 
-    /** يلغي القفل ويحذف المفتاح؛ يُستدعى بعد تحقق المستخدم، أو عند التلاعب، أو تجاوز المحاولات. */
+    /** يلغي الـ lock ويحذف المفتاح: بعد تحقق المستخدم، أو عند الـ tampering، أو تجاوز المحاولات. */
     fun reset() {
         store.clear()
         keyedMac.destroy()
     }
 
-    // ---------------- التحقق ----------------
+    // ---------------- Verify ----------------
 
     fun verifyPin(pin: String): PinResult {
         val config = when (val loaded = load()) {
@@ -140,7 +140,7 @@ class AppLock(
         if (remaining > 0) return PinResult.LockedOut(remaining)
 
         val candidate = verifierFor(pin, config.salt, config.iterations)
-        // مقارنة بزمن ثابت حتى لا يكشف التوقيت عدد البايتات المطابقة
+        // Constant-time comparison حتى لا يكشف التوقيت عدد البايتات المطابقة (timing attack)
         if (MessageDigest.isEqual(candidate, config.verifier)) {
             save(config.copy(failedAttempts = 0, lockoutStartElapsed = 0, lockoutDurationMs = 0))
             return PinResult.Success
@@ -163,7 +163,7 @@ class AppLock(
         return PinResult.Wrong(LockoutPolicy.attemptsBeforeLockout(failed), delay)
     }
 
-    /** نجاح البصمة يعادل نجاح الرمز: تُصفّر المحاولات الخاطئة. */
+    /** نجاح الـ fingerprint مثل نجاح الـ PIN: يصفّر المحاولات الخاطئة. */
     fun onBiometricSuccess() {
         val config = (load() as? Loaded.Ok)?.config ?: return
         if (config.failedAttempts != 0 || config.lockoutDurationMs != 0L) {
@@ -171,7 +171,7 @@ class AppLock(
         }
     }
 
-    /** الانتظار المتبقي قبل السماح بمحاولة رمز جديدة. */
+    /** الـ lockout المتبقي قبل السماح بمحاولة PIN جديدة. */
     fun remainingLockoutMs(): Long = (load() as? Loaded.Ok)?.config?.let(::remainingLockout) ?: 0
 
     fun failedAttempts(): Int = (load() as? Loaded.Ok)?.config?.failedAttempts ?: 0
@@ -181,14 +181,14 @@ class AppLock(
         val now = clock.elapsedRealtime()
         val boot = clock.bootCount()
         if (boot != config.bootCount || now < config.lockoutStartElapsed) {
-            // أُعيد تشغيل الجهاز (ساعة الإقلاع بدأت من الصفر): يبدأ الانتظار من جديد بدل أن يُتجاوز
+            // حصل reboot (elapsedRealtime بدأ من الصفر): الـ lockout يبدأ من جديد بدل أن يُتجاوز
             save(config.copy(lockoutStartElapsed = now, bootCount = boot))
             return config.lockoutDurationMs
         }
         return (config.lockoutStartElapsed + config.lockoutDurationMs - now).coerceAtLeast(0)
     }
 
-    // ---------------- التخزين الموقّع ----------------
+    // ---------------- Signed storage ----------------
 
     private fun verifierFor(pin: String, salt: ByteArray, iterations: Int): ByteArray {
         val pinBytes = pin.toByteArray(Charsets.UTF_8)
@@ -218,7 +218,7 @@ class AppLock(
     private fun load(): Loaded {
         val values = store.read()
         if (values.isEmpty()) {
-            // المفتاح موجود والإعدادات محذوفة: حُذف الملف لتعطيل القفل
+            // المفتاح موجود والـ prefs محذوفة: حُذف الملف لتعطيل الـ lock
             return if (keyedMac.exists()) Loaded.Tampered else Loaded.Missing
         }
         if (!keyedMac.exists()) return Loaded.Tampered
@@ -248,12 +248,12 @@ class AppLock(
         }
     }
 
-    /** نص ثابت الترتيب للتوقيع: المفاتيح مرتبة، وكل قيمة مسبوقة بطولها حتى لا تتداخل الحقول. */
+    /** Canonical string للـ signature: المفاتيح مرتبة، وكل قيمة مسبوقة بطولها حتى لا تتداخل الحقول. */
     private fun canonical(values: Map<String, String>): ByteArray =
         values.toSortedMap().entries.joinToString("\n") { (k, v) -> "$k=${v.length}:$v" }.toByteArray(Charsets.UTF_8)
 
     companion object {
-        /** عدد تكرارات PBKDF2: يجعل كل محاولة تخمين مكلفة (~ عُشر ثانية على هاتف حديث). */
+        /** عدد iterations الـ PBKDF2: يجعل كل محاولة تخمين مكلفة (~0.1 ثانية على هاتف حديث). */
         const val DEFAULT_ITERATIONS = 120_000
         private const val SALT_LENGTH = 16
         private const val DERIVED_LENGTH = 32

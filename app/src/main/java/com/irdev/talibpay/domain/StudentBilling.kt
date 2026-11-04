@@ -3,7 +3,7 @@ package com.irdev.talibpay.domain
 import com.irdev.talibpay.model.Student
 import java.util.Calendar
 
-/** تاريخ اليوم حسب ساعة الجهاز ومنطقته الزمنية. */
+/** تاريخ اليوم حسب ساعة الجهاز والـ timezone. */
 fun todaySimpleDate(nowMillis: Long = System.currentTimeMillis()): SimpleDate {
     val calendar = Calendar.getInstance().apply { timeInMillis = nowMillis }
     return SimpleDate(
@@ -13,11 +13,11 @@ fun todaySimpleDate(nowMillis: Long = System.currentTimeMillis()): SimpleDate {
     )
 }
 
-/** الطالب له رسوم شهرية تلقائية: قيمة أكبر من صفر وتاريخ تسجيل صالح. */
+/** للطالب monthly fee تلقائية: قيمة أكبر من صفر وتاريخ تسجيل صالح. */
 val Student.hasMonthlyBilling: Boolean
     get() = monthlyFee > 0 && SimpleDate.parse(registrationDate) != null
 
-/** الأشهر التي حان موعد رسومها ولم تُنشأ بعد. */
+/** الأشهر التي حان موعدها ولم يُنشأ لها charge بعد. */
 fun Student.periodsDue(today: SimpleDate): List<BillingPeriod> {
     if (archived) return emptyList()
     if (monthlyFee <= 0) return emptyList()
@@ -26,7 +26,7 @@ fun Student.periodsDue(today: SimpleDate): List<BillingPeriod> {
     return MonthlyBilling.periodsDue(registration, start, YearMonth.parse(lastBilledPeriod), today)
 }
 
-/** موعد الاستحقاق القادم، أو null إن لم تكن للطالب رسوم شهرية. */
+/** موعد الاستحقاق القادم، أو null إذا لا monthly fee للطالب. */
 fun Student.nextMonthlyDue(today: SimpleDate): SimpleDate? {
     if (archived) return null
     if (monthlyFee <= 0) return null
@@ -36,10 +36,10 @@ fun Student.nextMonthlyDue(today: SimpleDate): SimpleDate? {
 }
 
 /**
- * متى تبدأ الفوترة عند حفظ الطالب:
+ * قيمة billingStart عند حفظ الطالب:
  * - طالب جديد: من تاريخ تسجيله (رسومه مستحقة منذ التسجيل).
- * - تفعيل الرسوم لطالب موجود: من اليوم، حتى لا تُكرَّر أشهر سُجّلت رسومها يدويًا سابقًا.
- * - تعديل طالب مفعّلة رسومه: يبقى كما هو، فتغيير القيمة أو تاريخ التسجيل يسري على القادم فقط.
+ * - تفعيل الـ monthly fee لطالب موجود: من اليوم، حتى لا تتكرر أشهر سُجّلت يدويًا سابقًا.
+ * - تعديل طالب مفعّلة رسومه: تبقى كما هي، فتغيير القيمة أو تاريخ التسجيل يسري على القادم فقط.
  */
 fun billingStartFor(
     existing: Student?,
@@ -55,14 +55,14 @@ fun billingStartFor(
         else -> existing.billingStart
     }
 
-/** تُفعَّل الرسوم الشهرية لطالب موجود (لم تكن له رسوم شهرية من قبل). */
+/** تفعيل الـ monthly fee لطالب موجود (لم تكن له من قبل). */
 fun isEnablingMonthlyFee(existing: Student?, newMonthlyFee: Double): Boolean =
     existing != null && newMonthlyFee > 0 &&
             (existing.monthlyFee <= 0 || existing.billingStart.isBlank())
 
 /**
- * يُسأل المستخدم عن احتساب الرسوم السابقة فقط عند إدخال الرسوم الشهرية لأول مرة لطالب موجود،
- * وفقط إن وُجدت أشهر سابقة يمكن احتسابها (تاريخ التسجيل في الماضي).
+ * سؤال الـ backdate يظهر فقط عند إدخال الـ monthly fee لأول مرة لطالب موجود،
+ * وفقط إذا وُجدت أشهر سابقة يمكن احتسابها (تاريخ التسجيل في الماضي).
  * تعديل مبلغ موجود لا يُظهر السؤال.
  */
 fun shouldAskToBackdate(existing: Student?, newMonthlyFee: Double, registrationDate: String, today: SimpleDate): Boolean =
@@ -79,15 +79,15 @@ fun pastDuesSinceRegistration(registrationDate: String, today: SimpleDate): List
 }
 
 /**
- * بداية الفوترة عند إلغاء أرشفة الطالب: تُستأنف الرسوم الشهرية من اليوم،
+ * billingStart عند الـ unarchive: الرسوم تُستأنف من اليوم،
  * فلا تُحتسب الأشهر التي قضاها في الأرشيف.
  */
 fun billingStartOnUnarchive(student: Student, today: SimpleDate): String =
     if (student.monthlyFee > 0) today.format() else student.billingStart
 
 /**
- * موعد الرسوم الشهرية القادم الذي لم يُنشأ بعد، كمفتاح yyyy-MM-dd يُخزَّن مع الطالب
- * ليُستعلم عن المستحقين فقط بدل تحميل كل الطلاب. فارغ = لا رسوم تلقائية (بلا رسوم، أو مؤرشف).
+ * nextBillingDate: موعد الـ monthly charge القادم كـ key بصيغة yyyy-MM-dd يُخزَّن مع الطالب،
+ * لنعمل query على المستحقين فقط بدل تحميل كل الطلاب. فارغ = لا رسوم تلقائية (بلا رسوم، أو مؤرشف).
  */
 fun Student.nextBillingKey(): String {
     if (archived || monthlyFee <= 0) return ""

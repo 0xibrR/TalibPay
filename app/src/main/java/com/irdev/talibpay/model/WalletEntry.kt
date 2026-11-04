@@ -3,11 +3,11 @@ package com.irdev.talibpay.model
 import com.google.firebase.database.IgnoreExtraProperties
 
 /**
- * حركة في محفظة الطالب (رصيد دائن). السجل إضافي فقط: لا تُعدَّل الحركات ولا تُحذف،
- * والرصيد يُحسب دائمًا من مجموعها.
- * - DEPOSIT: زيادة دفعة عن المتبقي على مستحقها ([paymentId]).
- * - USE: استخدام الرصيد لتسديد مستحق جديد ([chargeId])، وليس دفعة نقدية.
- * - REFUND: إعادة الرصيد للطالب.
+ * حركة في الـ wallet (رصيد دائن). Append-only: الحركات لا تُعدَّل ولا تُحذف،
+ * والرصيد دائمًا مجموعها.
+ * - DEPOSIT: زيادة دفعة عن المتبقي على الـ charge الخاص بها ([paymentId]).
+ * - USE: استخدام الرصيد لتسديد charge جديد ([chargeId])، وليس دفعة نقدية.
+ * - REFUND: إرجاع الرصيد للطالب.
  */
 @IgnoreExtraProperties
 data class WalletEntry(

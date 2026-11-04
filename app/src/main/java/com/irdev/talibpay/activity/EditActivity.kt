@@ -52,11 +52,11 @@ class EditActivity : AppCompatActivity() {
         applySystemBarInsets(binding.main, applyTop = false)
         setupToolbar(binding.toolbar)
         title = getString(R.string.edit_student)
-        // بعد تدوير الشاشة يحتفظ النظام بما كتبه المستخدم، فلا نعيد التعبئة
+        // بعد الـ rotation يحتفظ النظام بما كتبه المستخدم، فلا نعيد التعبئة
         prefilled = savedInstanceState != null
 
         binding.monthlyFeeLayoutEdit.showCurrency()
-        // بعد تدوير الشاشة تبقى القيم المكتوبة، فنكتفي بتفعيل الحقول؛ وإلا تُعبّأ من بيانات الطالب عند تحميلها
+        // بعد الـ rotation تبقى القيم المكتوبة، فنكتفي بتفعيل الحقول؛ وإلا تُعبّأ من بيانات الطالب عند تحميلها
         if (savedInstanceState != null) {
             binding.discount.setup(binding.edtMonthlyFeeEdit, StudentDiscount.NONE)
             binding.attendanceDays.setup(emptySet())
@@ -91,7 +91,7 @@ class EditActivity : AppCompatActivity() {
         collectWhileStarted(viewModel.loading) { binding.btnEditStudent.isEnabled = !it }
         collectWhileStarted(viewModel.events) { event ->
             when (event) {
-                is UiEvent.Message -> toast(event.res)
+                is UiEvent.Message -> toast(event)
                 UiEvent.Finished -> finish()
                 UiEvent.NotSignedIn -> {
                     startActivity(Intent(this, LoginActivity::class.java))
@@ -106,10 +106,10 @@ class EditActivity : AppCompatActivity() {
     private fun confirmSave() {
         val name = binding.edtStudentNameEdit.requireText() ?: return
         val birthYear = binding.edtBirthYearEdit.requireText() ?: return
-        // اختياري هنا: الطلاب المضافون قبل هذه الميزة لا تاريخ تسجيل لهم
+        // اختياري هنا: الطلاب المضافون قبل هذه الميزة ليس لهم تاريخ تسجيل
         val registrationDate = binding.edtRegistrationDateEdit.text?.toString()?.trim().orEmpty()
         val monthlyFee = binding.edtMonthlyFeeEdit.optionalAmount() ?: return
-        // الرسوم الشهرية تُحسب من يوم التسجيل، فلا تُفعَّل بدونه
+        // الـ monthly fee تُحسب من يوم التسجيل، فلا تُفعَّل بدونه
         if (monthlyFee > 0 && registrationDate.isEmpty()) {
             binding.edtRegistrationDateEdit.error = getString(R.string.registration_date_required_for_fee)
             toast(R.string.registration_date_required_for_fee)
@@ -121,7 +121,7 @@ class EditActivity : AppCompatActivity() {
         val days = binding.attendanceDays.selectedDays()
         val notes = binding.edtNotesEdit.text?.toString()?.trim().orEmpty()
 
-        // إدخال الرسوم الشهرية لأول مرة: نسأل عن احتساب الأشهر السابقة منذ التسجيل
+        // أول مرة تُدخل الـ monthly fee: نسأل عن الـ backdate (احتساب الأشهر السابقة منذ التسجيل)
         val today = todaySimpleDate()
         if (shouldAskToBackdate(viewModel.existing.value, monthlyFee, registrationDate, today)) {
             val months = pastDuesSinceRegistration(registrationDate, today).size

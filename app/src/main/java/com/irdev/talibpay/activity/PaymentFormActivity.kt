@@ -27,7 +27,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** تسجيل دفعة لمستحق، أو تعديل دفعة موجودة. */
+/** تسجيل دفعة لـ charge، أو تعديل دفعة موجودة. */
 class PaymentFormActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPaymentBinding
@@ -62,7 +62,7 @@ class PaymentFormActivity : AppCompatActivity() {
             val date = binding.edtPaymentDate.requireText() ?: return@setOnClickListener
             viewModel.save(
                 dueId = selectedDueId,
-                // الحقل الفارغ في النقدي أو البنكي يعني صفرًا
+                // الحقل الفارغ في النقدي أو البنكي = صفر
                 cashText = binding.edtPaidCash.text?.toString().orEmpty().ifBlank { "0" },
                 bankText = binding.edtPaidBank.text?.toString().orEmpty().ifBlank { "0" },
                 paymentDate = date,
@@ -104,7 +104,7 @@ class PaymentFormActivity : AppCompatActivity() {
 
     private fun bindDues(state: PaymentFormState) {
         if (state.dues.isEmpty()) {
-            // لا يوجد مستحق مفتوح: لا يمكن تسجيل دفعة
+            // لا يوجد charge مفتوح: لا يمكن تسجيل دفعة
             binding.dueLayout.error = getString(R.string.no_open_dues)
             binding.btnSavePayment.isEnabled = false
             return
@@ -133,7 +133,7 @@ class PaymentFormActivity : AppCompatActivity() {
         }
     }
 
-    /** يعرض مجموع الدفعة وما يبقى من المستحق بعدها، وينبّه إن تجاوزت المتبقي. */
+    /** يعرض مجموع الدفعة وما يبقى من الـ charge بعدها، وينبّه إن تجاوزت المتبقي. */
     private fun updatePreview() {
         val state = formState ?: return
         val dueId = selectedDueId ?: return
@@ -144,7 +144,7 @@ class PaymentFormActivity : AppCompatActivity() {
         val amount = Money.sum(listOf(cash, bank))
         val after = Money.subtract(available, amount)
 
-        // دفعة جديدة: ما يزيد عن المتبقي يُضاف لمحفظة الطالب. التعديل: لا يتجاوز المتبقي
+        // دفعة جديدة: الزيادة عن المتبقي تذهب لـ wallet الطالب. التعديل: لا يتجاوز المتبقي
         val creditsWallet = !viewModel.isEditing
         binding.dueLayout.error = null
         binding.dueLayout.helperText = getString(
@@ -162,7 +162,7 @@ class PaymentFormActivity : AppCompatActivity() {
         binding.tvPaymentPreview.setTextColor(ContextCompat.getColor(this, color))
     }
 
-    // أرقام لاتينية بدون فواصل آلاف حتى يقبلها حقل الإدخال الرقمي
+    // أرقام لاتينية بدون فواصل آلاف حتى يقبلها الـ numeric input
     private fun plainAmount(value: Double) = Money.format(value, Locale.US).replace(",", "")
 
     private companion object {

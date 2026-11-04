@@ -15,12 +15,12 @@ import java.io.File
 import java.io.FileOutputStream
 
 /**
- * تصدير كل البيانات إلى Excel: ورقة للطلاب، وورقة للمستحقات، وورقة للدفعات.
- * يشمل المؤرشفين (مع عمود الحالة) لأن الملف للمحاسبة وكنسخة احتياطية.
+ * تصدير كل البيانات إلى Excel: sheet للطلاب، و sheet للمستحقات، و sheet للدفعات.
+ * يشمل المؤرشفين (مع عمود الحالة) لأن الملف للمحاسبة وكـ backup.
  */
 object ExcelExport {
 
-    /** يكتب الملف في cache ويعيده؛ يُستدعى خارج الخيط الرئيسي. */
+    /** يكتب الملف في الـ cache ويعيده؛ يُستدعى خارج الـ main thread. */
     fun write(context: Context, students: List<StudentWithPayments>): File {
         val file = File(context.cacheDir, "TalibPay-${todaySimpleDate().sortKey()}.xlsx")
         val rtl = context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL

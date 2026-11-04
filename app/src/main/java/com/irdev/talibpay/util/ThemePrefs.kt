@@ -5,7 +5,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
 
-/** إعداد الوضع الليلي: يُحفظ ويُطبَّق من مكان واحد. */
+/** إعداد الـ dark mode: يُحفظ ويُطبَّق من مكان واحد. */
 object ThemePrefs {
     const val LIGHT = 1
     const val DARK = 2

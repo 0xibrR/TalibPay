@@ -13,10 +13,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import android.widget.NumberPicker
-import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -35,7 +33,6 @@ import com.irdev.talibpay.R
 import com.irdev.talibpay.domain.Money
 import com.irdev.talibpay.domain.YearMonth
 import com.irdev.talibpay.model.Charge
-import com.irdev.talibpay.viewmodel.UiEvent
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -45,8 +42,8 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * يضيف هوامش أشرطة النظام للجذر (مع enableEdgeToEdge).
- * في الشاشات التي فيها AppBarLayout (fitsSystemWindows) يتولى شريط التطبيق الهامش العلوي،
+ * يضيف padding لأشرطة النظام (system bars insets) على الـ root، مع enableEdgeToEdge.
+ * في الشاشات التي فيها AppBarLayout (fitsSystemWindows) يتولى الـ AppBar الهامش العلوي،
  * فنمرر applyTop = false ونترك الـ insets تصل إليه.
  */
 fun applySystemBarInsets(root: View, applyTop: Boolean = true) {
@@ -59,7 +56,7 @@ fun applySystemBarInsets(root: View, applyTop: Boolean = true) {
     }
 }
 
-/** يربط MaterialToolbar كشريط التطبيق، مع زر رجوع اختياري. */
+/** يربط MaterialToolbar كـ action bar، مع زر رجوع اختياري. */
 fun AppCompatActivity.setupToolbar(toolbar: MaterialToolbar, showUp: Boolean = true) {
     setSupportActionBar(toolbar)
     if (showUp) {
@@ -68,21 +65,21 @@ fun AppCompatActivity.setupToolbar(toolbar: MaterialToolbar, showUp: Boolean = t
     }
 }
 
-/** المبلغ مع رمز العملة المختارة في الإعدادات، بتنسيق لغة الجهاز. */
+/** المبلغ مع رمز العملة المختارة، بتنسيق لغة الجهاز. */
 fun Context.money(value: Double): String {
     CurrencyPrefs.current(this) // يحمّل العملة إن لم تكن محمّلة
     return formatAmount(value)
 }
 
-/** يعرض رمز العملة المختارة داخل حقل المبلغ. */
+/** يعرض رمز العملة داخل حقل المبلغ (suffix). */
 fun TextInputLayout.showCurrency() {
     suffixText = CurrencyPrefs.current(context).symbol
 }
 
-/** اسم المستحق، أو "الرسوم" لمستحق البيانات القديمة الذي لا اسم له. */
+/** اسم الـ charge، أو "الرسوم" للـ legacy charge الذي ليس له اسم. */
 fun Context.dueTitle(charge: Charge): String {
     if (charge.title.isNotBlank()) return charge.title
-    // الرسوم الشهرية التلقائية: اسمها من شهرها بلغة التطبيق الحالية
+    // Monthly charge تلقائي: اسمه من شهره بلغة التطبيق الحالية
     val month = YearMonth.parse(charge.period)
         ?: return getString(R.string.due_legacy_title)
     return getString(R.string.due_title_month, monthName(month))
@@ -102,7 +99,7 @@ fun Context.monthName(month: YearMonth): String {
 fun paidPercent(paid: Double, total: Double): Int =
     if (total <= 0) 0 else ((paid / total) * 100).toInt().coerceIn(0, 100)
 
-/** يجمع الـ Flow فقط أثناء ظهور الشاشة. */
+/** يجمع الـ Flow فقط أثناء ظهور الشاشة (repeatOnLifecycle STARTED). */
 fun <T> LifecycleOwner.collectWhileStarted(flow: Flow<T>, action: suspend (T) -> Unit) {
     lifecycleScope.launch {
         repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -111,17 +108,7 @@ fun <T> LifecycleOwner.collectWhileStarted(flow: Flow<T>, action: suspend (T) ->
     }
 }
 
-fun Context.toast(@StringRes message: Int, long: Boolean = false) {
-    Toast.makeText(this, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
-}
-
-/** يعرض رسالة الـ ViewModel مع قيمتها إن وُجدت (مثل أقصى مبلغ مسموح). */
-fun Context.toast(message: UiEvent.Message) {
-    val text = if (message.arg != null) getString(message.res, message.arg) else getString(message.res)
-    Toast.makeText(this, text, Toast.LENGTH_LONG).show()
-}
-
-/** يعيد النص بعد قصّ المسافات، أو null مع إظهار خطأ إذا كان فارغًا. */
+/** يعيد النص بعد trim، أو null مع إظهار خطأ إذا كان فارغًا. */
 fun EditText.requireText(): String? {
     val value = text?.toString()?.trim().orEmpty()
     if (value.isEmpty()) {
@@ -140,7 +127,7 @@ fun EditText.optionalAmount(): Double? {
     return value
 }
 
-/** مثل [requireText] لكن دون قصّ المسافات (لكلمات المرور). */
+/** مثل [requireText] لكن بدون trim (لكلمات المرور). */
 fun EditText.requireRawText(): String? {
     val value = text?.toString().orEmpty()
     if (value.isEmpty()) {
@@ -151,8 +138,8 @@ fun EditText.requireRawText(): String? {
 }
 
 /**
- * نافذة حوار لتصميم مخصص (بطاقة بحواف دائرية): نافذة شفافة بعرض الشاشة
- * حتى لا تظهر خلفية مربعة خلف البطاقة.
+ * Dialog لتصميم مخصص (card بحواف دائرية): window شفافة بعرض الشاشة
+ * حتى لا تظهر خلفية مربعة خلف الـ card.
  */
 fun Context.cardDialog(content: View, cancelable: Boolean = true): Dialog =
     Dialog(this).apply {
@@ -166,7 +153,7 @@ fun Context.cardDialog(content: View, cancelable: Boolean = true): Dialog =
         )
     }
 
-/** نافذة تحميل غير قابلة للإلغاء. */
+/** Loading dialog غير قابل للإلغاء. */
 class LoadingDialog(activity: Activity) {
     @SuppressLint("InflateParams")
     private val dialog = Dialog(activity).apply {
@@ -198,12 +185,12 @@ fun Context.showYearPicker(onPicked: (Int) -> Unit) {
         .show()
 }
 
-/** تاريخ اليوم بصيغة dd/MM/yyyy (نفس صيغة منتقي التاريخ). */
+/** تاريخ اليوم بصيغة dd/MM/yyyy (نفس صيغة الـ date picker). */
 fun todayDate(): String = String.format(
     Locale.US, "%1\$td/%1\$tm/%1\$tY", Calendar.getInstance()
 )
 
-/** يعرض منتقي التاريخ ويعيد التاريخ بصيغة dd/MM/yyyy. */
+/** يعرض الـ date picker ويعيد التاريخ بصيغة dd/MM/yyyy. */
 fun Context.showDatePicker(onPicked: (String) -> Unit) {
     val calendar = Calendar.getInstance()
     DatePickerDialog(
@@ -215,7 +202,7 @@ fun Context.showDatePicker(onPicked: (String) -> Unit) {
     ).show()
 }
 
-/** يعرض الطابع الزمني بصيغة الجهاز، أو النص القديم إن لم يوجد طابع. */
+/** يعرض الـ timestamp بصيغة الجهاز، أو النص الـ legacy إن لم يوجد timestamp. */
 fun Context.formatTimestamp(millis: Long, legacy: String = ""): String {
     if (millis <= 0) return legacy
     val date = Date(millis)
@@ -223,14 +210,14 @@ fun Context.formatTimestamp(millis: Long, legacy: String = ""): String {
             DateFormat.getTimeFormat(this).format(date)
 }
 
-/** إجراء سحب في اتجاه واحد: أيقونته ولون خلفيته وما يحدث عند إتمام السحب. */
+/** Swipe action في اتجاه واحد: الـ icon ولون الخلفية وما يحدث عند إتمام السحب. */
 data class SwipeAction(
     @param:DrawableRes val icon: Int,
     @param:ColorRes val color: Int,
     val onSwiped: (position: Int) -> Unit
 )
 
-/** سحب العناصر يمينًا أو يسارًا؛ الاتجاه بلا إجراء (null) معطّل. */
+/** Swipe العناصر يمينًا أو يسارًا (ItemTouchHelper)؛ الاتجاه بلا action (null) معطّل. */
 fun RecyclerView.attachSwipeActions(right: SwipeAction?, left: SwipeAction?) {
     val directions = (if (right != null) ItemTouchHelper.RIGHT else 0) or (if (left != null) ItemTouchHelper.LEFT else 0)
 
@@ -245,7 +232,7 @@ fun RecyclerView.attachSwipeActions(right: SwipeAction?, left: SwipeAction?) {
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             val position = viewHolder.bindingAdapterPosition
             if (position == RecyclerView.NO_POSITION) return
-            // نعيد الصف لمكانه دائمًا؛ التغيير الفعلي يحدّث القائمة من البيانات
+            // نعيد الـ row لمكانه دائمًا؛ التغيير الفعلي يحدّث القائمة من البيانات
             adapter?.notifyItemChanged(position)
             (if (direction == ItemTouchHelper.RIGHT) right else left)?.onSwiped?.invoke(position)
         }

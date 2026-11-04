@@ -14,9 +14,9 @@ class MyApp : Application() {
         FirebaseDatabase.getInstance().setPersistenceEnabled(true)
         ThemePrefs.apply(ThemePrefs.get(this))
         CurrencyPrefs.current(this)
-        // قفل التطبيق الاختياري (بصمة/رمز) عند الفتح وعند العودة من الخلفية
+        // App lock اختياري (fingerprint/PIN) عند الفتح وعند العودة من الـ background
         AppLockGate.install(this)
-        // إنشاء الرسوم الشهرية يوميًا في الخلفية
+        // إنشاء الـ monthly charges يوميًا في الـ background (WorkManager)
         MonthlyDuesWorker.schedule(this)
     }
 

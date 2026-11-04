@@ -18,8 +18,8 @@ private fun ViewAttendanceDaysBinding.dayChips(): Map<Weekday, Chip> = mapOf(
 )
 
 /**
- * أزرار أيام الدوام: "يوميًا" يحدد كل الأيام أو يلغيها،
- * ويُعلَّم تلقائيًا عند اختيار الأيام السبعة يدويًا.
+ * Chips أيام الدوام: "يوميًا" يحدد كل الأيام أو يلغيها،
+ * ويُحدَّد تلقائيًا عند اختيار الأيام السبعة يدويًا.
  */
 fun ViewAttendanceDaysBinding.setup(initial: Set<Weekday>) {
     val chips = dayChips()

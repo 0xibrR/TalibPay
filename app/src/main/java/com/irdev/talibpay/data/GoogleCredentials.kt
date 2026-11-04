@@ -19,17 +19,17 @@ import com.irdev.talibpay.R
 class GoogleCredentialException(cause: Throwable? = null) :
     IllegalStateException("No Google ID token credential returned", cause)
 
-/** التطبيق غير مسجَّل في Google Cloud (بصمة SHA-1 أو اسم الحزمة غير مضافة في Firebase). */
+/** التطبيق غير مُعدّ في Google Cloud (الـ SHA-1 أو الـ package name غير مضاف في Firebase). */
 class GoogleSignInNotConfiguredException(cause: Throwable) :
     IllegalStateException("Google Sign-In is not configured for this app signature", cause)
 
 private const val GOOGLE_ACCOUNT_TYPE = "com.google"
 
 /**
- * تسجيل الدخول بـ Google عبر Credential Manager (بديل GoogleSignIn المهجور).
- * يحتاج Activity لأنه يعرض واجهة اختيار الحساب.
+ * Google sign-in عبر Credential Manager (بديل GoogleSignIn الـ deprecated).
+ * يحتاج Activity لأنه يعرض UI اختيار الحساب.
  *
- * @param authorizedOnly true لإعادة التحقق (مثل حذف الحساب): يختار بصمت من الحسابات المستخدمة سابقًا.
+ * @param authorizedOnly true للـ re-authentication (مثل حذف الحساب): يختار بصمت من الحسابات المستخدمة سابقًا.
  *  false (زر "تسجيل الدخول عبر Google"): يعرض كل حسابات Google على الجهاز مع خيار إضافة حساب،
  *  ويطلب إضافة حساب إذا لم يوجد أي حساب.
  */
@@ -63,18 +63,18 @@ suspend fun requestGoogleIdToken(activity: Activity, authorizedOnly: Boolean = f
     throw GoogleCredentialException()
 }
 
-/** خطأ 28444 من Play Services: "Developer console is not set up correctly". */
+/** Error 28444 من Play Services: "Developer console is not set up correctly". */
 internal fun GetCredentialException.isNotConfiguredError(): Boolean {
     val text = "$type ${message.orEmpty()}"
     return "28444" in text || "Developer console" in text
 }
 
-/** شاشة النظام لإضافة حساب Google إلى الجهاز. */
+/** System screen لإضافة حساب Google إلى الجهاز. */
 fun addGoogleAccountIntent(): Intent =
     Intent(Settings.ACTION_ADD_ACCOUNT)
         .putExtra(Settings.EXTRA_ACCOUNT_TYPES, arrayOf(GOOGLE_ACCOUNT_TYPE))
 
-/** يمسح الحساب المختار من Credential Manager حتى لا يُختار تلقائيًا بعد تسجيل الخروج. */
+/** يمسح الحساب المختار من Credential Manager حتى لا يُختار تلقائيًا بعد الـ sign out. */
 suspend fun clearGoogleCredentialState(context: Context) {
     runCatching {
         CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())

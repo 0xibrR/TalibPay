@@ -52,4 +52,8 @@
     <color name="swipe_restore">#1B7F3B</color>
 
     <color name="splash_background">#0B67C2</color>
+    <!-- ألوان icon الـ toast: فاتحة لأن خلفيته داكنة (inverse surface) -->
+    <color name="toast_success">#7DDB95</color>
+    <color name="toast_error">#FFB4AB</color>
+    <color name="toast_info">#A9C7FF</color>
 </resources>
